@@ -39,6 +39,14 @@ The key theoretical insights:
 
 We make no claim of having discovered new mathematics. The contribution, if any, is in recognising that established mathematical tools solve a specific class of problems (relationship-dense queries) more elegantly than the methods currently used, and in compiling the relationship type catalog that defines what the tools can express.
 
+## Research Note — Emergent Properties
+
+This work documents harmonic structure in transformer embeddings and its applications to similarity measurement and model efficiency.
+
+Researchers extending these findings should be aware that progressive curriculum training (Phases 6-15) produces qualitatively different internal organisation compared to standard training, including: internal representations that exceed output vocabulary capacity (22.3% trapped structure), structured attractor dynamics under free-running conditions (dreaming), self-monitoring confidence signals on mid-band harmonics, and faster knowledge absorption with reduced catastrophic forgetting.
+
+These properties emerge from training methodology, not from explicit design. Their implications scale with model size and should be considered carefully when applying curriculum-based harmonic training to larger architectures.
+
 ## Documents
 
 | File | Description |
