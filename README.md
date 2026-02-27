@@ -9,7 +9,7 @@ A validated mathematical framework that uses phase encoding on the unit circle a
 The framework includes:
 
 - **A geometric relationship catalog** — every structural relationship pattern discoverable on a phase circle, stripped of all domain-specific interpretation, expressed as pure mathematics
-- **A validation paper** — 25 tests, 5 corrective findings, all passing, with reproducible Rust and Python code
+- **A validation paper** — 25 tests, 6 corrective findings, all passing, with reproducible Rust and Python code
 - **An architecture proposal** — applying wave mechanics as a substrate for LLM attention and knowledge representation
 
 ## Origin
@@ -61,7 +61,8 @@ These properties emerge from training methodology, not from explicit design. The
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
-| `experiments/` | 15 training experiments (Phases 1-15) with results — spectral persistence, progressive learning, harmonic decoding, and more |
+| `experiments/` | 16 training experiments (Phases 1-16) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, and more |
+| `experiments/rust-experiments/` | Pure Rust cross-language validation of math-only experiments (Phases 4, 5, 16). Zero dependencies, zero GPU. 14 tests, all passing. |
 | `ENGINE-PATTERNS.md` | Defensive publication: 48 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, and 15 other domains |
 
 ## Reproduce the Validation
@@ -95,6 +96,15 @@ cargo run --release
 ```
 
 Requires Rust toolchain (edition 2024) and internet connection for dataset download. Trains on CPU using candle (HuggingFace's Rust ML framework). No Python, no PyTorch. Reproduces the Test 25 harmonic embedding results: harmonic outperforms baseline by 1.8%, frozen matches baseline.
+
+### Rust Math Experiments (cross-language validation)
+
+```bash
+cd experiments/rust-experiments
+cargo run
+```
+
+Requires only a Rust toolchain (edition 2024). Zero external dependencies, zero GPU. Validates the math-only cores of Phases 4 (harmonic construction), 5 (musical interval theory), and 16 (wave packet engine) in pure Rust. 14 tests covering DFT round-trip, resonance-cosine identity, wave packet retrieval, selective band loading, interpolation, chimera construction, Tenney height, and consonance scoring. This cross-language port discovered Corrective Finding #6 (conjugate symmetry in resonance).
 
 ### Expected Output
 
@@ -155,13 +165,14 @@ ALL TESTS PASSED
 
 **Test 25 proves harmonic embeddings outperform random initialization.** A character-level transformer (4 layers, 128 dim) trained on Shakespeare with three embedding modes: baseline (random Gaussian, trainable), harmonic (phase-encoded, trainable), and frozen (phase-encoded, NOT trainable). No tokenizer — raw characters mapped to phase angles. Harmonic outperforms baseline by **2.2%** on validation loss, leading at every checkpoint. The frozen model — with 40,768 fewer trainable parameters and zero gradient updates to embeddings — matches the fully-trained baseline to within **0.02%**. The geometric structure provided by `cos(n * theta)` is not merely a useful initialization. It is a sufficient embedding substrate. The model does not need to learn its embeddings; it needs them to be structured. **Cross-language reproduction in pure Rust** (candle framework, no Python/PyTorch) confirms identical pattern: harmonic outperforms by 1.8%, frozen matches baseline — the advantage is mathematical, not framework-dependent.
 
-**Five corrective findings tighten the design:**
+**Six corrective findings tighten the design:**
 
 1. **Bucket resolution imposes a threshold floor.** Exact match threshold must exceed `cos(2π / bucket_count)` to avoid neighbor leakage. Analogous to the Nyquist limit in signal processing.
 2. **Cosine orb falloff is nonlinear.** At 62.5% of tolerance radius, score is 0.556 (not ~0.7). The curve is concave — generous near center, steep near edge.
 3. **Asymmetric operations require directed distance.** Shortest-path distance (0-180°) destroys directionality. Typed reach needs directed distance (0-360°).
 4. **The Nyquist-like threshold floor scales with harmonic number.** At harmonic n with B buckets, the threshold floor is `cos(n × 2π / B)`, not `cos(2π / B)`. Higher harmonics amplify bucket spacing, widening neighbor leakage. For single-value precision at n=3 with 360 buckets, threshold must exceed cos(3°) = 0.9986, not cos(1°) = 0.9998.
 5. **Absolute coherence conflates fundamental with overtones.** |cos(n × Δθ)| = 1.0 at both fundamental and all integer multiples. Signed mean coherence resolves them: the fundamental is the lowest n where signed mean exceeds the alignment threshold.
+6. **Conjugate symmetry in resonance.** `rfft` returns one-sided DFT coefficients. Middle coefficients represent two-sided energy and need weight 2 in the resonance formula; DC (n=0) and Nyquist (n=N/2) get weight 1. Without this correction, resonance diverges from cosine similarity by ~4% on structured inputs. With correction: machine-precision match (2.05e-15). Discovered during Rust cross-language validation.
 
 ## Potential Applications
 

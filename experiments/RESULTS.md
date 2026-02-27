@@ -655,6 +655,58 @@ Verdict: Wave packet queries achieve 5/5 retrieval with 25% of bands. Translator
 
 ---
 
+## Corrective Finding #6: Conjugate Symmetry in Resonance
+
+Discovered during cross-language validation (Rust port of Phase 16).
+
+**Problem:** The resonance formula `R(W,U) = sum |V_n| * |U_n| * cos(phi_n - psi_n)` treats all rfft coefficients equally. But rfft returns one-sided coefficients for a real signal. Due to conjugate symmetry (X[N-k] = conj(X[k])), the middle coefficients represent two-sided energy and must be weighted by 2. DC (n=0) and Nyquist (n=N/2) appear once and get weight 1.
+
+| Metric | Without weighting | With weighting |
+|---|---|---|
+| Max |resonance - cosine_similarity| | 4.18e-02 | 2.05e-15 |
+| Identity holds | No | Yes (machine precision) |
+| Ranking equivalence | Preserved (on uniform energy) | Exact |
+
+**Design rule:** When computing resonance from rfft coefficients, apply conjugate symmetry weights:
+- w[0] = 1 (DC component)
+- w[k] = 2 for k = 1..N/2-1 (middle components)
+- w[N/2] = 1 (Nyquist component, if N is even)
+
+**Why Python masked it:** Sentence-transformer embeddings (384d) have relatively uniform DFT energy distribution, so the ~4% error didn't affect rankings. Harmonic embeddings (structured cosine sequences) concentrate energy at specific bands, making the error visible.
+
+**Fixed in:** `experiments/wave_packet_engine.py` (Python) and `experiments/rust-experiments/src/wave_packet.rs` (Rust).
+
+---
+
+## Rust Cross-Language Validation
+
+Pure Rust reproduction of math-only experiments. No GPU, no external dependencies, no neural networks. Zero crates, pure `std` library.
+
+Location: `experiments/rust-experiments/`
+
+### Results (14/14 pass)
+
+| # | Test | Phase | Result | Key metric |
+|---|------|-------|--------|------------|
+| 1 | DFT round-trip | 16 | PASS | 1.42e-14 max error |
+| 2 | Resonance = cosine identity | 16 | PASS | 2.05e-15 max diff |
+| 3 | Wave packet retrieval (5 queries) | 16 | PASS | 5/5 all bands, 5/5 mid+high |
+| 4 | Selective band loading | 16 | PASS | All=1.0, Mid+High=0.83, Amp-25%=0.98 |
+| 5 | Amplitude band selection energy | 16 | PASS | 98% energy in top-25% bands |
+| 6 | Band energy distribution | 16 | PASS | Distinct profiles per angle |
+| 7 | Interpolation monotonicity | 4 | PASS | r = +0.974 |
+| 8 | Fractional position continuity | 4 | PASS | 0.983 min adjacent similarity |
+| 9 | Chimera band independence | 4 | PASS | 1.000 (perfect split) |
+| 10 | Norm preservation | 4 | PASS | All ratios 0.70-1.00 |
+| 11 | Adjacent channel intervals | 5 | PASS | 5/5 interval names correct |
+| 12 | Tenney height ordering | 5 | PASS | Exact values match theory |
+| 13 | Consonance map (120 pairs) | 5 | PASS | 51.7% consonant, 28.3% mild, 20.0% dissonant |
+| 14 | Interval identification | 5 | PASS | 8/8 ratios correctly identified |
+
+Cross-language validation confirms: the mathematical foundations produce identical results in Rust (pure CPU) and Python (numpy). No GPU required for the foundational operations.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |

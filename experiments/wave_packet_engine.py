@@ -58,13 +58,23 @@ def make_wave_packet(amplitudes, phases, band_set):
 def resonance(packet, stored_amplitudes, stored_phases):
     """Resonance matching: amplitude-weighted phase coherence (Pattern 31).
 
-    R(W, U) = Σ_{n ∈ S} |V_n| · |U_n| · cos(φ_n − ψ_n)
+    R(W, U) = Σ_{n ∈ S} w_n · |V_n| · |U_n| · cos(φ_n − ψ_n)
 
     Three things at once per term:
       - Query confidence (|V_n|)
       - Stored signal strength (|U_n|)
       - Phase alignment (cos(φ_n − ψ_n))
+
+    Conjugate symmetry correction (Corrective Finding #6):
+      rfft returns N/2+1 one-sided coefficients. For a real signal,
+      X[N-k] = conj(X[k]), so middle coefficients represent two-sided
+      energy and must be weighted by 2. DC (n=0) and Nyquist (n=N/2)
+      appear once and get weight 1. Without this, resonance diverges
+      from cosine similarity by up to ~4% on structured inputs.
     """
+    n_coeffs = len(stored_amplitudes)
+    last_idx = n_coeffs - 1
+
     score = 0.0
     query_energy = 0.0
     stored_energy = 0.0
@@ -73,9 +83,12 @@ def resonance(packet, stored_amplitudes, stored_phases):
         amp_s = stored_amplitudes[n]
         phase_s = stored_phases[n]
 
-        score += amp_q * amp_s * np.cos(phase_q - phase_s)
-        query_energy += amp_q ** 2
-        stored_energy += amp_s ** 2
+        # Conjugate symmetry weight
+        w = 1.0 if (n == 0 or n == last_idx) else 2.0
+
+        score += w * amp_q * amp_s * np.cos(phase_q - phase_s)
+        query_energy += w * amp_q ** 2
+        stored_energy += w * amp_s ** 2
 
     # Normalised resonance [-1, 1]
     norm = np.sqrt(query_energy) * np.sqrt(stored_energy)
