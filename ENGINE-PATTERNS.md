@@ -548,9 +548,301 @@ An engine that uses harmonic coherence to cluster delivery routes by structural 
 
 ---
 
-## 31. Wave Packet Query Engine
+## 31. Space and Satellite Engine
 
-### 31.1 Sparse DFT Query Format
+### 31.1 Orbital Resonance Detection
+
+An engine that phase-encodes satellite orbital parameters (orbital period, inclination, ascending node, argument of periapsis — all inherently angular quantities) and uses harmonic coherence to detect orbital resonances. Satellites in resonant orbits (e.g., 2:1 period ratio) show high coherence at corresponding harmonics. The engine discovers orbital families and resonance chains without computing full Keplerian propagation.
+
+### 31.2 Constellation Geometry Analysis
+
+An engine that analyses satellite constellation spacing using harmonic coherence. A well-designed constellation (e.g., Walker delta pattern) has satellites evenly spaced on orbital planes — this IS harmonic structure. The engine detects constellation integrity, identifies gaps or drift, and verifies coverage geometry through harmonic sweep rather than pairwise distance computation.
+
+### 31.3 Space Debris Collision Risk Clustering
+
+An engine that phase-encodes debris orbital elements and uses harmonic coherence to cluster debris by collision risk families. Objects that share harmonic coherence at specific frequencies occupy similar orbital corridors. The engine identifies collision risk groups without computing individual conjunction assessments for every pair — sub-linear screening before detailed propagation.
+
+### 31.4 Satellite Signal Classification
+
+An engine that classifies satellite signals by their harmonic coherence profiles across frequency bands. Different satellite systems (GPS, Galileo, GLONASS, BeiDou) use different signal structures that produce distinct harmonic signatures. The engine identifies signal source and type from spectral profile without demodulation.
+
+### 31.5 Remote Sensing Pattern Detection
+
+An engine that applies harmonic coherence to remote sensing imagery to detect periodic ground patterns (agricultural field spacing, urban grid structures, geological formations with rotational symmetry). Phase encoding of spatial frequencies in satellite imagery enables structural pattern matching across different scales and orientations.
+
+### 31.6 Space Weather Event Correlation
+
+An engine that phase-encodes space weather parameters (solar wind speed, magnetic field components, particle flux — many with inherent periodicity tied to solar rotation) and uses harmonic coherence to correlate events across multiple observation points. The engine detects correlated space weather patterns across distributed sensor networks using harmonic resonance rather than time-series cross-correlation.
+
+---
+
+## 32. Plant Science and Agricultural Research Engine
+
+### 32.1 Phyllotaxis Pattern Analysis
+
+An engine that analyses leaf arrangement patterns (phyllotaxis) using harmonic coherence. Plants arrange leaves at angular offsets — most commonly the golden angle (~137.5°) — to maximise light capture. Phase encoding of leaf positions and harmonic sweeps detect the underlying angular pattern, classify phyllotactic type (spiral, whorled, distichous), and identify developmental anomalies. The framework is native to this domain because phyllotaxis IS angular geometry.
+
+### 32.2 Circadian Rhythm Detection in Gene Expression
+
+An engine that phase-encodes temporal gene expression data from plants and uses harmonic coherence to detect circadian and ultradian rhythms. Genes with expression peaks at the same phase angle are co-regulated. The engine identifies gene families that share circadian timing, detects phase shifts under stress conditions, and groups genes by their temporal coherence profile without requiring prior pathway knowledge.
+
+### 32.3 Root Architecture Pattern Matching
+
+An engine that phase-encodes root branching angles and inter-branch spacing to characterise root architecture types. Different species and growth conditions produce distinct angular branching patterns. The harmonic profile of root architecture serves as a phenotypic fingerprint — two plants with similar harmonic signatures have structurally similar root systems regardless of absolute size.
+
+### 32.4 Pollination Network Analysis
+
+An engine that encodes plant-pollinator interaction networks using phase angles representing flowering time, flower orientation, and morphological fit. Harmonic coherence detects pollination syndromes — groups of plants that attract the same pollinator families share coherence at specific harmonics. The engine discovers ecological community structure from interaction data.
+
+### 32.5 Crop Phenotyping via Spectral Signature
+
+An engine that phase-encodes multispectral imagery bands from crop phenotyping platforms and uses harmonic coherence to classify crop health states, growth stages, and stress responses. Plants under drought stress produce different spectral harmonic profiles than healthy plants. The engine detects stress before visible symptoms appear by identifying spectral profile shifts at specific harmonics.
+
+### 32.6 Growth Cycle Synchronisation
+
+An engine that detects synchronisation between plant growth cycles and environmental signals (photoperiod, temperature, rainfall periodicity) using harmonic coherence. The engine identifies which environmental frequency each growth parameter is locked to, enabling prediction of phenological events (flowering, fruiting) from environmental harmonic profiles.
+
+---
+
+## 33. Automotive Engine
+
+### 33.1 Engine Vibration Harmonic Analysis
+
+An engine that applies harmonic coherence to vehicle engine vibration data. Internal combustion engines produce vibrations at frequencies directly related to RPM and cylinder count — this IS harmonic structure. The engine detects misfires (missing harmonic), bearing wear (new harmonics appearing), and combustion anomalies (phase shifts) from vibration profiles. Harmonic number maps directly to engine order analysis.
+
+### 33.2 Autonomous Vehicle Sensor Fusion
+
+An engine that phase-encodes sensor readings from LiDAR, radar, and camera systems on autonomous vehicles. Objects detected by multiple sensors at the same angular position show high harmonic coherence. The engine fuses multi-sensor data by computing resonance across sensor channels — objects with high cross-sensor coherence are confirmed detections; low coherence flags sensor disagreement or ghost objects.
+
+### 33.3 Vehicle Diagnostic Pattern Recognition
+
+An engine that phase-encodes OBD-II diagnostic data streams (RPM, throttle position, timing advance, oxygen sensor voltages — many inherently periodic) and uses harmonic coherence to create vehicle health fingerprints. A healthy engine has a characteristic spectral profile. Deviations at specific harmonics indicate specific fault categories before diagnostic trouble codes trigger.
+
+### 33.4 Traffic Flow Pattern Detection
+
+An engine that phase-encodes traffic flow parameters (vehicle speed, headway, lane position) at observation points and uses harmonic coherence to detect traffic wave patterns. Stop-and-go waves have characteristic harmonic signatures. The engine detects congestion formation, classifies traffic states, and identifies oscillation sources by their spectral profiles.
+
+### 33.5 Electric Vehicle Battery Degradation Profiling
+
+An engine that phase-encodes battery charge-discharge cycle data (voltage curves, impedance spectra, temperature profiles — impedance spectroscopy is inherently frequency-domain) and uses harmonic coherence to detect degradation patterns. Different degradation mechanisms (SEI growth, lithium plating, cathode degradation) produce distinct harmonic signatures in impedance spectra. The engine classifies degradation type and predicts remaining useful life from spectral profile evolution.
+
+### 33.6 Crash Signature Classification
+
+An engine that phase-encodes accelerometer data from vehicle crash events and uses harmonic coherence to classify crash types (frontal, side, rear, rollover). Different impact geometries produce distinct energy distributions across frequency bands. The engine classifies crash severity and type from accelerometer spectral profiles in milliseconds, informing airbag deployment and emergency response.
+
+---
+
+## 34. Robotics Engine
+
+### 34.1 Joint Angle State Encoding
+
+An engine that phase-encodes robot joint angles — which are inherently angular quantities on the unit circle — and uses harmonic coherence to represent and compare robot configurations. Two robot poses that are harmonically coherent share structural similarity (same kinematic family) even if individual joint angles differ. The framework is native to this domain because joint space IS angular space.
+
+### 34.2 Gait Pattern Analysis and Classification
+
+An engine that phase-encodes joint angle trajectories over time for walking robots and uses harmonic coherence to classify gait types. Walking, trotting, galloping, and bounding gaits have distinct phase relationships between limbs. The engine detects gait transitions, identifies gait anomalies (limping), and classifies locomotion mode from harmonic profiles of joint trajectories.
+
+### 34.3 Swarm Coordination via Harmonic Resonance
+
+An engine that coordinates robot swarms using harmonic coherence as the communication primitive. Each robot broadcasts its state as a phase angle. Robots that need to synchronise check harmonic coherence at a designated frequency — coherence above threshold means aligned, below means adjust. The same mechanism supports multiple independent coordination channels (one harmonic per task: formation = n=4, speed = n=1, heading = n=2) with zero cross-talk between channels.
+
+### 34.4 Manipulation Grasp Classification
+
+An engine that phase-encodes contact points and force vectors during robotic grasping and uses harmonic coherence to classify grasp types. Force closure grasps have characteristic symmetry patterns (opposing force pairs = n=2 coherence). The engine evaluates grasp stability from the harmonic profile of the contact geometry without full force analysis.
+
+### 34.5 Motion Planning via Harmonic Potential Fields
+
+An engine that encodes obstacles and goals as phase sources and uses harmonic superposition to generate navigation potential fields. Obstacles emit repulsive phases; goals emit attractive phases. The robot follows the gradient of the combined harmonic field. Multiple obstacles and goals combine through wave superposition without the local minima problem of additive potential fields.
+
+### 34.6 Robot Skill Transfer via Spectral Matching
+
+An engine that represents learned robot skills as harmonic profiles of joint trajectories and transfers skills between robots with different kinematics by matching spectral structure rather than joint-level trajectories. Two robots with different arm configurations can share skills if their task-space harmonic profiles match — the engine translates between joint spaces by preserving harmonic coherence.
+
+---
+
+## 35. Spacecraft Engineering Engine
+
+### 35.1 Attitude Determination and Control
+
+An engine that phase-encodes spacecraft orientation using Euler angles or quaternion components — inherently angular quantities — and uses harmonic coherence to detect attitude modes, classify spin states, and identify precession patterns. Spacecraft attitude IS angular state on the rotation group. The engine detects tumbling modes, nutation frequencies, and spin-stabilisation quality from harmonic profiles of attitude telemetry.
+
+### 35.2 Docking Alignment Verification
+
+An engine that phase-encodes relative position and orientation between spacecraft during rendezvous and uses harmonic coherence to verify alignment across multiple axes simultaneously. Perfect docking alignment shows maximum coherence across all channels. Misalignment at specific harmonics indicates which axis or rotation is off. Multi-channel harmonic verification replaces sequential single-axis checking.
+
+### 35.3 Structural Health Monitoring
+
+An engine that applies harmonic coherence to vibration data from spacecraft structural members. Changes in harmonic signature indicate structural degradation — micro-fractures introduce new frequency components, joint loosening shifts phase relationships, material fatigue changes damping profiles at specific harmonics. The engine monitors structural integrity continuously from vibration spectra.
+
+### 35.4 Thruster Firing Pattern Optimisation
+
+An engine that phase-encodes thruster firing sequences and uses harmonic coherence to optimise multi-thruster coordination. Efficient station-keeping requires thruster firings that are harmonically balanced — equal and opposite impulses at specific frequencies. The engine detects inefficient firing patterns (harmonic imbalance) and proposes corrections that minimise fuel consumption.
+
+### 35.5 Interplanetary Trajectory Classification
+
+An engine that phase-encodes trajectory parameters (transfer angle, departure/arrival asymptotes, gravity assist deflection angles) and uses harmonic coherence to classify trajectory families. Trajectories that share harmonic structure belong to the same transfer family. The engine discovers multi-flyby opportunities by finding trajectory segments that are harmonically coherent across different planetary encounters.
+
+### 35.6 Thermal Cycling Pattern Detection
+
+An engine that phase-encodes spacecraft thermal data over orbital periods and uses harmonic coherence to detect thermal cycling patterns. Orbital thermal cycling is inherently periodic — the fundamental matches orbital period, harmonics capture eclipse entry/exit transients, thermal lag, and anomalous heating. Deviation in harmonic profile indicates thermal control system degradation.
+
+### 35.7 Deep Space Communication Signal Recovery
+
+An engine that uses harmonic coherence to detect weak signals in noise by exploiting known phase structure of transmitted signals. Rather than correlating against a full template, the engine computes resonance against a sparse wave packet containing only the transmitted signal's dominant harmonics. Reduces computation while maintaining detection sensitivity for signals near noise floor.
+
+---
+
+## 36. Aviation Engine
+
+### 36.1 Turbine Engine Health Monitoring
+
+An engine that applies harmonic coherence to jet engine vibration and acoustic data. Turbine blade passing frequencies, shaft harmonics, and combustor tones create a characteristic harmonic signature. Blade damage introduces sub-harmonics, bearing wear shifts phase relationships, compressor stall has a distinct spectral fingerprint. The engine detects faults by harmonic deviation from baseline.
+
+### 36.2 Flight Path Pattern Classification
+
+An engine that phase-encodes flight path parameters (heading changes, altitude profiles, turn rates — all angular or periodic quantities) and uses harmonic coherence to classify flight patterns. Standard approaches, holds, and departures have characteristic harmonic profiles. Deviations indicate non-standard operations, enabling air traffic pattern analysis and anomaly detection.
+
+### 36.3 Wake Turbulence Characterisation
+
+An engine that phase-encodes atmospheric sensor data behind aircraft and uses harmonic coherence to characterise wake vortex structure. Wake vortices have specific rotational frequencies that decay over time. The harmonic profile of wake measurements classifies wake severity, estimates decay state, and determines safe separation distance from spectral analysis rather than time-based rules.
+
+### 36.4 Pilot Workload Estimation
+
+An engine that phase-encodes pilot control inputs (stick deflection, pedal movement, throttle changes — all periodic during routine flight) and uses harmonic coherence to estimate workload. Low workload shows smooth, low-harmonic control profiles. High workload introduces high-frequency corrections and phase instability. The engine detects workload transitions from control input spectral changes.
+
+---
+
+## 37. Marine and Naval Engine
+
+### 37.1 Propeller Signature Classification
+
+An engine that applies harmonic coherence to underwater acoustic data for propeller noise classification. Propeller blade count determines fundamental harmonic. Speed determines frequency. Cavitation introduces broadband noise at specific harmonics. The engine classifies vessel type, estimates speed, and detects propulsion anomalies from acoustic harmonic profiles. This is native to the domain — propeller acoustics IS harmonic analysis.
+
+### 37.2 Ocean Current Pattern Detection
+
+An engine that phase-encodes current meter data (speed and direction — direction is angular) and uses harmonic coherence to detect tidal constituents, inertial oscillations, and mesoscale eddy signatures. Different oceanographic phenomena have distinct harmonic periods. The engine separates overlapping signals by harmonic channel.
+
+### 37.3 Hull Structural Monitoring
+
+An engine that applies harmonic coherence to strain gauge and accelerometer data from ship hulls. Wave loading is periodic — the fundamental matches wave encounter frequency, harmonics capture slamming impacts, springing, and whipping. The engine detects structural fatigue accumulation and identifies dangerous resonance conditions from harmonic profiles.
+
+### 37.4 Sonar Target Classification
+
+An engine that computes harmonic coherence profiles of sonar returns to classify underwater objects. Different target geometries (cylinder, sphere, flat plate) produce different scattering harmonic signatures. The engine classifies targets by spectral profile matching rather than template correlation, enabling classification of objects not in the template library by their harmonic family membership.
+
+---
+
+## 38. Energy and Power Grid Engine
+
+### 38.1 Power Quality Harmonic Analysis
+
+An engine that applies harmonic coherence to electrical power grid data. Power quality IS harmonic analysis — the fundamental is 50/60 Hz, harmonics indicate nonlinear loads, inter-harmonics indicate power electronic converters. The engine detects power quality events, classifies harmonic sources, and identifies grid instabilities from harmonic coherence between measurement points.
+
+### 38.2 Renewable Energy Forecasting
+
+An engine that phase-encodes solar irradiance and wind speed time series and uses harmonic coherence to identify predictable periodic components (diurnal, seasonal, weather-system-scale). The engine decomposes generation profiles into harmonic bands and forecasts by extrapolating coherent harmonics while treating incoherent bands as noise. Forecasting accuracy improves by separating predictable structure from random variation.
+
+### 38.3 Grid Fault Location via Travelling Wave
+
+An engine that applies harmonic coherence to travelling wave fault signatures recorded at multiple substations. Fault-generated travelling waves have characteristic harmonic content that depends on fault type and distance. The engine locates faults by computing harmonic coherence between recording points — the station pair showing maximum coherence at the appropriate harmonic provides fault location.
+
+### 38.4 Smart Meter Pattern Classification
+
+An engine that phase-encodes household electricity consumption profiles and uses harmonic coherence to classify consumption patterns. Different household types (residential, commercial, industrial) have distinct daily and weekly harmonic profiles. The engine clusters consumers by structural consumption similarity for demand response targeting, tariff design, and anomaly detection.
+
+---
+
+## 39. Mining and Geology Engine
+
+### 39.1 Seismic Survey Pattern Detection
+
+An engine that applies harmonic coherence to seismic reflection data. Subsurface geological layers produce reflections with specific frequency content depending on layer thickness and acoustic impedance contrast. The engine detects layer boundaries, classifies lithology, and identifies geological structures (folds, faults) by their harmonic signatures in seismic data.
+
+### 39.2 Drill Vibration Monitoring
+
+An engine that applies harmonic coherence to drill string vibration data. Drill bit interaction with rock produces vibrations at frequencies related to rotation speed and bit geometry. Stick-slip oscillation has a characteristic low-frequency harmonic signature. Bit wear changes the spectral profile. The engine detects drilling dysfunctions and optimises drilling parameters from harmonic analysis of vibration data.
+
+### 39.3 Ore Grade Pattern Recognition
+
+An engine that phase-encodes assay data along drill holes and uses harmonic coherence to detect periodic grade variations that indicate geological control (e.g., rhythmic layering, cyclic deposition). The engine identifies ore shoot geometry and predicts grade continuity from harmonic structure in assay profiles.
+
+### 39.4 Ground Stability Monitoring
+
+An engine that phase-encodes ground deformation data (InSAR, extensometers, tiltmeters — tilt is angular) and uses harmonic coherence to detect subsidence patterns, slope creep, and seasonal ground movement. The engine separates thermal cycling (annual harmonic), mining-induced subsidence (progressive phase shift), and tectonic movement (long-period harmonic) by frequency band.
+
+---
+
+## 40. Manufacturing and Quality Control Engine
+
+### 40.1 Machine Tool Vibration Monitoring
+
+An engine that applies harmonic coherence to CNC machine vibration data. Tool wear changes the harmonic profile of cutting vibration — chatter onset appears as new frequency components, tool breakage shifts energy between harmonics. The engine detects tool condition in real-time from vibration spectral profiles, enabling predictive tool changes before quality degrades.
+
+### 40.2 Statistical Process Control via Harmonic Profile
+
+An engine that phase-encodes process parameters over time and uses harmonic coherence to detect process drift. Traditional SPC uses control charts on individual parameters. Harmonic SPC monitors the spectral profile of the entire process — a drift at a specific harmonic indicates a specific root cause. Multi-parameter process monitoring reduces to spectral profile comparison.
+
+### 40.3 Assembly Sequence Verification
+
+An engine that phase-encodes sensor signals during assembly operations (torque curves, force profiles, motion trajectories) and uses harmonic coherence to verify correct assembly sequence. Each assembly step has a characteristic harmonic signature. Omitted or incorrectly ordered steps produce coherence gaps or mismatches at specific harmonics.
+
+### 40.4 Additive Manufacturing Layer Analysis
+
+An engine that phase-encodes melt pool monitoring data layer-by-layer during 3D printing and uses harmonic coherence to detect print defects. Consistent layer quality shows stable harmonic profiles. Porosity, delamination, and thermal stress produce characteristic spectral deviations. The engine detects defects during printing from harmonic anomalies in melt pool sensor data.
+
+---
+
+## 41. Climate and Meteorology Engine
+
+### 41.1 Climate Oscillation Detection
+
+An engine that phase-encodes climate time series (temperature, pressure, sea surface temperature) and uses harmonic coherence to detect known climate oscillations (ENSO, NAO, PDO, AMO) and discover new ones. Different oscillation modes have distinct periods mapping to specific harmonics. The engine separates overlapping climate signals by harmonic channel and detects phase relationships between oscillation modes.
+
+### 41.2 Weather Pattern Classification
+
+An engine that phase-encodes atmospheric state variables and uses harmonic coherence to classify synoptic weather patterns. Blocking highs, troughs, and ridges have characteristic spatial harmonic signatures in pressure fields. The engine classifies weather regimes and detects regime transitions from harmonic profile changes.
+
+### 41.3 Paleoclimate Cycle Analysis
+
+An engine that phase-encodes proxy records (ice cores, tree rings, sediment layers — all periodic archives) and uses harmonic coherence to identify Milankovitch cycles (eccentricity, obliquity, precession) and shorter-period climate signals. The engine detects which astronomical forcing frequencies are expressed in each proxy record.
+
+---
+
+## 42. Defence and Security Engine
+
+### 42.1 Radar Target Classification
+
+An engine that computes harmonic coherence profiles of radar returns for target classification. Different aircraft, vehicles, and ships produce distinct micro-Doppler signatures — rotating propellers, vibrating surfaces, and moving parts create harmonic modulation. The engine classifies targets by micro-Doppler harmonic profile.
+
+### 42.2 Electronic Warfare Signal Identification
+
+An engine that uses harmonic coherence to identify and classify electronic emitters. Different radar and communication systems have unique pulse timing, frequency agility patterns, and modulation structures that produce distinct harmonic signatures. The engine identifies emitter type from spectral profile without full signal demodulation.
+
+### 42.3 Movement Pattern Analysis
+
+An engine that phase-encodes movement trajectories (heading, speed, turn rate) and uses harmonic coherence to classify movement patterns. Patrol routes, delivery routes, and evasive manoeuvres have distinct harmonic profiles. The engine detects pattern changes and classifies intent from trajectory spectral analysis.
+
+---
+
+## 43. Quantum Computing Engine
+
+### 43.1 Qubit State Characterisation via Harmonic Tomography
+
+An engine that applies harmonic coherence analysis to qubit measurement data. Qubit states on the Bloch sphere are inherently phase-encoded — the framework is native to quantum state representation. The engine characterises quantum state quality by harmonic profile of repeated measurements, detecting decoherence, gate errors, and crosstalk as spectral deviations.
+
+### 43.2 Quantum Error Syndrome Classification
+
+An engine that phase-encodes error syndrome patterns from quantum error correction codes and uses harmonic coherence to classify error types. Different physical error mechanisms (bit flip, phase flip, depolarising) produce distinct syndrome harmonic signatures. The engine classifies error type from syndrome spectral profile, informing targeted correction strategies.
+
+### 43.3 Quantum Circuit Equivalence via Spectral Matching
+
+An engine that represents quantum circuits by the harmonic profile of their action on reference states and determines circuit equivalence by spectral matching. Two circuits that produce the same harmonic profile on reference inputs are functionally equivalent regardless of gate-level implementation. The engine verifies circuit compilation correctness from spectral comparison.
+
+---
+
+## 44. Wave Packet Query Engine
+
+### 44.1 Sparse DFT Query Format
 
 A query engine where queries are represented as wave packets — sparse DFT representations of embedding vectors. Given an embedding vector **v** ∈ ℝ^d, its DFT yields complex coefficients V_n = |V_n| · e^(iφ_n). The wave packet retains only the selected bands:
 
@@ -558,26 +850,26 @@ A query engine where queries are represented as wave packets — sparse DFT repr
 
 where S ⊆ {1, ..., N} is the set of selected band indices. The query carries only the bands relevant to the search, not the full vector.
 
-### 31.2 Resonance Matching
+### 44.2 Resonance Matching
 
 A matching engine that scores query-to-entry similarity using amplitude-weighted phase coherence:
 
-R(**W**, **U**) = Σ_{n ∈ S} |V_n| · |U_n| · cos(φ_n − ψ_n)
+R(**W**, **U**) = Σ_{n ∈ S} |V_n| · |U_n| · cos(φ_n - ψ_n)
 
-Each term simultaneously weighs query confidence (|V_n|), stored signal strength (|U_n|), and phase alignment (cos(φ_n − ψ_n)). The phase coherence term is the same coherence function C(θ_a, θ_b) = cos(θ_a − θ_b) from the core framework. Normalised form: R_norm = R / (‖A_S‖ · ‖U_S‖) where ‖A_S‖ = √(Σ_{n∈S} |V_n|²).
+Each term simultaneously weighs query confidence (|V_n|), stored signal strength (|U_n|), and phase alignment (cos(φ_n - ψ_n)). The phase coherence term is the same coherence function C(θ_a, θ_b) = cos(θ_a - θ_b) from the core framework. Normalised form: R_norm = R / (‖A_S‖ · ‖U_S‖) where ‖A_S‖ = √(Σ_{n∈S} |V_n|²).
 
-### 31.3 Self-Regulating Query Bandwidth
+### 44.3 Self-Regulating Query Bandwidth
 
 A query engine where the number of bands in the wave packet (|S|) self-regulates based on the embedding's energy distribution:
-- Confident query → few bands with high amplitude → narrow packet → precise results
-- Uncertain query → energy spread across many bands → wide packet → broad results
+- Confident query -> few bands with high amplitude -> narrow packet -> precise results
+- Uncertain query -> energy spread across many bands -> wide packet -> broad results
 
 The uncertainty principle applies naturally: wide bandwidth (many bands) = localised in the database (few matches). Narrow bandwidth (few bands) = spread across the database (many matches). No manual tuning of query breadth required.
 
-### 31.4 Band Selection Strategies
+### 44.4 Band Selection Strategies
 
 A query engine supporting multiple band selection methods:
-- **Amplitude threshold:** S = {n : |V_n| > τ} — the model's own energy distribution decides what matters
+- **Amplitude threshold:** S = {n : |V_n| > τ} -- the model's own energy distribution decides what matters
 - **Task-based:** Predefined S per query type (synonym search uses different bands than identity search)
 - **Amplitude-weighted (all bands):** S = {1,...,N} but low-energy bands contribute ~0 naturally
 
@@ -585,99 +877,99 @@ All strategies produce wave packets compatible with the same resonance matching 
 
 ---
 
-## 32. Harmonic Translator Engine
+## 45. Harmonic Translator Engine
 
-### 32.1 DFT-Based Translator Pipeline
+### 45.1 DFT-Based Translator Pipeline
 
 A translator that converts between human language and harmonic database representations using only foundational mathematical operations:
 
-**Input path (Human → Harmonic):**
-1. Text → embedding model → vector **v** ∈ ℝ^d (matrix multiplication)
-2. **v** → DFT → frequency components {c₁, c₂, ..., c_N} (Discrete Fourier Transform)
+**Input path (Human -> Harmonic):**
+1. Text -> embedding model -> vector **v** ∈ ℝ^d (matrix multiplication)
+2. **v** -> DFT -> frequency components {c_1, c_2, ..., c_N} (Discrete Fourier Transform)
 3. Select bands relevant to query type (array indexing)
 4. Selected bands = wave packet query
 
-**Output path (Harmonic → Human):**
-1. Database returns matched bands {c_k₁, c_k₂, ...}
-2. Zero-fill unmatched bands → inverse DFT → reconstructed vector **v'** ∈ ℝ^d (inverse DFT)
-3. **v'** → lm_head → token probabilities → text (matrix multiplication)
+**Output path (Harmonic -> Human):**
+1. Database returns matched bands {c_k1, c_k2, ...}
+2. Zero-fill unmatched bands -> inverse DFT -> reconstructed vector **v'** ∈ ℝ^d (inverse DFT)
+3. **v'** -> lm_head -> token probabilities -> text (matrix multiplication)
 
-The translator is DFT → band selection → inverse DFT, sandwiched between existing model components. Every operation is foundational mathematics (DFT: Cooley-Tukey 1965, matrix multiplication, array indexing).
+The translator is DFT -> band selection -> inverse DFT, sandwiched between existing model components. Every operation is foundational mathematics (DFT: Cooley-Tukey 1965, matrix multiplication, array indexing).
 
-### 32.2 Bidirectional Model-Database Bridge
+### 45.2 Bidirectional Model-Database Bridge
 
 A system where the same translator serves both directions: the model's embedding layer decomposes input into harmonic bands (already happens implicitly), and the lm_head recomposes harmonic bands back to tokens (already happens implicitly). The translator makes this decomposition explicit rather than implicit, enabling the harmonic database to interface directly with the model's native representation.
 
-### 32.3 Band-Decomposed Storage
+### 45.3 Band-Decomposed Storage
 
 A storage engine where embedding vectors are not stored as opaque blobs but decomposed into their independent frequency bands via DFT. Each band is stored and indexed separately. Queries target specific bands without loading the full vector. Reconstruction uses inverse DFT on the retrieved bands with zero-fill for unretrieved bands.
 
 ---
 
-## 33. Confidence-Guided Decoding Engine
+## 46. Confidence-Guided Decoding Engine
 
-### 33.1 Mid-Band Energy as Confidence Signal
+### 46.1 Mid-Band Energy as Confidence Signal
 
-A decoding engine that reads the model's mid-band harmonic energy during inference as a real-time confidence signal. Mid-band activation is 1.6× higher during confident predictions than uncertain ones. The signal requires no additional training or parameters — it is already present in the model's hidden states.
+A decoding engine that reads the model's mid-band harmonic energy during inference as a real-time confidence signal. Mid-band activation is 1.6x higher during confident predictions than uncertain ones. The signal requires no additional training or parameters -- it is already present in the model's hidden states.
 
-### 33.2 Adaptive Beam Width Decoding
+### 46.2 Adaptive Beam Width Decoding
 
 A beam search decoder where beam width is dynamically adjusted based on mid-band energy:
-- High mid-band energy (model is confident) → narrow beam → commit to top candidates
-- Low mid-band energy (model is uncertain) → wide beam → explore alternatives
+- High mid-band energy (model is confident) -> narrow beam -> commit to top candidates
+- Low mid-band energy (model is uncertain) -> wide beam -> explore alternatives
 
 This produces 13.4% improvement over fixed greedy decoding on knowledge-probing tasks. The decoder reads the model's own confidence signal without the model being aware it is broadcasting.
 
-### 33.3 Confidence-Mode Switching
+### 46.3 Confidence-Mode Switching
 
 A decoder that classifies each token prediction as KNOW mode (high mid-band energy, narrow search) or GUESS mode (low mid-band energy, broad search) and applies different decoding strategies to each. The mode switching is per-token and adapts within a single generation sequence.
 
 ---
 
-## 34. Selective Band Loading Engine (RAM-Disk Membrane)
+## 47. Selective Band Loading Engine (RAM-Disk Membrane)
 
-### 34.1 Band-Level Storage Tiering
+### 47.1 Band-Level Storage Tiering
 
 A storage engine where model parameters or database entries are stored decomposed by frequency band, with different bands on different storage tiers:
-- High-priority bands (mid+high, minimum viable set) → RAM
-- Low-priority bands (low, infrastructure) → disk/SSD
-- Dormant bands → cold storage
+- High-priority bands (mid+high, minimum viable set) -> RAM
+- Low-priority bands (low, infrastructure) -> disk/SSD
+- Dormant bands -> cold storage
 
 The engine loads bands on demand based on query frequency, enabling useful inference from a fraction of the full model in RAM.
 
-### 34.2 Wave Packet Triggered Loading
+### 47.2 Wave Packet Triggered Loading
 
 A loading engine where incoming wave packet queries trigger selective band loading from disk to RAM. The query's frequency signature determines which dormant bands to activate:
-- Query frequency matches a dormant band → load that band
-- Query frequency doesn't match any dormant band → nothing loads (zero unnecessary I/O)
+- Query frequency matches a dormant band -> load that band
+- Query frequency doesn't match any dormant band -> nothing loads (zero unnecessary I/O)
 
 Phase matching acts as a natural filter: only relevant data moves between storage tiers.
 
-### 34.3 Predictive Band Pre-Fetching
+### 47.3 Predictive Band Pre-Fetching
 
 A pre-fetching engine that monitors query patterns and pre-loads bands that are likely to be needed based on the harmonic profile of recent queries. If recent queries activate bands 20-30, the engine pre-fetches bands 15-19 and 31-35 anticipating related queries.
 
-### 34.4 Minimum Viable Band Set Inference
+### 47.4 Minimum Viable Band Set Inference
 
 An inference engine that runs a language model using only the minimum viable band set (mid+high bands) in RAM while keeping low bands on disk. The engine provides degraded but functional inference from approximately half the parameters, enabling useful AI assistants on devices with 1-2GB of available RAM.
 
 ---
 
-## 35. Autocrine Signalling Engine (Self-Monitoring)
+## 48. Autocrine Signalling Engine (Self-Monitoring)
 
-### 35.1 Internal Confidence Feedback Loop
+### 48.1 Internal Confidence Feedback Loop
 
-A neural network architecture where the model's mid-band energy at layer N is decoded into a confidence signal that modulates processing at layer N+1. The confidence signal is not an external decoder — it is an internal feedback loop within the forward pass:
-- High mid-band energy → next layer narrows attention, commits to current direction
-- Low mid-band energy → next layer broadens attention, explores alternatives
+A neural network architecture where the model's mid-band energy at layer N is decoded into a confidence signal that modulates processing at layer N+1. The confidence signal is not an external decoder -- it is an internal feedback loop within the forward pass:
+- High mid-band energy -> next layer narrows attention, commits to current direction
+- Low mid-band energy -> next layer broadens attention, explores alternatives
 
 The model adjusts its own processing depth and width based on its own confidence signal.
 
-### 35.2 Learned Confidence Receptors
+### 48.2 Learned Confidence Receptors
 
-A small learned module inserted between transformer layers that reads band-level energy from the previous layer's output and produces a modulation signal for the next layer. The receptor is trained end-to-end with the model. The receptor responds only to genuine confidence signals because noise doesn't phase-match the learned receptor pattern — self-regulating by construction.
+A small learned module inserted between transformer layers that reads band-level energy from the previous layer's output and produces a modulation signal for the next layer. The receptor is trained end-to-end with the model. The receptor responds only to genuine confidence signals because noise doesn't phase-match the learned receptor pattern -- self-regulating by construction.
 
-### 35.3 Band-Level Self-Regulation
+### 48.3 Band-Level Self-Regulation
 
 A self-regulation mechanism where different frequency bands carry different self-signals:
 - Low bands: structural/syntactic confidence
@@ -686,7 +978,7 @@ A self-regulation mechanism where different frequency bands carry different self
 
 Each band's self-signal modulates a different aspect of downstream processing. The model develops differentiated self-awareness across frequency bands without explicit supervision.
 
-### 35.4 Progressive Training with Autocrine Receptors
+### 48.4 Progressive Training with Autocrine Receptors
 
 A training procedure that combines progressive curriculum learning (build harmonic structure first) with autocrine receptor modules (let the model listen to that structure). The progressive training produces richer internal signals; the receptors enable the model to respond to those signals. The combination produces a model that self-regulates its confidence and processing depth without external decoders.
 
@@ -726,11 +1018,24 @@ A training procedure that combines progressive curriculum learning (build harmon
 | 28 | Image and computer vision | Computer Vision |
 | 29 | Education and adaptive learning | Education |
 | 30 | Supply chain and logistics | Logistics |
-| 31 | Wave packet query engine | Computing / AI |
-| 32 | Harmonic translator engine | Computing / AI |
-| 33 | Confidence-guided decoding | AI |
-| 34 | Selective band loading (RAM-disk membrane) | Computing / AI |
-| 35 | Autocrine signalling (self-monitoring) | AI |
+| 31 | Space and satellite | Aerospace / Defence |
+| 32 | Plant science and agriculture | Life Sciences / AgTech |
+| 33 | Automotive | Automotive / Transport |
+| 34 | Robotics | Robotics / Manufacturing |
+| 35 | Spacecraft engineering | Aerospace |
+| 36 | Aviation | Aerospace / Transport |
+| 37 | Marine and naval | Maritime / Defence |
+| 38 | Energy and power grid | Energy |
+| 39 | Mining and geology | Resources / Mining |
+| 40 | Manufacturing and quality control | Manufacturing |
+| 41 | Climate and meteorology | Earth Sciences |
+| 42 | Defence and security | Defence |
+| 43 | Quantum computing | Quantum / Computing |
+| 44 | Wave packet query engine | Computing / AI |
+| 45 | Harmonic translator engine | Computing / AI |
+| 46 | Confidence-guided decoding | AI |
+| 47 | Selective band loading (RAM-disk membrane) | Computing / AI |
+| 48 | Autocrine signalling (self-monitoring) | AI |
 
 ---
 
