@@ -34,12 +34,14 @@ Each experiment below maps to the framework validated by the core test suite (Te
 | 13 | `expression_curriculum.py` | Can richer output heads unlock trapped structure? | Deep head: best accuracy (0.535). Linear head: best knowledge preservation (11.6x efficiency). |
 | 14 | `shakespeare_knowledge.py` | Does the model know Shakespeare? | P("discontent")=0.39, P("Juliet")=0.28. Mid bands 1.6x more active during confident predictions. |
 | 15 | `harmonic_decoder.py` | Can mid-band confidence guide decoding? | Harmonic beam 0.186 vs greedy 0.164 (+13.4%). Adaptive beam width from confidence signal. |
+| 16 | `wave_packet_engine.py` | Wave packet queries, translator round-trip, selective band loading | 5/5 retrieval from 25% bands, 2.24e-08 round-trip error, 87% quality from 75% bands |
 | — | `sweep-test/` | Rust reproduction of harmonic sweep (Test 21) | Independent validation — same results, different language. |
 
 ### Key Cross-References
 
 | Paper topic | Primary evidence | Supporting evidence |
 |-------------|-----------------|---------------------|
+| Wave packet queries and selective loading | Phase 16 | ENGINE-PATTERNS.md (Patterns 31-35) |
 | Harmonic coherence as query operator | Tests 1-3, 9, 14 | — |
 | Cosine similarity blindness | Test 21 | Test 24 (real embeddings) |
 | Self-indexing property | Tests 18-20 | — |
