@@ -607,6 +607,54 @@ Verdict: Harmonic beam wins: 0.186 vs greedy 0.164 (+13.4%). Mid-band energy gui
 
 ---
 
+## Phase 16: Wave Packet Engine
+
+Can wave packet queries on real embeddings match cosine similarity retrieval using fewer bands?
+
+Model: all-MiniLM-L6-v2 (384 dimensions, 193 DFT bands). Database: 25 words across 5 categories. Queries: 5 words.
+
+### Translator Round-Trip (Pattern 32)
+
+| Metric | Value |
+|---|---|
+| Max reconstruction error (embed -> DFT -> inverse DFT -> embed) | 2.24e-08 |
+| Cosine similarity preservation | 1.0000000000 |
+
+### Wave Packet Retrieval (Pattern 31)
+
+| Band selection | Bands used | % of total | Top-1 correct |
+|---|---|---|---|
+| Full cosine (baseline) | 384 (raw) | 100% | 5/5 |
+| All DFT bands | 193 | 100% | 5/5 |
+| Mid+High | 145 | 75% | 5/5 |
+| Amplitude-selected (top 25%) | 49 | 25% | 5/5 |
+
+### Selective Band Loading (Pattern 34)
+
+Cosine similarity between full vector and selectively-loaded vector:
+
+| Strategy | Bands | RAM % | Avg similarity | Min similarity |
+|---|---|---|---|---|
+| All bands | 193 | 100% | 1.0000 | 1.0000 |
+| Mid+High | 145 | 75% | 0.8686 | 0.8358 |
+| Top 25% by amplitude | 49 | 25% | 0.7785 | 0.7595 |
+| Mid only | 96 | 50% | 0.7142 | 0.6522 |
+| Low only | 48 | 25% | 0.4940 | 0.3884 |
+| High only | 49 | 25% | 0.4934 | 0.4362 |
+
+### Data Transfer Reduction
+
+| Strategy | Bytes per query | % of full vector |
+|---|---|---|
+| Full vector (cosine) | 1536 | 100% |
+| Mid+High packet | 1160 | 75.5% |
+| Top-25% amplitude | 384 | 25.0% |
+| High only | 392 | 25.5% |
+
+Verdict: Wave packet queries achieve 5/5 retrieval with 25% of bands. Translator round-trip is lossless (2.24e-08). Mid+High bands preserve 87% similarity at 75% data transfer. Amplitude-selected packets reduce data to 25% with 78% similarity preserved. All operations are foundational math: DFT, inverse DFT, cosine, array indexing.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -627,3 +675,4 @@ Verdict: Harmonic beam wins: 0.186 vs greedy 0.164 (+13.4%). Mid-band energy gui
 | 13. Expression Curriculum | Can we teach it to speak? | Richer heads find smarter (not more) structure. Linear head preserves knowledge best (11.6x efficiency) |
 | 14. Shakespeare Knowledge | Does the model know Shakespeare? | YES — P("discontent")=0.39, P("Juliet")=0.28. Mid bands 1.6x more active during confident predictions |
 | 15. Harmonic Decoder | Can we listen to the model's confidence? | YES — Harmonic beam 0.186 vs greedy 0.164 (+13.4%). Mid-band signal guides adaptive beam width |
+| 16. Wave Packet Engine | Can sparse DFT queries match full cosine retrieval? | YES — 5/5 retrieval with 25% of bands. Lossless round-trip (2.24e-08). 87% quality at 75% data transfer. |
