@@ -62,7 +62,7 @@ These properties emerge from training methodology, not from explicit design. The
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
 | `experiments/` | 15 training experiments (Phases 1-15) with results — spectral persistence, progressive learning, harmonic decoding, and more |
-| `ENGINE-PATTERNS.md` | Defensive publication: 35 engine pattern families (99 implementations) as prior art across computing, AI, healthcare, finance, and 10 other domains |
+| `ENGINE-PATTERNS.md` | Defensive publication: 48 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, and 15 other domains |
 
 ## Reproduce the Validation
 
