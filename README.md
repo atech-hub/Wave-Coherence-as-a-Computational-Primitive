@@ -193,6 +193,18 @@ The implication for LLM architecture: harmonic embeddings could serve as **struc
 
 The hypothesis: learned embeddings discover through gradient descent a structure that harmonic encoding provides by construction. If true, pre-building the harmonic structure could reduce training cost, improve interpretability, and lower energy consumption.
 
+### Language-Independent Training
+
+Frozen harmonic embeddings remove the dependency on automatic differentiation frameworks for the embedding layer. The embeddings are computed analytically — `cos(n * position * base_frequency)` and `sin(n * position * base_frequency)` — with no gradient computation, no backpropagation through embeddings, and no framework required. Any language that can compute trigonometric functions can generate identical embeddings.
+
+This means transformer training is no longer bound to Python/PyTorch/TensorFlow for the embedding layer. The evidence:
+
+- **Phase 17:** Frozen harmonic embeddings (val loss 3.0793) outperform both baseline random init (3.1684, -2.8%) and trainable harmonic embeddings (3.0899, -0.4%) on character-level Shakespeare. Not training the embeddings produces the best result.
+- **Pure Rust implementation:** Zero external dependencies, zero unsafe blocks — the harmonic transformer trains and evaluates with no framework beyond `std`. Cross-language reproduction confirms the advantage is mathematical, not framework-dependent.
+- **Machine-precision cross-language agreement:** Wave packet experiments in Python and Rust produce identical results to 2.05e-15, confirming the math is portable.
+
+The implication: embedding generation, storage, retrieval, and training can all be implemented in any language. The full pipeline from embedding creation to model training to inference is framework-independent. The only remaining framework dependency is backpropagation through the transformer layers themselves (attention, MLP) — the embedding layer, which maps raw inputs to geometric structure, requires only trigonometry.
+
 ### Knowledge Graph / RAG
 Typed retrieval that surfaces not just "documents about X" but "documents about things that enable X" or "documents about things X conflicts with" — relationship-typed retrieval that cosine similarity alone cannot express.
 
