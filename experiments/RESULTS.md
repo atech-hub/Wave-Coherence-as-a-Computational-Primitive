@@ -1011,6 +1011,25 @@ Wave coherence operates on what models produce (representations, retrieval), not
 - **The projection itself** (Q/K weights): must remain unconstrained. Cannot be replaced or constrained by harmonic structure. Additive bias is tolerated but not beneficial at 65-token vocabulary. Whether richer vocabularies change this is an open question.
 - **After the projection** (attention patterns): emergent, task-specific. The model must discover its own attention patterns through gradient descent.
 
+### Why: Substrate Incompatibility
+
+The boundary exists because of a fundamental structural incompatibility between wave mechanics and matrix multiplication.
+
+A matrix treats every element as an independent number in a grid. Row 3, column 7 has no structural relationship to row 3, column 8. The matrix doesn't know that those two columns represent adjacent frequency bands. It doesn't know that column pairs encode cos/sin of the same harmonic. It can't know — the format doesn't carry that information.
+
+When harmonic embeddings — inherently circular, continuous, periodic — pass through a matrix multiplication, the wave structure is invisible to the operation. The matrix treats cos(3θ) and cos(4θ) as two unrelated numbers. Adjacency, periodicity, phase relationships — all destroyed by the container.
+
+**This is the transistor/capacitor analogy from circuit design.** A transistor is a discrete switch — on/off, 0/1. When an analogue wave passes through a transistor, it clips and distorts. The transistor is structurally incompatible with continuous signals. A capacitor stores and releases charge continuously, responds to rate-of-change, naturally selects frequencies. Capacitors and inductors form resonant LC circuits — native wave processors.
+
+Matrix multiplication is the transistor of neural computation. It processes discrete grid positions, structurally blind to frequency. Harmonic coherence is the capacitor — it natively operates on phase, frequency, and resonance. The framework works for representation (vectors you can decompose) and retrieval (comparison via frequency-aware functions). It fails inside the network because the computation primitive — matmul — is structurally incompatible with wave mechanics.
+
+That's why:
+- **Weights stay broad-spectrum** (Phase 17): the matrix format can't represent "I only need harmonics 2 through 5." It can only fill grid positions with values. The optimiser fills the grid because the grid has no concept of bands.
+- **Harmonic attention fails** (Phase 18-19): wave structure injected into a dot-product mechanism operating on discrete vector positions. The dot product sees numbers, not frequencies.
+- **Harmonic bias is detectable but useless** (Phase 19b): the model can sense the frequency structure through lambda, but can't convert it into better predictions through matrix operations.
+
+The question this raises is not "how do we make matrices harmonic" but "what computation primitive replaces matrices when the data is waves?" The computational equivalent of an LC circuit — an operation that naturally resonates at specific frequencies, filters by band, and preserves phase — does not yet exist in neural network architectures. Harmonic coherence already does this for retrieval. The missing piece is a version that works for transformation, not just comparison.
+
 ---
 
 ## Summary

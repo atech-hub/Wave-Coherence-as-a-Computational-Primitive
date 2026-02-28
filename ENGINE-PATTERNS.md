@@ -189,7 +189,7 @@ An attention mechanism that replaces learned Q/K projections entirely with direc
 
 An attention mechanism that preserves full learned Q/K projections while adding an additive harmonic interference term: `score = Q·K^T/sqrt(d) + λ * interference(i,j)`. The interference term is computed from harmonic embedding sub-vectors (same as 6.9). λ is a learnable scalar per head per layer, allowing each head to discover how much to trust the harmonic prior versus its own learned projections. If λ → 0 during training, the harmonic bias was not useful. If λ stays positive, the harmonic structure provides information that Q/K doesn't need to rediscover.
 
-**Note:** Phase 19b tested this architecture at fixed λ=0.1 (gradient flow to λ was blocked by frozen embedding computation). Result: 1.1% worse than standard attention at every training checkpoint. The near-uniform interference term adds noise to discriminative learned scores. The concept requires interference terms that are selective (high for task-relevant token pairs, low for irrelevant ones), which harmonic embedding dot products are not for character-level language modelling. May be viable in domains where harmonic phase angles encode task-relevant relationships (e.g., periodic data, structured databases).
+**Note:** Phase 19b tested this architecture. Candle (Rust) showed λ stuck at 0.1 due to autograd limitation (Corrective Finding #7). PyTorch cross-framework verification revealed λ actually learns: low-frequency heads amplify (λ→0.54), high-frequency heads suppress (λ→-0.08), mid-frequency indifferent. Loss still -0.4% worse — the model detects the harmonic signal but cannot exploit it for prediction at 65-token vocabulary. The frequency-stratified lambda pattern suggests the bias may become useful with richer vocabularies (50K+ tokens) where deep hierarchical category structure provides more discriminative harmonic signal.
 
 ---
 
@@ -1062,6 +1062,67 @@ An inference engine that exploits curriculum-induced band sparsity for computati
 
 ---
 
+## 51. Frequency-Native Transformation Engine
+
+Matrix multiplication is structurally blind to frequency — it treats every element as an independent grid position, destroying the adjacency, periodicity, and phase relationships that harmonic data carries. This is a substrate incompatibility analogous to transistors and analogue waves in circuit design: a transistor clips continuous signals because it's a discrete switch; a capacitor and inductor form resonant circuits because they're native wave components. The following patterns describe computation primitives that natively operate on frequency structure, preserving wave mechanics through transformation rather than only at the representation and retrieval layers.
+
+### 51.1 Resonant Transformation (Computational LC Circuit)
+
+A transformation primitive that naturally resonates at specific frequencies, filters by band, and preserves phase relationships through the operation. Unlike matrix multiplication which treats each dimension independently, a resonant transformation operates on frequency bands as atomic units — transforming cos(nθ) and sin(nθ) jointly, preserving their phase relationship. The transformation matrix is parameterised in the frequency domain: instead of learning arbitrary grid values, the model learns per-band amplitude and phase shift parameters. A d-dimensional transformation requires d/2 amplitude and d/2 phase parameters (one per harmonic) instead of d×d grid values — quadratic to linear parameter reduction.
+
+**Implementation pattern:**
+- Input vector decomposed into harmonic bands via DFT (or analytically, if already phase-encoded)
+- Each band transformed by learned amplitude scaling and phase rotation: (|V_n|, φ_n) → (α_n × |V_n|, φ_n + δ_n)
+- Output vector reconstructed via inverse DFT
+- Bands below energy threshold skipped entirely — computation proportional to signal, not dimension
+
+### 51.2 Band-Selective Transformation
+
+A transformation that operates only on frequency bands relevant to the current operation, skipping bands that carry no useful information. Unlike matrix multiplication which computes all d×d interactions, band-selective transformation computes only the S×S interactions within selected bands. The band selection can be static (determined by architecture) or dynamic (determined by input content via the energy profile from Pattern 45).
+
+**Implementation pattern:**
+- Compute band energy profile of input
+- Select bands exceeding energy threshold
+- Apply transformation only to selected bands
+- Zero or passthrough unselected bands
+- Computation scales with information content, not dimension
+
+### 51.3 Phase-Preserving Convolution
+
+A convolution operation in the frequency domain that preserves phase relationships between harmonics. Standard convolution in the spatial domain becomes pointwise multiplication in the frequency domain (convolution theorem). For harmonic data, this means each frequency band can be processed independently without cross-band contamination. A "frequency-domain MLP" that applies nonlinearities per-band rather than per-dimension, preserving the harmonic structure through the nonlinearity.
+
+### 51.4 Frequency-Domain Token Mixing
+
+A token mixing mechanism that operates entirely in the frequency domain. Instead of all-pairs attention (Q·K^T) in position space, tokens are decomposed into their harmonic components and mixed per-band. Tokens that share energy in band n interact through band n; tokens with no shared energy don't interact. This produces naturally sparse token mixing — interaction density proportional to spectral overlap rather than sequence length.
+
+### 51.5 Harmonic Gating Unit
+
+A gating mechanism (analogous to GRU/LSTM gates) where the gate signal is derived from harmonic coherence rather than learned projections. The gate for band n opens when the coherence between input and memory at harmonic n exceeds a threshold. This creates frequency-selective memory — the network remembers information at specific frequency bands and forgets at others. Unlike standard gating which operates on arbitrary learned features, harmonic gating has interpretable frequency semantics.
+
+---
+
+## 52. Ternary-Harmonic Hybrid Engine
+
+Ternary weight quantisation (-1, 0, +1) eliminates multiplication entirely — weights become "negate, skip, or keep." Combined with frozen harmonic embeddings (which eliminate embedding training), the result is a model where the embedding layer costs zero parameters and the computation layers cost only addition and subtraction. Two approaches attacking different layers of the same cost problem.
+
+### 52.1 Ternary Weights with Frozen Harmonic Embeddings
+
+A neural network where the embedding layer is frozen harmonic functions (Pattern 6.1) and all weight matrices are constrained to ternary values (-1, 0, +1). The embedding layer is free (no training, no multiplication — just trigonometric lookup). The weight layers are cheap (addition and subtraction only). The combination minimises both parameter count and operation cost simultaneously.
+
+### 52.2 Ternary Gated Recurrent Unit with Harmonic Input
+
+A GRU token mixer (replacing attention) with ternary-constrained gate weights, operating on frozen harmonic embeddings. The GRU's forget and update gates use ternary weights to decide what to remember and discard. The harmonic embedding provides structured input where each frequency band carries defined information. The ternary gate effectively performs band-selective filtering: +1 passes the band, -1 inverts it, 0 discards it. This is a discrete approximation of the resonant transformation in Pattern 51.1.
+
+### 52.3 FPGA Harmonic Processor
+
+A hardware implementation combining frozen harmonic embeddings with ternary computation on FPGA. The harmonic embedding table is stored in ROM (never updated). Ternary operations are implemented as multiplexer logic (select, negate, or zero — no multiply unit needed). The combination achieves minimal power consumption: no GPU required for embeddings (ROM lookup), no multiplier required for computation (ternary mux). Extends Pattern 44.1 with specific ternary quantisation strategy.
+
+### 52.4 Ternary Band Pruning
+
+A pruning strategy that leverages the frequency structure of harmonic embeddings to guide ternary weight assignment. During training with straight-through estimators, weights operating on low-energy frequency bands are biased toward zero (skip), while weights on high-energy bands are biased toward ±1 (keep or negate). The harmonic energy profile provides a principled basis for which weights should be zero versus non-zero — frequency-informed sparsity rather than magnitude-based pruning.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1116,6 +1177,8 @@ An inference engine that exploits curriculum-induced band sparsity for computati
 | 48 | Selective band loading (RAM-disk membrane) | Computing / AI |
 | 49 | Autocrine signalling (self-monitoring) | AI |
 | 50 | Curriculum-induced harmonic specialisation | AI / Training |
+| 51 | Frequency-native transformation engine | Computing / AI / Hardware |
+| 52 | Ternary-harmonic hybrid engine | Hardware / AI |
 
 ---
 
