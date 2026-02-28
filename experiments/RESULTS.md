@@ -1240,6 +1240,70 @@ The Kerr-ODE layer's dynamics are adapted from two independent lines of work:
 
 ---
 
+## Phase 21b: Per-Band Kerr Coefficients
+
+Does giving each of the 64 bands its own alpha_k and beta_k (instead of one scalar per layer) close the 8% gap?
+
+**Change:** scalar alpha -> alpha_k (64 values), scalar beta -> beta_k (64 values). Initialised to 0.1. Extra params: 128/layer (negligible).
+
+**Results:**
+
+| Mode | Val Loss | vs MLP | Steps |
+|---|---|---|---|
+| MLP baseline | 1.6940 | - | - |
+| Kerr scalar (Phase 21) | 1.8704 | +10.42% | 4 |
+| Kerr per-band 4s | 1.8612 | +9.87% | 4 |
+| Kerr per-band 8s | 1.8245 | +7.71% | 8 |
+
+Per-band bought 0.54pp over scalar. Negligible. Integration depth (8 vs 4 steps) bought 2.17pp — 4x more impact.
+
+**Did bands differentiate?** NO. All four layers failed the success criterion (std > 0.02):
+
+| Layer | alpha std | beta std | Verdict |
+|---|---|---|---|
+| L0 | 0.0149 | 0.0167 | clustered |
+| L1 | 0.0143 | 0.0102 | clustered |
+| L2 | 0.0091 | 0.0073 | clustered |
+| L3 | 0.0107 | 0.0093 | clustered |
+
+**Diagnostics:** No dead gradients (alpha/beta norms 2e-2 to 1e-1). The optimizer has signal but doesn't see a reason to differentiate bands. Band energy confirms depth pattern: L0 barely transforms (ratio ~1.04), L3 amplifies ~2x.
+
+Verdict: The 8% gap is NOT about per-band nonlinear expressiveness. The scalar Kerr coefficient was already the right abstraction. Same pattern as Phase 17 — freedom granted, freedom ignored.
+
+---
+
+## Phase 22: Inverse Kerr — Understanding the Transform by Reversing It
+
+Run the Kerr-ODE backwards. Feed output through reverse ODE (negated dt), measure per-band reconstruction error. Separates three categories: reversible (spectral remixing), irreversible-damping (energy dissipation), irreversible-nonlinear (genuine computation).
+
+**Method:** Train 8-step scalar Kerr-ODE. For each layer, run three reverse passes: (a) full reverse with 64 steps, (b) gamma=0 reverse (remove dissipation), (c) control (random vector forward+backward for noise floor). Classify by blow-up and error magnitude.
+
+**Results — the binary split:**
+
+| Layer | Reversible | Damping | Nonlinear | Fwd Clamping |
+|---|---|---|---|---|
+| L0 | 64/64 (100%) | 0/64 | 0/64 | 0/64 |
+| L1 | 0/64 (0%) | 0/64 | 64/64 (100%) | 8/64 |
+| L2 | 0/64 (0%) | 0/64 | 64/64 (100%) | 43/64 |
+| L3 | 0/64 (0%) | 0/64 | 64/64 (100%) | 61/64 |
+
+The transition is binary, not gradual. L0 is fully reversible; L1-L3 are fully irreversible-nonlinear. Zero bands in any layer classified as damping-irreversible — the Kerr nonlinearity, not gamma, creates the irreversibility.
+
+**L0 reversible detail:** Full reverse reconstruction error mean=10.6% (numerical Euler noise). No forward clamping. Amplification ratio 0.968 (slight attenuation). L0 is doing gentle spectral remixing that an analytical transform could replace.
+
+**Clamping gradient — the finding within the finding:** L0: 0/64, L1: 8/64, L2: 43/64, L3: 61/64 bands hit the [-10, 10] clamp during forward pass. By L3, 95% of bands are being truncated. Some of the "irreversible-nonlinear" classification in deep layers may actually be information destroyed by the clamp rather than by the Kerr dynamics. The signal is being driven into the rails.
+
+**Cross-reference:** L3's 4 bands with >1.5x amplification are all nonlinear-irreversible. The amplification is genuine nonlinear computation, not spectral routing.
+
+**Three interventions identified:**
+1. Replace L0 ODE with analytical linear transform (free 25% compute saving — fully reversible)
+2. Widen/remove clamping bounds in L2-L3 (test if the ceiling moves — is the gap an information bottleneck?)
+3. RK4 integration for L1-L3 (better integration of the genuinely nonlinear portion)
+
+Verdict: 75% irreversible-nonlinear (L1-L3), 25% reversible (L0). The nonlinear dynamics are genuinely essential. Damping is not the bottleneck. Forward clamping in deep layers is a separate information bottleneck requiring investigation.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -1269,3 +1333,5 @@ The Kerr-ODE layer's dynamics are adapted from two independent lines of work:
 | 20. LC Circuit Layer | Can frequency-native computation replace MLP? | **NO** -- 148 params/layer, 23.5% worse. Concept works (params learn meaningful patterns in PyTorch) but extreme capacity starvation. Candle autograd blocked gradients again (Finding #7). |
 | 20b. Expanded LC Layer | Fair capacity test: 13.4K params/layer (10x fewer than MLP)? | **NO** -- 21.3% worse. 91x more params only bought 2.2pp improvement. Bottleneck is architectural: per-band nonlinear + cross-band linear cannot match dense MLP's nonlinear multi-band interaction. Frequency-native structure helps (8.1x efficiency ratio) but cannot replace dense computation. |
 | 21. Kerr-ODE Layer | Can nonlinear optics ODE replace MLP? | **PARTIALLY** -- 7.7-8.5% worse with 7.9x fewer FFN params. Kerr nonlinearity (|Z|^2 cross-band coupling) cuts the gap from LC's 21.3% to 7.7%. Depth-dependent nonlinearity: deep layers amplify Kerr effect, shallow layers suppress it. First wave-native primitive that meaningfully competes with matmul. |
+| 21b. Per-Band Kerr | Does per-band alpha_k/beta_k close the 8% gap? | **NO** -- 0.54pp improvement over scalar (negligible). All layers' alpha/beta std < 0.02 (clustered). Integration depth (8 vs 4 steps) matters 4x more than per-band freedom. Same pattern as Phase 17: freedom granted, freedom ignored. |
+| 22. Inverse Kerr | What does the Kerr-ODE actually compute? | **Binary split**: L0 100% reversible (spectral remixing), L1-L3 100% irreversible-nonlinear (genuine computation). Zero damping-irreversibility. Clamping gradient: L3 has 95% of bands hitting the clamp -- information bottleneck. Three interventions: analytical L0, wider clamps, RK4 for L1-L3. |
