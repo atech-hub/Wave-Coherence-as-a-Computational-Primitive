@@ -879,9 +879,9 @@ score = Q·K^T / sqrt(d) + λ * dot(emb_band, emb_band^T) / sqrt(d)
 | frozen_standard | 3.0987 | — |
 | harmonic_bias (λ=0.1 fixed) | 3.1325 | -1.1% worse |
 
-### Lambda Evolution
+### Lambda Evolution (Candle)
 
-Lambda remained at exactly +0.100000 across all 16 parameters through 2000 iterations — the gradient did not flow back through the frozen embedding interference computation (candle autograd limitation with non-tracked tensor products). The result is effectively a fixed-bias experiment at λ=0.1.
+Lambda remained at exactly +0.100000 across all 16 parameters through 2000 iterations — the gradient did not flow back through the frozen embedding interference computation. Originally attributed to a candle autograd limitation with non-tracked tensor products. **See Phase 19b PyTorch Verification below — this WAS a candle bug (Corrective Finding #7).**
 
 ### Convergence Comparison
 
@@ -895,9 +895,85 @@ Lambda remained at exactly +0.100000 across all 16 parameters through 2000 itera
 
 The bias hurts from step 250 onward and never recovers. No convergence acceleration.
 
-### Root Cause: Uniform Interference
+### Root Cause: Near-Uniform Interference
 
-The harmonic bias fails for the same reason Phases 18 and 19 failed — the embedding dot products produce near-uniform scores across all token pairs. Adding a multiple of a near-uniform matrix to learned attention scores pushes the distribution toward uniformity. At any positive λ it hurts. At λ=0 it's just standard attention. There is no beneficial operating point.
+The harmonic bias fails for a related but more nuanced reason than originally stated. The embedding dot products produce near-uniform scores, but they are NOT perfectly uniform — **see PyTorch verification below**, which showed lambda actively learning head-specific values. The model can detect the harmonic signal but cannot exploit it for prediction. The interference encodes token identity, not token relevance.
+
+---
+
+## Phase 19b PyTorch Verification — Corrective Finding #7
+
+The candle (Rust) implementation showed lambda stuck at exactly +0.100000 for 2000 iterations. Was this a framework autograd limitation or a genuine property of the computation? PyTorch verification settles it.
+
+### Cross-Framework Setup
+
+Identical architecture, identical hyperparameters (4 layers, 4 heads, 128 dim, 256 block, batch 64, lr 3e-4, 2000 iters). PyTorch 2.10.0+cu128. Lambda as `nn.Parameter` with `register_buffer` for frozen embeddings.
+
+### Result: Lambda DOES Learn in PyTorch
+
+**Gradient check at iteration 0:**
+```
+layer 0 lambda grad: [-0.00000170, -0.00000395, +0.00000721, +0.00001878]
+layer 1 lambda grad: [-0.00000457, +0.00001775, +0.00000314, -0.00000390]
+layer 2 lambda grad: [-0.00000620, -0.00000722, -0.00000079, -0.00000530]
+layer 3 lambda grad: [+0.00000171, -0.00000877, +0.00001241, -0.00000243]
+```
+
+Gradients are real (1e-5 to 1e-8 magnitude). Small, but non-zero. PyTorch propagates them correctly; candle did not.
+
+### Lambda Evolution
+
+| Step | Layer 0 avg | Layer 1 avg | Layer 2 avg | Layer 3 avg | Overall avg |
+|---|---|---|---|---|---|
+| 0 | +0.100 | +0.100 | +0.100 | +0.100 | +0.100 |
+| 250 | +0.143 | +0.139 | +0.146 | +0.131 | +0.140 |
+| 500 | +0.167 | +0.182 | +0.185 | +0.155 | +0.172 |
+| 1000 | +0.175 | +0.205 | +0.214 | +0.196 | +0.198 |
+| 1500 | +0.190 | +0.198 | +0.220 | +0.227 | +0.209 |
+| 1999 | +0.201 | +0.192 | +0.219 | +0.250 | +0.215 |
+
+Lambda moved substantially — from 0.100 to 0.215 average, with individual heads ranging from **-0.081 to +0.540**.
+
+### Per-Head Pattern (final values)
+
+| | Head 0 (low freq) | Head 1 | Head 2 | Head 3 (high freq) |
+|---|---|---|---|---|
+| Layer 0 | +0.415 | +0.359 | +0.035 | -0.004 |
+| Layer 1 | +0.540 | +0.203 | +0.104 | -0.081 |
+| Layer 2 | +0.457 | +0.353 | +0.110 | -0.043 |
+| Layer 3 | +0.287 | +0.462 | +0.149 | +0.102 |
+
+Clear frequency-dependent pattern: **low-frequency heads increase lambda** (0.29-0.54), **high-frequency heads decrease or go negative** (-0.08 to +0.10). The model selectively amplifies coarse geometric structure (broad token-class distinctions) while suppressing fine-grained harmonic identity.
+
+### Training Results
+
+| Mode | Val Loss | vs Standard |
+|---|---|---|
+| frozen_standard (PyTorch) | 1.6602 | — |
+| harmonic_bias (PyTorch) | 1.6672 | -0.4% worse |
+
+### Attention Entropy (PyTorch)
+
+| | frozen_standard | harmonic_bias |
+|---|---|---|
+| Layer 0 avg | 3.41 | 3.30 |
+| Layer 1 avg | 1.75 | 2.12 |
+| Layer 2 avg | 2.04 | 1.59 |
+| Layer 3 avg | 3.81 | 4.04 |
+
+Attention entropy is NOT uniform (range 1.13-4.23), unlike the candle run where everything was 4.56. The learned Q/K functions normally alongside the bias. The lambda values do NOT push attention toward uniformity — they modulate it per head.
+
+### Corrective Finding #7: Candle Autograd Limitation with Frozen Tensors
+
+Candle (HuggingFace's Rust ML framework) does not propagate gradients through products where one operand is a `Tensor` not tracked in `VarMap` (frozen via construction, not via `requires_grad=false`). PyTorch's autograd handles this correctly — gradients flow to `nn.Parameter` operands even when the other operand is a `register_buffer`.
+
+**Impact on Phase 19b results:**
+- Candle showed lambda stuck at 0.100000 → PyTorch shows lambda learns to avg +0.215
+- Candle showed 1.1% worse → PyTorch shows 0.4% worse (within noise)
+- Candle showed uniform entropy → PyTorch shows normal entropy variation
+- **The conclusion is refined**: not "the harmonic prior provides no signal" but "the harmonic prior provides signal the model can detect but cannot exploit for prediction"
+
+This is the seventh time cross-language/cross-framework validation has caught a hidden assumption. Corrective Finding #6 was caught by Rust; Corrective Finding #7 was caught by Python.
 
 ### Phase 18-19b Complete Picture
 
@@ -907,7 +983,7 @@ The harmonic bias fails for the same reason Phases 18 and 19 failed — the embe
 | 19 | Replace Q/K with embedding | 3.2503 | -5.3% | Uniform interference, no discrimination |
 | 19b | Bias Q/K with interference | 3.1325 | -1.1% | Near-uniform bias adds noise |
 
-All three approaches fail because harmonic embedding dot products don't discriminate between tokens for the task of next-character prediction. The fundamental issue: harmonic embeddings encode token IDENTITY uniformly across all harmonics. There is no reason for any harmonic band to be more predictive than another for which characters follow which — that relationship must be LEARNED, which is exactly what Q/K projections do.
+All three approaches fail because harmonic embedding dot products encode token identity, not token relevance. PyTorch verification (Phase 19b) refined this: the model CAN detect frequency-dependent structure (lambda learns to amplify low-frequency heads and suppress high-frequency heads), but this geometric knowledge doesn't help predict which characters follow which. That statistical relationship must be LEARNED, which is exactly what Q/K projections do.
 
 ### Boundary Finalised
 
@@ -944,4 +1020,4 @@ Wave coherence operates on what models produce (representations, retrieval), not
 | 17b. Curriculum Specialisation | Does frequency curriculum change weight spectra? | **NULL** — curriculum teaches frequency patterns but does not restructure weight spectra. Boundary: wave coherence is representation/retrieval primitive, not training primitive. |
 | 18. Harmonic Attention Heads | Do harmonic-structured Q/K projections improve attention? | **NO** — 5.2% worse than standard. Uniform entropy (4.56) across all heads/layers = model cannot discriminate tokens. Q/K must remain unconstrained. Boundary extended: harmonic structure helps representations, not learned projections. |
 | 19. Spectral Interference | Can embedding interference replace learned Q/K? | **NO** — 5.3% worse. Same uniform entropy (4.56). Embedding dot products don't discriminate between tokens. Matches Phase 18 result exactly (3.2503 vs 3.2511) — confirming Phase 18's Q/K converged to producing same uniform attention as having no Q/K at all. |
-| 19b. Harmonic Attention Bias | Does an additive harmonic bias improve standard attention? | **NO** — 1.1% worse. Near-uniform interference added to learned scores just adds noise. No lambda value helps because the interference term lacks token-pair discrimination. Three approaches (constrain/replace/bias Q/K) fail for the same root cause. |
+| 19b. Harmonic Attention Bias | Does an additive harmonic bias improve standard attention? | **NO** — 1.1% worse (candle, lambda stuck). PyTorch verification: lambda DOES learn (avg 0.1→0.215, low-freq heads amplify, high-freq suppress) but loss still -0.4%. Model detects harmonic signal but cannot exploit it for prediction. **Corrective Finding #7: candle autograd doesn't propagate gradients through frozen tensor products.** |

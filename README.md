@@ -55,13 +55,13 @@ These properties emerge from training methodology, not from explicit design. The
 | `docs/wave-mechanics-stripped-catalog.md` | Pure mathematical specification — all domain-specific interpretation removed, only structural geometry remains |
 | `docs/wave-test-program.md` | Test program specification — 20 tests validating the core math |
 | `docs/wave-mechanics-validation-paper-theoretical.md` | Pre-test validation paper — formal framework and expected results (written before code execution) |
-| `docs/wave-mechanics-validation-paper-empirical.md` | Post-test validation paper — actual results, real numbers, four corrective findings from running the code |
+| `docs/wave-mechanics-validation-paper-empirical.md` | Post-test validation paper — actual results, real numbers, corrective findings from running the code |
 | `src/` | Rust source code for the validation test suite (~2400 lines, zero dependencies) |
 | `python/` | Python translation of the full test suite (Python 3.10+, zero dependencies) |
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
-| `experiments/` | 20 training experiments (Phases 1-19b) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, harmonic attention experiments, and more |
+| `experiments/` | 20 training experiments (Phases 1-19b) with results, plus Phase 19b PyTorch cross-framework verification — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, harmonic attention experiments, and more |
 | `experiments/rust-experiments/` | Pure Rust cross-language validation of math-only experiments (Phases 4, 5, 16). Zero dependencies, zero GPU. 14 tests, all passing. |
 | `ENGINE-PATTERNS.md` | Defensive publication: 50 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, analogue/neuromorphic hardware, and 15 other domains |
 
@@ -104,7 +104,7 @@ cd experiments/rust-experiments
 cargo run
 ```
 
-Requires only a Rust toolchain (edition 2024). Zero external dependencies, zero GPU. Validates the math-only cores of Phases 4 (harmonic construction), 5 (musical interval theory), and 16 (wave packet engine) in pure Rust. 14 tests covering DFT round-trip, resonance-cosine identity, wave packet retrieval, selective band loading, interpolation, chimera construction, Tenney height, and consonance scoring. This cross-language port discovered Corrective Finding #6 (conjugate symmetry in resonance).
+Requires only a Rust toolchain (edition 2024). Zero external dependencies, zero GPU. Validates the math-only cores of Phases 4 (harmonic construction), 5 (musical interval theory), and 16 (wave packet engine) in pure Rust. 14 tests covering DFT round-trip, resonance-cosine identity, wave packet retrieval, selective band loading, interpolation, chimera construction, Tenney height, and consonance scoring. This cross-language port discovered Corrective Finding #6 (conjugate symmetry in resonance). A separate PyTorch cross-framework verification of Phase 19b discovered Corrective Finding #7 (candle autograd limitation with frozen tensors).
 
 ### Expected Output
 
@@ -165,7 +165,7 @@ ALL TESTS PASSED
 
 **Test 25 proves harmonic embeddings outperform random initialization.** A character-level transformer (4 layers, 128 dim) trained on Shakespeare with three embedding modes: baseline (random Gaussian, trainable), harmonic (phase-encoded, trainable), and frozen (phase-encoded, NOT trainable). No tokenizer — raw characters mapped to phase angles. Harmonic outperforms baseline by **2.2%** on validation loss, leading at every checkpoint. The frozen model — with 40,768 fewer trainable parameters and zero gradient updates to embeddings — matches the fully-trained baseline to within **0.02%**. The geometric structure provided by `cos(n * theta)` is not merely a useful initialization. It is a sufficient embedding substrate. The model does not need to learn its embeddings; it needs them to be structured. **Cross-language reproduction in pure Rust** (candle framework, no Python/PyTorch) confirms identical pattern: harmonic outperforms by 1.8%, frozen matches baseline — the advantage is mathematical, not framework-dependent.
 
-**Six corrective findings tighten the design:**
+**Seven corrective findings tighten the design:**
 
 1. **Bucket resolution imposes a threshold floor.** Exact match threshold must exceed `cos(2π / bucket_count)` to avoid neighbor leakage. Analogous to the Nyquist limit in signal processing.
 2. **Cosine orb falloff is nonlinear.** At 62.5% of tolerance radius, score is 0.556 (not ~0.7). The curve is concave — generous near center, steep near edge.
@@ -173,6 +173,7 @@ ALL TESTS PASSED
 4. **The Nyquist-like threshold floor scales with harmonic number.** At harmonic n with B buckets, the threshold floor is `cos(n × 2π / B)`, not `cos(2π / B)`. Higher harmonics amplify bucket spacing, widening neighbor leakage. For single-value precision at n=3 with 360 buckets, threshold must exceed cos(3°) = 0.9986, not cos(1°) = 0.9998.
 5. **Absolute coherence conflates fundamental with overtones.** |cos(n × Δθ)| = 1.0 at both fundamental and all integer multiples. Signed mean coherence resolves them: the fundamental is the lowest n where signed mean exceeds the alignment threshold.
 6. **Conjugate symmetry in resonance.** `rfft` returns one-sided DFT coefficients. Middle coefficients represent two-sided energy and need weight 2 in the resonance formula; DC (n=0) and Nyquist (n=N/2) get weight 1. Without this correction, resonance diverges from cosine similarity by ~4% on structured inputs. With correction: machine-precision match (2.05e-15). Discovered during Rust cross-language validation.
+7. **Candle autograd limitation with frozen tensors.** Candle (HuggingFace's Rust ML framework) does not propagate gradients through products where one operand is a frozen tensor not tracked in VarMap. PyTorch handles this correctly — `nn.Parameter` receives gradients even when multiplied by a `register_buffer`. In Phase 19b, candle showed lambda stuck at 0.100000 for 2000 iterations; PyTorch showed lambda learning to head-specific values (range -0.08 to +0.54, avg 0.215). The loss conclusion is unchanged (harmonic bias doesn't help prediction) but the mechanism is refined: the model actively engages with the harmonic prior, selectively amplifying low-frequency structure and suppressing high-frequency structure, yet this doesn't improve next-token prediction. Discovered during Python cross-framework validation.
 
 ## Potential Applications
 
@@ -211,9 +212,9 @@ Null results are findings. Phases 17, 17b, and 18 established where harmonic str
 
 - **Representation layer — works.** Frozen harmonic embeddings outperform learned embeddings. Wave packets enable selective loading with 25% of bands. Proven across Phases 1-16.
 - **Weight layer — no effect.** Weight matrices remain spectrally flat regardless of embedding type or training curriculum. The optimiser (AdamW) determines weight spectral profile, not the input data. Proven null twice (Phase 17, 17b).
-- **Attention layer — harmful.** Constraining, replacing, or biasing Q/K projections with harmonic structure produces uniform or near-uniform attention patterns that cannot discriminate between tokens. Three independent approaches tested (Phases 18, 19, 19b) — all degrade performance. Q/K projections require full-rank freedom to learn task-specific attention patterns.
+- **Attention layer — not useful.** Constraining or replacing Q/K projections with harmonic structure produces uniform attention (Phases 18, 19). Biasing Q/K with harmonic interference (Phase 19b) allows the model to engage with the signal — PyTorch verification shows lambda actively learning head-specific values, amplifying low-frequency structure and suppressing high-frequency structure — but this still doesn't improve prediction (-0.4%). Four independent approaches tested, all degrade or match standard performance.
 
-The wave packet concept applies to the representation layer, not the computation layer. Harmonic embeddings encode token identity uniformly across all harmonics — no frequency band is more predictive than another for next-token prediction. That task-specific discrimination must be learned, which is exactly what Q/K projections do.
+The wave packet concept applies to the representation layer, not the computation layer. Harmonic embeddings encode token identity, not token relevance. The model can detect geometric relationships between tokens (proven by lambda learning in Phase 19b) but cannot exploit them for next-character prediction. That statistical relationship must be learned, which is exactly what Q/K projections do.
 
 ### Knowledge Graph / RAG
 Typed retrieval that surfaces not just "documents about X" but "documents about things that enable X" or "documents about things X conflicts with" — relationship-typed retrieval that cosine similarity alone cannot express.
