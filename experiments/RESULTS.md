@@ -707,6 +707,68 @@ Cross-language validation confirms: the mathematical foundations produce identic
 
 ---
 
+## Phase 17: Weight Spectral Analysis
+
+Do harmonic embeddings create band-sparse weight matrices?
+
+4-layer, 4-head, 128-dim. Shakespeare. CUDA, 2000 steps, batch 64, lr 3e-4. DFT analysis on 17 weight matrices per mode (all transformer blocks + lm_head).
+
+### Training Results
+
+| Mode | Val Loss | vs Baseline |
+|---|---|---|
+| Baseline (random init) | 3.1684 | — |
+| Harmonic (trainable cos/sin) | 3.0899 | -2.5% |
+| Frozen (fixed cos/sin) | 3.0793 | -2.8% |
+
+### Spectral Analysis (column-wise DFT, averaged across 17 weight matrices)
+
+| Metric | Baseline | Harmonic | Frozen |
+|---|---|---|---|
+| Bands for 90% energy (% of available) | 88.3% | 88.3% | 88.3% |
+| Bands for 95% energy (% of available) | 93.8% | 93.8% | 93.8% |
+| Band sparsity (<1% of peak energy) | 0.0% | 0.0% | 0.0% |
+
+Verdict: **NULL RESULT.** Weight matrices are spectrally flat regardless of embedding type. All modes show identical spectral profiles. Harmonic embeddings improve loss (2.5-2.8% better) but do NOT induce frequency-domain sparsity. Frozen mode (3.0793) beats trainable harmonic (3.0899) — geometric structure alone suffices.
+
+---
+
+## Phase 17b: Curriculum-Induced Harmonic Specialisation
+
+Does teaching frequency structure before content change weight spectral profiles?
+
+Two-phase training with frozen harmonic embeddings: 500 iterations on synthetic frequency patterns (low-freq sinusoids 1-4 cycles, high-freq sinusoids 20-64 cycles, band-specific targeting), then 2000 iterations on Shakespeare.
+
+### Curriculum Training
+
+| Phase | Start Loss | End Loss |
+|---|---|---|
+| Phase 1: Frequency patterns (500 iters) | 5.0188 | 4.0319 |
+| Phase 2: Shakespeare fine-tune (2000 iters) | 4.2343 | 3.0774 |
+
+Final Shakespeare val loss: 3.0774 (vs plain frozen 3.0793 — identical within noise).
+
+### Spectral Analysis (5 modes, column-wise DFT)
+
+| Metric | Baseline | Harmonic | Frozen | Curriculum_pre | Curriculum |
+|---|---|---|---|---|---|
+| Bands for 90% energy | 88.3% | 88.3% | 88.3% | 88.5% | 88.3% |
+| Bands for 95% energy | 93.8% | 93.8% | 93.8% | 94.0% | 93.8% |
+| Band sparsity | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% |
+
+Verdict: **NULL RESULT (second confirmation).** Frequency curriculum teaches frequency patterns (loss 5.02→4.03) but does not restructure weight spectra. Curriculum neither helped nor hurt final Shakespeare performance. Weight spectral profile is determined by the optimiser (AdamW), not the input structure or training curriculum.
+
+### Boundary Established
+
+Two null results bracket the same conclusion: wave coherence is a **representation and retrieval** primitive, not a training primitive. The framework operates on what models produce, not on how they learn.
+
+- **Representation layer** — harmonic structure works. Frozen beats learned. Wave packets enable selective loading. Proven across Phases 1-16.
+- **Weight layer** — spectrally flat regardless of embedding type, training data, or curriculum. Determined by optimiser dynamics. Proven null twice.
+
+Weight spectral sparsity requires explicit optimiser intervention. Related work by grisun0 (DOI: 10.5281/zenodo.18407920) demonstrates that extreme regularisation pressure (λ = 10³⁰) can force 99.996% weight sparsity with phase-structured matrices, confirming the spectral flatness observed here is a property of standard optimisation, not a fundamental limit.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -728,3 +790,5 @@ Cross-language validation confirms: the mathematical foundations produce identic
 | 14. Shakespeare Knowledge | Does the model know Shakespeare? | YES — P("discontent")=0.39, P("Juliet")=0.28. Mid bands 1.6x more active during confident predictions |
 | 15. Harmonic Decoder | Can we listen to the model's confidence? | YES — Harmonic beam 0.186 vs greedy 0.164 (+13.4%). Mid-band signal guides adaptive beam width |
 | 16. Wave Packet Engine | Can sparse DFT queries match full cosine retrieval? | YES — 5/5 retrieval with 25% of bands. Lossless round-trip (2.24e-08). 87% quality at 75% data transfer. |
+| 17. Weight Spectral Analysis | Do harmonic embeddings create band-sparse weights? | **NULL** — all modes spectrally flat (88.3% bands for 90% energy, 0% sparsity). Optimiser determines weight spectra, not embeddings. |
+| 17b. Curriculum Specialisation | Does frequency curriculum change weight spectra? | **NULL** — curriculum teaches frequency patterns but does not restructure weight spectra. Boundary: wave coherence is representation/retrieval primitive, not training primitive. |

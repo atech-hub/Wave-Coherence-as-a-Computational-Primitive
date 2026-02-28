@@ -20,7 +20,37 @@ use dft::rfft;
 use std::fs;
 use std::path::Path;
 
-const MODES: [&str; 3] = ["baseline", "harmonic", "frozen"];
+/// Discover available modes by scanning the weights/ directory.
+/// Returns sorted list with preferred ordering: baseline, harmonic, frozen,
+/// curriculum_pre, curriculum, then any others alphabetically.
+fn discover_modes() -> Vec<String> {
+    let weights_dir = Path::new("weights");
+    if !weights_dir.exists() {
+        eprintln!("Error: weights/ directory not found. Run training first.");
+        std::process::exit(1);
+    }
+
+    let mut modes: Vec<String> = fs::read_dir(weights_dir)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().map(|ft| ft.is_dir()).unwrap_or(false))
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+
+    let preferred = ["baseline", "harmonic", "frozen", "curriculum_pre", "curriculum"];
+    modes.sort_by(|a, b| {
+        let a_idx = preferred.iter().position(|&p| p == a).unwrap_or(usize::MAX);
+        let b_idx = preferred.iter().position(|&p| p == b).unwrap_or(usize::MAX);
+        a_idx.cmp(&b_idx).then(a.cmp(b))
+    });
+
+    if modes.is_empty() {
+        eprintln!("Error: no mode directories found in weights/.");
+        std::process::exit(1);
+    }
+
+    modes
+}
 
 // =============================================================================
 // Binary Tensor I/O
@@ -279,24 +309,17 @@ fn main() {
     println!("  Phase 17: Weight Spectral Analysis");
     println!("{}", "=".repeat(60));
 
-    // Check all mode directories exist
-    for mode in &MODES {
-        let dir = format!("weights/{mode}");
-        if !Path::new(&dir).exists() {
-            eprintln!(
-                "Error: {dir}/ not found. Run 'cargo run --release --bin train' first."
-            );
-            std::process::exit(1);
-        }
-    }
+    // Discover available modes dynamically
+    let modes = discover_modes();
+    println!("  Modes found: {}", modes.join(", "));
 
     // Analyze each mode
-    let mut all_analyses: Vec<(&str, Vec<WeightAnalysis>)> = Vec::new();
-    for mode in &MODES {
+    let mut all_analyses: Vec<(String, Vec<WeightAnalysis>)> = Vec::new();
+    for mode in &modes {
         print!("  Analyzing {mode} weights...");
         let analyses = analyze_mode(mode);
         println!(" {} matrices", analyses.len());
-        all_analyses.push((mode, analyses));
+        all_analyses.push((mode.clone(), analyses));
     }
 
     // Verify all modes have the same weight names in the same order
@@ -319,6 +342,9 @@ fn main() {
             );
         }
     }
+
+    // Find baseline index for comparisons (if present)
+    let baseline_idx = all_analyses.iter().position(|(m, _)| m == "baseline");
 
     // =========================================================================
     // Per-Matrix Results
@@ -396,88 +422,99 @@ fn main() {
     println!("  SUMMARY");
     println!("{}", "=".repeat(60));
 
-    // Column-wise: bands for 90% energy (as % of total bands)
-    println!("\n  Average bands for 90% energy (column-wise, as % of available bands):");
-    let baseline_90 = avg_fraction(&all_analyses[0].1, |a| (a.col.bands_90, a.col.n_bands));
-    let harmonic_90 = avg_fraction(&all_analyses[1].1, |a| (a.col.bands_90, a.col.n_bands));
-    let frozen_90 = avg_fraction(&all_analyses[2].1, |a| (a.col.bands_90, a.col.n_bands));
+    // Compute metrics for all modes
+    let col90: Vec<f64> = all_analyses
+        .iter()
+        .map(|(_, a)| avg_fraction(a, |w| (w.col.bands_90, w.col.n_bands)))
+        .collect();
+    let col95: Vec<f64> = all_analyses
+        .iter()
+        .map(|(_, a)| avg_fraction(a, |w| (w.col.bands_95, w.col.n_bands)))
+        .collect();
+    let col_sp: Vec<f64> = all_analyses
+        .iter()
+        .map(|(_, a)| avg_metric(a, |w| w.col.sparsity_pct))
+        .collect();
+    let row90: Vec<f64> = all_analyses
+        .iter()
+        .map(|(_, a)| avg_fraction(a, |w| (w.row.bands_90, w.row.n_bands)))
+        .collect();
+    let row_sp: Vec<f64> = all_analyses
+        .iter()
+        .map(|(_, a)| avg_metric(a, |w| w.row.sparsity_pct))
+        .collect();
 
-    println!("    baseline: {baseline_90:.1}%");
-    if baseline_90 > 0.0 {
-        let h_reduction = (1.0 - harmonic_90 / baseline_90) * 100.0;
-        let f_reduction = (1.0 - frozen_90 / baseline_90) * 100.0;
-        println!("    harmonic: {harmonic_90:.1}%  ({h_reduction:+.1}% vs baseline)");
-        println!("    frozen:   {frozen_90:.1}%  ({f_reduction:+.1}% vs baseline)");
-    } else {
-        println!("    harmonic: {harmonic_90:.1}%");
-        println!("    frozen:   {frozen_90:.1}%");
+    // Find max mode name length for alignment
+    let max_name = all_analyses.iter().map(|(m, _)| m.len()).max().unwrap_or(8);
+
+    // Column-wise: bands for 90% energy
+    println!("\n  Average bands for 90% energy (column-wise, as % of available bands):");
+    for (j, (mode, _)) in all_analyses.iter().enumerate() {
+        let val = col90[j];
+        if let Some(bi) = baseline_idx {
+            if j != bi && col90[bi] > 0.0 {
+                let reduction = (1.0 - val / col90[bi]) * 100.0;
+                println!("    {:<width$} {:.1}%  ({reduction:+.1}% vs baseline)", mode, val, width = max_name + 1);
+                continue;
+            }
+        }
+        println!("    {:<width$} {:.1}%", mode, val, width = max_name + 1);
     }
 
     // Column-wise: bands for 95% energy
     println!("\n  Average bands for 95% energy (column-wise, as % of available bands):");
-    let baseline_95 = avg_fraction(&all_analyses[0].1, |a| (a.col.bands_95, a.col.n_bands));
-    let harmonic_95 = avg_fraction(&all_analyses[1].1, |a| (a.col.bands_95, a.col.n_bands));
-    let frozen_95 = avg_fraction(&all_analyses[2].1, |a| (a.col.bands_95, a.col.n_bands));
-
-    println!("    baseline: {baseline_95:.1}%");
-    if baseline_95 > 0.0 {
-        let h_reduction = (1.0 - harmonic_95 / baseline_95) * 100.0;
-        let f_reduction = (1.0 - frozen_95 / baseline_95) * 100.0;
-        println!("    harmonic: {harmonic_95:.1}%  ({h_reduction:+.1}% vs baseline)");
-        println!("    frozen:   {frozen_95:.1}%  ({f_reduction:+.1}% vs baseline)");
-    } else {
-        println!("    harmonic: {harmonic_95:.1}%");
-        println!("    frozen:   {frozen_95:.1}%");
+    for (j, (mode, _)) in all_analyses.iter().enumerate() {
+        let val = col95[j];
+        if let Some(bi) = baseline_idx {
+            if j != bi && col95[bi] > 0.0 {
+                let reduction = (1.0 - val / col95[bi]) * 100.0;
+                println!("    {:<width$} {:.1}%  ({reduction:+.1}% vs baseline)", mode, val, width = max_name + 1);
+                continue;
+            }
+        }
+        println!("    {:<width$} {:.1}%", mode, val, width = max_name + 1);
     }
 
     // Column-wise: band sparsity
     println!("\n  Average band sparsity (column-wise, % of bands carrying <1% of peak energy):");
-    let baseline_sp = avg_metric(&all_analyses[0].1, |a| a.col.sparsity_pct);
-    let harmonic_sp = avg_metric(&all_analyses[1].1, |a| a.col.sparsity_pct);
-    let frozen_sp = avg_metric(&all_analyses[2].1, |a| a.col.sparsity_pct);
-
-    println!("    baseline: {baseline_sp:.1}%");
-    if baseline_sp > 0.0 {
-        let h_ratio = harmonic_sp / baseline_sp;
-        let f_ratio = frozen_sp / baseline_sp;
-        println!("    harmonic: {harmonic_sp:.1}%  ({h_ratio:.2}x vs baseline)");
-        println!("    frozen:   {frozen_sp:.1}%  ({f_ratio:.2}x vs baseline)");
-    } else {
-        println!("    harmonic: {harmonic_sp:.1}%");
-        println!("    frozen:   {frozen_sp:.1}%");
+    for (j, (mode, _)) in all_analyses.iter().enumerate() {
+        let val = col_sp[j];
+        if let Some(bi) = baseline_idx {
+            if j != bi && col_sp[bi] > 0.0 {
+                let ratio = val / col_sp[bi];
+                println!("    {:<width$} {:.1}%  ({ratio:.2}x vs baseline)", mode, val, width = max_name + 1);
+                continue;
+            }
+        }
+        println!("    {:<width$} {:.1}%", mode, val, width = max_name + 1);
     }
 
-    // Row-wise summary
+    // Row-wise: bands for 90% energy
     println!("\n  Average bands for 90% energy (row-wise, as % of available bands):");
-    let baseline_r90 = avg_fraction(&all_analyses[0].1, |a| (a.row.bands_90, a.row.n_bands));
-    let harmonic_r90 = avg_fraction(&all_analyses[1].1, |a| (a.row.bands_90, a.row.n_bands));
-    let frozen_r90 = avg_fraction(&all_analyses[2].1, |a| (a.row.bands_90, a.row.n_bands));
-
-    println!("    baseline: {baseline_r90:.1}%");
-    if baseline_r90 > 0.0 {
-        let h_reduction = (1.0 - harmonic_r90 / baseline_r90) * 100.0;
-        let f_reduction = (1.0 - frozen_r90 / baseline_r90) * 100.0;
-        println!("    harmonic: {harmonic_r90:.1}%  ({h_reduction:+.1}% vs baseline)");
-        println!("    frozen:   {frozen_r90:.1}%  ({f_reduction:+.1}% vs baseline)");
-    } else {
-        println!("    harmonic: {harmonic_r90:.1}%");
-        println!("    frozen:   {frozen_r90:.1}%");
+    for (j, (mode, _)) in all_analyses.iter().enumerate() {
+        let val = row90[j];
+        if let Some(bi) = baseline_idx {
+            if j != bi && row90[bi] > 0.0 {
+                let reduction = (1.0 - val / row90[bi]) * 100.0;
+                println!("    {:<width$} {:.1}%  ({reduction:+.1}% vs baseline)", mode, val, width = max_name + 1);
+                continue;
+            }
+        }
+        println!("    {:<width$} {:.1}%", mode, val, width = max_name + 1);
     }
 
-    let baseline_rsp = avg_metric(&all_analyses[0].1, |a| a.row.sparsity_pct);
-    let harmonic_rsp = avg_metric(&all_analyses[1].1, |a| a.row.sparsity_pct);
-    let frozen_rsp = avg_metric(&all_analyses[2].1, |a| a.row.sparsity_pct);
-
+    // Row-wise: band sparsity
     println!("\n  Average band sparsity (row-wise, % of bands carrying <1% of peak energy):");
-    println!("    baseline: {baseline_rsp:.1}%");
-    if baseline_rsp > 0.0 {
-        let h_ratio = harmonic_rsp / baseline_rsp;
-        let f_ratio = frozen_rsp / baseline_rsp;
-        println!("    harmonic: {harmonic_rsp:.1}%  ({h_ratio:.2}x vs baseline)");
-        println!("    frozen:   {frozen_rsp:.1}%  ({f_ratio:.2}x vs baseline)");
-    } else {
-        println!("    harmonic: {harmonic_rsp:.1}%");
-        println!("    frozen:   {frozen_rsp:.1}%");
+    for (j, (mode, _)) in all_analyses.iter().enumerate() {
+        let val = row_sp[j];
+        if let Some(bi) = baseline_idx {
+            if j != bi && row_sp[bi] > 0.0 {
+                let ratio = val / row_sp[bi];
+                println!("    {:<width$} {:.1}%  ({ratio:.2}x vs baseline)", mode, val, width = max_name + 1);
+                continue;
+            }
+        }
+        println!("    {:<width$} {:.1}%", mode, val, width = max_name + 1);
     }
 
     // =========================================================================
@@ -487,45 +524,80 @@ fn main() {
     println!("  CONCLUSION");
     println!("{}", "=".repeat(60));
 
-    let col_reduction = if baseline_90 > 0.0 {
-        (1.0 - harmonic_90 / baseline_90) * 100.0
-    } else {
-        0.0
-    };
+    if let Some(bi) = baseline_idx {
+        let base_90 = col90[bi];
+        let base_sp = col_sp[bi];
 
-    let sparsity_ratio = if baseline_sp > 0.0 {
-        harmonic_sp / baseline_sp
-    } else {
-        1.0
-    };
-
-    println!();
-    if col_reduction > 0.0 {
-        println!(
-            "  Harmonic embeddings concentrate 90% of weight energy into {:.1}% fewer",
-            col_reduction
-        );
-        println!("  frequency bands than baseline.");
-    } else {
-        println!("  Harmonic embeddings did NOT reduce band concentration vs baseline.");
-    }
-
-    if sparsity_ratio > 1.0 {
-        println!(
-            "  Band sparsity is {:.2}x higher with harmonic embeddings,",
-            sparsity_ratio
-        );
-        println!(
-            "  meaning {:.1}% of bands carry negligible energy (vs {:.1}% baseline).",
-            harmonic_sp, baseline_sp
-        );
         println!();
-        println!("  This supports the efficiency argument: harmonic models may need");
-        println!("  fewer frequency bands in weight computation, extending the wave");
-        println!("  packet selective loading concept from retrieval into training.");
+        for (j, (mode, _)) in all_analyses.iter().enumerate() {
+            if j == bi {
+                continue;
+            }
+            let reduction = if base_90 > 0.0 {
+                (1.0 - col90[j] / base_90) * 100.0
+            } else {
+                0.0
+            };
+            let sp_ratio = if base_sp > 0.0 {
+                col_sp[j] / base_sp
+            } else {
+                1.0
+            };
+
+            println!("  {mode}:");
+            if reduction > 0.0 {
+                println!(
+                    "    Concentrates 90% energy into {:.1}% fewer bands than baseline.",
+                    reduction
+                );
+            } else {
+                println!("    Does NOT reduce band concentration vs baseline.");
+            }
+            if sp_ratio > 1.0 {
+                println!(
+                    "    Band sparsity is {:.2}x higher ({:.1}% vs {:.1}% baseline).",
+                    sp_ratio, col_sp[j], base_sp
+                );
+            } else {
+                println!("    Band sparsity is NOT higher than baseline.");
+            }
+        }
+
+        // Check if curriculum mode shows improvement over frozen
+        let curriculum_idx = all_analyses.iter().position(|(m, _)| m == "curriculum");
+        let frozen_idx = all_analyses.iter().position(|(m, _)| m == "frozen");
+        if let (Some(ci), Some(fi)) = (curriculum_idx, frozen_idx) {
+            println!();
+            let cur_vs_frozen = if col90[fi] > 0.0 {
+                (1.0 - col90[ci] / col90[fi]) * 100.0
+            } else {
+                0.0
+            };
+            if cur_vs_frozen.abs() > 0.1 {
+                println!(
+                    "  Curriculum vs frozen (same embeddings, different training):"
+                );
+                println!(
+                    "    Band concentration: {:.1}% difference in 90% energy bands.",
+                    cur_vs_frozen
+                );
+                println!(
+                    "    Band sparsity: curriculum={:.1}% vs frozen={:.1}%.",
+                    col_sp[ci], col_sp[fi]
+                );
+                if cur_vs_frozen > 0.0 {
+                    println!("    Frequency curriculum DOES induce sparser weight spectra.");
+                } else {
+                    println!("    Frequency curriculum does NOT induce sparser weight spectra.");
+                }
+            } else {
+                println!("  Curriculum vs frozen: negligible spectral difference.");
+            }
+        }
     } else {
-        println!("  Band sparsity is NOT higher with harmonic embeddings.");
-        println!("  The efficiency argument is not supported by this data.");
+        println!();
+        println!("  No baseline mode found — cannot compute relative comparisons.");
+        println!("  Run full training first: cargo run --release --bin train --features cuda");
     }
 
     println!();

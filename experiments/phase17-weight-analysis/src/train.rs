@@ -38,6 +38,10 @@ const MAX_ITERS: usize = 2000;
 const EVAL_INTERVAL: usize = 250;
 const EVAL_ITERS: usize = 50;
 
+// Curriculum training (Phase 17b)
+const CURRICULUM_ITERS: usize = 500;
+const CURRICULUM_EVAL_INTERVAL: usize = 100;
+
 // =============================================================================
 // Harmonic Embedding — deterministic phase encoding
 // =============================================================================
@@ -491,6 +495,82 @@ impl Dataset {
 }
 
 // =============================================================================
+// Curriculum Data Generation (Phase 17b)
+// =============================================================================
+
+/// Low-frequency pattern: slow sinusoidal sweep through token space.
+/// 1-4 cycles over the sequence — activates low harmonic bands in the embedding.
+fn generate_low_freq(vocab_size: usize, rng: &mut impl Rng) -> Vec<u32> {
+    let len = BLOCK_SIZE + 1;
+    let freq = rng.random_range(1u32..=4) as f32;
+    let phase = rng.random_range(0.0f32..std::f32::consts::TAU);
+    let v = (vocab_size - 1) as f32;
+    (0..len)
+        .map(|i| {
+            let t = i as f32 / len as f32;
+            let val = (freq * std::f32::consts::TAU * t + phase).sin() * 0.5 + 0.5;
+            (val * v).round().clamp(0.0, v) as u32
+        })
+        .collect()
+}
+
+/// High-frequency pattern: rapid alternation through token space.
+/// 20-64 cycles over the sequence — activates high harmonic bands.
+fn generate_high_freq(vocab_size: usize, rng: &mut impl Rng) -> Vec<u32> {
+    let len = BLOCK_SIZE + 1;
+    let freq = rng.random_range(20u32..=64) as f32;
+    let phase = rng.random_range(0.0f32..std::f32::consts::TAU);
+    let v = (vocab_size - 1) as f32;
+    (0..len)
+        .map(|i| {
+            let t = i as f32 / len as f32;
+            let val = (freq * std::f32::consts::TAU * t + phase).sin() * 0.5 + 0.5;
+            (val * v).round().clamp(0.0, v) as u32
+        })
+        .collect()
+}
+
+/// Band-specific pattern: targets a specific harmonic band n (1..N_EMBD/2).
+/// Creates a token sequence whose embedding activates primarily that band.
+fn generate_band_specific(vocab_size: usize, n_embd: usize, rng: &mut impl Rng) -> Vec<u32> {
+    let len = BLOCK_SIZE + 1;
+    let n_harmonics = n_embd / 2;
+    let band = rng.random_range(1u32..=(n_harmonics as u32)) as f32;
+    let phase = rng.random_range(0.0f32..std::f32::consts::TAU);
+    let v = (vocab_size - 1) as f32;
+    (0..len)
+        .map(|i| {
+            let t = i as f32 / len as f32;
+            let val = (band * std::f32::consts::TAU * t + phase).sin() * 0.5 + 0.5;
+            (val * v).round().clamp(0.0, v) as u32
+        })
+        .collect()
+}
+
+/// Generate a batch of curriculum data with mixed frequency patterns.
+fn generate_curriculum_batch(vocab_size: usize, device: &Device) -> Result<(Tensor, Tensor)> {
+    let mut rng = rand::rng();
+    let mut x_data = Vec::with_capacity(BATCH_SIZE * BLOCK_SIZE);
+    let mut y_data = Vec::with_capacity(BATCH_SIZE * BLOCK_SIZE);
+
+    for _ in 0..BATCH_SIZE {
+        let pattern_type = rng.random_range(0u32..3);
+        let seq = match pattern_type {
+            0 => generate_low_freq(vocab_size, &mut rng),
+            1 => generate_high_freq(vocab_size, &mut rng),
+            _ => generate_band_specific(vocab_size, N_EMBD, &mut rng),
+        };
+
+        x_data.extend_from_slice(&seq[..BLOCK_SIZE]);
+        y_data.extend_from_slice(&seq[1..BLOCK_SIZE + 1]);
+    }
+
+    let x = Tensor::from_vec(x_data, (BATCH_SIZE, BLOCK_SIZE), device)?;
+    let y = Tensor::from_vec(y_data, (BATCH_SIZE, BLOCK_SIZE), device)?;
+    Ok((x, y))
+}
+
+// =============================================================================
 // Training
 // =============================================================================
 
@@ -569,17 +649,124 @@ fn train_model(
     Ok(history)
 }
 
+/// Phase 17b: Curriculum training — frequency patterns then Shakespeare.
+/// Uses frozen harmonic embeddings throughout both phases.
+fn train_curriculum(
+    dataset: &Dataset,
+    device: &Device,
+) -> Result<Vec<(usize, f32, f32)>> {
+    println!("\n{}", "=".repeat(60));
+    println!("  Training: CURRICULUM (frozen harmonic + frequency curriculum)");
+    println!("{}", "=".repeat(60));
+
+    let varmap = VarMap::new();
+    let model = HarmonicGPT::new(dataset.vocab_size, "frozen", &varmap, device)?;
+
+    let mut opt = candle_nn::AdamW::new(
+        varmap.all_vars(),
+        candle_nn::ParamsAdamW {
+            lr: LEARNING_RATE,
+            ..Default::default()
+        },
+    )?;
+
+    let mut history = Vec::new();
+    let start = std::time::Instant::now();
+
+    // Phase 1: Curriculum — teach frequency structure
+    println!(
+        "\n  --- Phase 1: Frequency curriculum ({CURRICULUM_ITERS} iters) ---"
+    );
+
+    for iter_num in 0..CURRICULUM_ITERS {
+        if iter_num % CURRICULUM_EVAL_INTERVAL == 0 || iter_num == CURRICULUM_ITERS - 1 {
+            let mut cur_loss = 0.0;
+            for _ in 0..EVAL_ITERS {
+                let (x, y) = generate_curriculum_batch(dataset.vocab_size, device)?;
+                let (_, loss) = model.forward(&x, Some(&y))?;
+                cur_loss += loss.unwrap().to_scalar::<f32>()?;
+            }
+            cur_loss /= EVAL_ITERS as f32;
+
+            let mut val_loss = 0.0;
+            for _ in 0..EVAL_ITERS {
+                let (x, y) = dataset.get_batch("val", device)?;
+                let (_, loss) = model.forward(&x, Some(&y))?;
+                val_loss += loss.unwrap().to_scalar::<f32>()?;
+            }
+            val_loss /= EVAL_ITERS as f32;
+
+            let elapsed = start.elapsed().as_secs_f32();
+            println!(
+                "  step {:>5} | curriculum {:.4} | shakespeare val {:.4} | {:.1}s",
+                iter_num, cur_loss, val_loss, elapsed
+            );
+            history.push((iter_num, cur_loss, val_loss));
+        }
+
+        let (x, y) = generate_curriculum_batch(dataset.vocab_size, device)?;
+        let (_, loss) = model.forward(&x, Some(&y))?;
+        let loss = loss.unwrap();
+        opt.backward_step(&loss)?;
+    }
+
+    let phase1_time = start.elapsed().as_secs_f32();
+    println!("  Phase 1 complete in {:.1}s", phase1_time);
+
+    // Dump weights after curriculum phase
+    dump_weights(&varmap, "curriculum_pre", dataset.vocab_size, device)?;
+
+    // Phase 2: Shakespeare fine-tuning
+    println!(
+        "\n  --- Phase 2: Shakespeare fine-tuning ({MAX_ITERS} iters) ---"
+    );
+    let start2 = std::time::Instant::now();
+
+    for iter_num in 0..MAX_ITERS {
+        if iter_num % EVAL_INTERVAL == 0 || iter_num == MAX_ITERS - 1 {
+            let (train_l, val_l) = estimate_loss(&model, dataset, device)?;
+            let elapsed = start2.elapsed().as_secs_f32();
+            println!(
+                "  step {:>5} | train loss {:.4} | val loss {:.4} | {:.1}s",
+                iter_num, train_l, val_l, elapsed
+            );
+            history.push((CURRICULUM_ITERS + iter_num, train_l, val_l));
+        }
+
+        let (x, y) = dataset.get_batch("train", device)?;
+        let (_, loss) = model.forward(&x, Some(&y))?;
+        let loss = loss.unwrap();
+        opt.backward_step(&loss)?;
+    }
+
+    let total = start.elapsed().as_secs_f32();
+    println!("  Training complete (both phases) in {:.1}s", total);
+
+    // Dump weights after Shakespeare fine-tuning
+    dump_weights(&varmap, "curriculum", dataset.vocab_size, device)?;
+
+    Ok(history)
+}
+
 // =============================================================================
 // Main
 // =============================================================================
 
 fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    let curriculum_mode = args.iter().any(|a| a == "--curriculum");
+
     let device = Device::cuda_if_available(0)?;
     let device_name = if device.is_cuda() { "CUDA" } else { "CPU" };
 
     println!("{}", "=".repeat(60));
-    println!("  Phase 17: Weight Spectral Analysis — Training");
-    println!("  Harmonic Transformer — 2000 iters, batch 64");
+    if curriculum_mode {
+        println!("  Phase 17b: Curriculum-Induced Harmonic Specialisation");
+        println!("  Frozen harmonic embeddings + frequency curriculum");
+    } else {
+        println!("  Phase 17: Weight Spectral Analysis — Training");
+        println!("  Harmonic Transformer — 2000 iters, batch 64");
+    }
     println!("  Device: {device_name}");
     println!("{}", "=".repeat(60));
 
@@ -601,61 +788,81 @@ fn main() -> Result<()> {
     );
     println!("  Context: {} characters", BLOCK_SIZE);
 
-    let mut all_results = Vec::new();
+    if curriculum_mode {
+        let history = train_curriculum(&dataset, &device)?;
 
-    for mode in &["baseline", "harmonic", "frozen"] {
-        let history = train_model(mode, &dataset, &device)?;
-        all_results.push((mode.to_string(), history));
-    }
+        println!("\n{}", "=".repeat(60));
+        println!("  CURRICULUM RESULTS");
+        println!("{}", "=".repeat(60));
 
-    // =========================================================================
-    // Comparison
-    // =========================================================================
-    println!("\n{}", "=".repeat(60));
-    println!("  COMPARISON: Final Validation Loss");
-    println!("{}", "=".repeat(60));
-    println!();
-    println!(
-        "  {:<12} {:>10} {:>12}",
-        "Mode", "Val Loss", "Train Loss"
-    );
-    println!(
-        "  {:<12} {:>10} {:>12}",
-        "-".repeat(12),
-        "-".repeat(10),
-        "-".repeat(12)
-    );
+        if let Some(&(_, _, final_val)) = history.last() {
+            println!("\n  Final Shakespeare val loss: {:.4}", final_val);
+        }
 
-    for (mode, history) in &all_results {
-        let (_, train_l, val_l) = history.last().unwrap();
-        println!("  {:<12} {:>10.4} {:>12.4}", mode, val_l, train_l);
-    }
-
-    let baseline_val = all_results[0].1.last().unwrap().2;
-    let harmonic_val = all_results[1].1.last().unwrap().2;
-    let frozen_val = all_results[2].1.last().unwrap().2;
-
-    println!();
-    if harmonic_val < baseline_val {
-        let pct = (1.0 - harmonic_val / baseline_val) * 100.0;
-        println!(
-            "  Harmonic embeddings OUTPERFORM baseline by {:.1}% on val loss.",
-            pct
-        );
+        println!();
+        println!("  Weights dumped to:");
+        println!("    weights/curriculum_pre/  (after frequency curriculum)");
+        println!("    weights/curriculum/      (after Shakespeare fine-tuning)");
+        println!();
+        println!("  Run 'cargo run --release --bin analyze' for spectral comparison.");
+        println!("{}", "=".repeat(60));
     } else {
-        println!("  Harmonic embeddings underperform baseline.");
-    }
+        let mut all_results = Vec::new();
 
-    if frozen_val < baseline_val * 1.1 {
-        println!("  Frozen harmonic embeddings within 10% of baseline --");
-        println!("  geometric structure alone carries most of the signal.");
-    }
+        for mode in &["baseline", "harmonic", "frozen"] {
+            let history = train_model(mode, &dataset, &device)?;
+            all_results.push((mode.to_string(), history));
+        }
 
-    println!();
-    println!("  Weight matrices dumped to weights/{{baseline,harmonic,frozen}}/");
-    println!("  Run 'cargo run --release --bin analyze' for spectral analysis.");
-    println!();
-    println!("{}", "=".repeat(60));
+        // =====================================================================
+        // Comparison
+        // =====================================================================
+        println!("\n{}", "=".repeat(60));
+        println!("  COMPARISON: Final Validation Loss");
+        println!("{}", "=".repeat(60));
+        println!();
+        println!(
+            "  {:<12} {:>10} {:>12}",
+            "Mode", "Val Loss", "Train Loss"
+        );
+        println!(
+            "  {:<12} {:>10} {:>12}",
+            "-".repeat(12),
+            "-".repeat(10),
+            "-".repeat(12)
+        );
+
+        for (mode, history) in &all_results {
+            let (_, train_l, val_l) = history.last().unwrap();
+            println!("  {:<12} {:>10.4} {:>12.4}", mode, val_l, train_l);
+        }
+
+        let baseline_val = all_results[0].1.last().unwrap().2;
+        let harmonic_val = all_results[1].1.last().unwrap().2;
+        let frozen_val = all_results[2].1.last().unwrap().2;
+
+        println!();
+        if harmonic_val < baseline_val {
+            let pct = (1.0 - harmonic_val / baseline_val) * 100.0;
+            println!(
+                "  Harmonic embeddings OUTPERFORM baseline by {:.1}% on val loss.",
+                pct
+            );
+        } else {
+            println!("  Harmonic embeddings underperform baseline.");
+        }
+
+        if frozen_val < baseline_val * 1.1 {
+            println!("  Frozen harmonic embeddings within 10% of baseline --");
+            println!("  geometric structure alone carries most of the signal.");
+        }
+
+        println!();
+        println!("  Weight matrices dumped to weights/{{baseline,harmonic,frozen}}/");
+        println!("  Run 'cargo run --release --bin analyze' for spectral analysis.");
+        println!();
+        println!("{}", "=".repeat(60));
+    }
 
     Ok(())
 }
