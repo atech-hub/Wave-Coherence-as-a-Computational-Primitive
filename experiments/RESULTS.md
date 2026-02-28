@@ -769,6 +769,63 @@ Weight spectral sparsity requires explicit optimiser intervention. Related work 
 
 ---
 
+## Phase 18: Harmonic Attention Heads
+
+Does structuring attention heads by harmonic order improve over standard attention?
+
+4-layer, 4-head, 128-dim. Shakespeare. CUDA, 2000 steps, batch 64, lr 3e-4. Frozen harmonic embeddings throughout. Harmonic orders per head: [1, 2, 4, 8] (octave-spaced). Three modes: standard attention (Phase 17 rerun), warm-start Q/K initialised to harmonic orders (trainable), frozen Q/K at harmonic init (only V trainable).
+
+### Training Results
+
+| Mode | Trainable Params | Val Loss | vs Standard |
+|---|---|---|---|
+| frozen_standard (Phase 17 rerun) | 801,664 | 3.0912 | — |
+| harmonic_heads (warm-start Q/K, trainable) | 801,664 | 3.2511 | -5.2% worse |
+| frozen_heads (frozen Q/K, only V trainable) | 669,568 | 3.2376 | -4.7% worse |
+
+### Attention Head Entropy (lower = more specialised)
+
+| Mode | Layer 0 avg | Layer 1 avg | Layer 2 avg | Layer 3 avg | Overall avg |
+|---|---|---|---|---|---|
+| frozen_standard | 3.37 | 3.77 | 4.04 | 3.97 | 3.79 |
+| harmonic_heads | 4.56 | 4.56 | 4.56 | 4.56 | 4.56 |
+| frozen_heads | 4.56 | 4.56 | 4.56 | 4.56 | 4.56 |
+
+Standard attention develops varied per-head entropy (3.37-4.30), showing genuine head specialisation. Both harmonic modes produce **uniform 4.56 entropy across every head in every layer** — the theoretical maximum for causal attention over 256 positions. The harmonic Q/K projections cannot discriminate between tokens.
+
+### Weight Spectral Analysis (column-wise DFT, common matrices)
+
+| Metric | frozen_standard | harmonic_heads | frozen_heads |
+|---|---|---|---|
+| Bands for 90% energy | 88.3% | 88.4% | 88.3% |
+| Band sparsity | 0.0% | 0.0% | 0.0% |
+
+Confirms Phase 17 null result — weight spectra identical regardless of attention architecture.
+
+### Findings
+
+1. **Harmonic Q/K initialisation hurts performance.** Emphasising only 2 input dimensions per head (the cos/sin pair for that head's harmonic order) is too constraining. With 128 input dimensions, forcing attention through a 2-dimensional bottleneck destroys the model's ability to form useful attention patterns.
+
+2. **Uniform attention entropy = the model cannot attend.** 4.56 across all heads and layers means every token attends equally to all preceding tokens. No specialisation, no information routing. The harmonic Q/K weights produce attention scores that are essentially identical across all token pairs.
+
+3. **Frozen heads slightly outperform trainable harmonic heads** (3.2376 vs 3.2511). The model with 132K fewer trainable parameters did marginally better, suggesting the harmonic_heads model wasted optimisation budget trying to fix the Q/K initialisation rather than learning through V and MLP layers.
+
+4. **The optimiser cannot escape the harmonic basin.** Even with 2000 iterations and full gradient access, trainable harmonic heads never recovered the varied entropy that standard heads naturally develop. The warm-start creates a local minimum.
+
+Verdict: **Harmonic attention heads do not improve performance.** The Q/K projection is where the model learns unrestricted token-to-token relationships. Constraining it to harmonic structure impairs the model by creating uniform (uninformative) attention patterns.
+
+### Boundary Extended
+
+Phase 18 adds a third layer to the established boundary:
+
+- **Representation layer** — harmonic structure works. Frozen beats learned. Proven across Phases 1-16.
+- **Weight layer** — spectrally flat regardless of architecture. Determined by optimiser. Proven null in Phases 17-17b.
+- **Attention layer** — Q/K projections must remain unconstrained. Harmonic structure in Q/K destroys attention discrimination. Proven in Phase 18.
+
+Wave coherence operates on what models produce (representations, retrieval), not on how they compute (attention, weights). The boundary between where harmonic structure helps and where it hurts is the learned projection — the Q/K transformation needs full-rank freedom to build useful attention patterns, even when the input embeddings carry harmonic structure.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -792,3 +849,4 @@ Weight spectral sparsity requires explicit optimiser intervention. Related work 
 | 16. Wave Packet Engine | Can sparse DFT queries match full cosine retrieval? | YES — 5/5 retrieval with 25% of bands. Lossless round-trip (2.24e-08). 87% quality at 75% data transfer. |
 | 17. Weight Spectral Analysis | Do harmonic embeddings create band-sparse weights? | **NULL** — all modes spectrally flat (88.3% bands for 90% energy, 0% sparsity). Optimiser determines weight spectra, not embeddings. |
 | 17b. Curriculum Specialisation | Does frequency curriculum change weight spectra? | **NULL** — curriculum teaches frequency patterns but does not restructure weight spectra. Boundary: wave coherence is representation/retrieval primitive, not training primitive. |
+| 18. Harmonic Attention Heads | Do harmonic-structured Q/K projections improve attention? | **NO** — 5.2% worse than standard. Uniform entropy (4.56) across all heads/layers = model cannot discriminate tokens. Q/K must remain unconstrained. Boundary extended: harmonic structure helps representations, not learned projections. |

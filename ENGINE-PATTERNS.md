@@ -161,6 +161,24 @@ A method of injecting harmonic structural priors into any neural network archite
 
 An attention mechanism where attention scores are computed per-harmonic rather than via a single dot product. Each harmonic provides a different "lens" for the attention computation. The final attention is a weighted combination of per-harmonic attention scores, enabling the model to attend to different structural relationships simultaneously.
 
+### 6.6 Sparse Attention via Harmonic Pre-Scoring
+
+An attention mechanism that uses harmonic coherence between token embeddings to pre-score token pair relevance before computing full dot-product attention. For each query-key pair, compute harmonic coherence C_n(θ_q, θ_k) across multiple orders. Token pairs with low coherence across all orders are masked out before the expensive Q·K^T computation, reducing attention from O(N²) to O(N × S) where S is the number of harmonically relevant pairs. The harmonic pre-scoring operates on the embedding-space phase angles (O(1) per pair per harmonic), not the learned Q/K projections.
+
+**Note:** Phase 18 demonstrated that replacing Q/K projections with harmonic structure produces uniform attention and degrades performance. This pattern preserves learned Q/K projections and uses harmonic coherence only for sparsity masking — a pre-filter, not a replacement.
+
+### 6.7 Warm-Start Attention from Coherence Maps
+
+An attention mechanism where Q/K weight matrices are initialised from harmonic coherence maps but remain fully trainable. The initialisation computes a coherence map between all embedding dimension pairs across multiple harmonic orders, providing a structured starting point that encodes which input dimensions carry harmonically meaningful information. The model retains full gradient access to modify the Q/K weights during training.
+
+**Note:** Phase 18 tested a simplified version (emphasis on 2 dimensions per head) which created a local minimum the optimiser could not escape. Future implementations should initialise from the full coherence map rather than projecting through a 2-dimensional bottleneck.
+
+### 6.8 Per-Order Attention Head Specialisation
+
+An attention architecture where each head is assigned a harmonic order (e.g., 1, 2, 4, 8 for a 4-head model) and the head's V (value) projection is initialised or constrained to operate on the embedding dimensions corresponding to that harmonic order. Unlike 6.5 which modifies the attention score computation, this pattern specialises what information each head extracts from the attended context. Q/K projections remain unconstrained (learned), preserving the model's ability to form discriminative attention patterns.
+
+**Note:** This pattern separates two concerns tested jointly in Phase 18: (1) what to attend to (Q/K — must be learned) and (2) what to extract (V — may benefit from harmonic structure). Phase 18 constrained both Q/K and V together; constraining only V while keeping Q/K free is untested.
+
 ---
 
 ## 7. Knowledge Graph Engine

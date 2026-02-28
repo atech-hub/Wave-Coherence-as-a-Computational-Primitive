@@ -61,7 +61,7 @@ These properties emerge from training methodology, not from explicit design. The
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
-| `experiments/` | 17 training experiments (Phases 1-17) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, and more |
+| `experiments/` | 18 training experiments (Phases 1-18) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, harmonic attention heads, and more |
 | `experiments/rust-experiments/` | Pure Rust cross-language validation of math-only experiments (Phases 4, 5, 16). Zero dependencies, zero GPU. 14 tests, all passing. |
 | `ENGINE-PATTERNS.md` | Defensive publication: 50 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, analogue/neuromorphic hardware, and 15 other domains |
 
@@ -185,7 +185,7 @@ A single phase angle probed across N harmonics produces an N-dimensional vector:
 
 The implication for LLM architecture: harmonic embeddings could serve as **structural priors** — pre-built geometric structure that reduces what the network needs to learn through training. Specific applications:
 
-- Attention heads parameterized by harmonic frequency instead of learned weights
+- ~~Attention heads parameterized by harmonic frequency instead of learned weights~~ — **tested in Phase 18: does not work.** Constraining Q/K projections to harmonic structure produces uniform attention (entropy 4.56 across all heads), destroying token discrimination. Q/K projections require full-rank freedom. Harmonic pre-scoring of token relevance remains an open question (see ENGINE-PATTERNS.md Pattern 6.6-6.8)
 - Positional encoding via harmonic phase (RoPE already uses this principle for one dimension; harmonic encoding generalizes it to N dimensions with relationship-typed structure)
 - Context windows as resonance fields where relevance emerges from constructive interference
 - Directed phase relationships as native reasoning chain primitives
@@ -204,6 +204,16 @@ This means transformer training is no longer bound to Python/PyTorch/TensorFlow 
 - **Machine-precision cross-language agreement:** Wave packet experiments in Python and Rust produce identical results to 2.05e-15, confirming the math is portable.
 
 The implication: embedding generation, storage, retrieval, and training can all be implemented in any language. The full pipeline from embedding creation to model training to inference is framework-independent. The only remaining framework dependency is backpropagation through the transformer layers themselves (attention, MLP) — the embedding layer, which maps raw inputs to geometric structure, requires only trigonometry.
+
+### Established Boundaries (Null Results)
+
+Null results are findings. Phases 17, 17b, and 18 established where harmonic structure helps and where it does not:
+
+- **Representation layer — works.** Frozen harmonic embeddings outperform learned embeddings. Wave packets enable selective loading with 25% of bands. Proven across Phases 1-16.
+- **Weight layer — no effect.** Weight matrices remain spectrally flat regardless of embedding type or training curriculum. The optimiser (AdamW) determines weight spectral profile, not the input data. Proven null twice (Phase 17, 17b).
+- **Attention layer — harmful.** Constraining Q/K projections to harmonic structure produces uniform attention patterns that cannot discriminate between tokens. Q/K projections require full-rank freedom. Proven in Phase 18.
+
+The wave packet concept applies to the representation layer, not the computation layer.
 
 ### Knowledge Graph / RAG
 Typed retrieval that surfaces not just "documents about X" but "documents about things that enable X" or "documents about things X conflicts with" — relationship-typed retrieval that cosine similarity alone cannot express.

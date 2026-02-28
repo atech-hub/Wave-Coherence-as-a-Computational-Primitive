@@ -7,6 +7,9 @@ rust-transformer/target/
 experiments/phase17-weight-analysis/target/
 experiments/phase17-weight-analysis/data/
 experiments/phase17-weight-analysis/weights/
+experiments/phase18-harmonic-attention/target/
+experiments/phase18-harmonic-attention/data/
+experiments/phase18-harmonic-attention/weights/
 experiments/rust-transformer-cpu/target/
 experiments/rust-transformer-cpu/data/
 research-lab/
