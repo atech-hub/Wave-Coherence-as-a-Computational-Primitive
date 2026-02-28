@@ -19,4 +19,7 @@ experiments/phase19b-harmonic-bias/weights/
 experiments/rust-transformer-cpu/target/
 experiments/rust-transformer-cpu/data/
 experiments/data/
+experiments/phase20-lc-layer/target/
+experiments/phase20-lc-layer/data/
+experiments/phase20-lc-layer/weights/
 research-lab/

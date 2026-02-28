@@ -1,0 +1,17 @@
+[package]
+name = "phase20-lc-layer"
+version = "0.1.0"
+edition = "2024"
+description = "Phase 20: Can LC circuit mathematics replace matrix multiplication for harmonically-structured data?"
+
+[[bin]]
+name = "train"
+path = "src/train.rs"
+
+[features]
+cuda = ["candle-core/cuda", "candle-nn/cuda"]
+
+[dependencies]
+candle-core = "0.9"
+candle-nn = "0.9"
+rand = "0.9"

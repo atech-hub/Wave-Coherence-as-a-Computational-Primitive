@@ -1032,6 +1032,110 @@ The question this raises is not "how do we make matrices harmonic" but "what com
 
 ---
 
+## Phase 20: LC Circuit Layer
+
+Can frequency-native computation replace matrix multiplication for harmonically-structured data?
+
+Inspired by the substrate incompatibility insight, we built an LC circuit analog as a neural network layer. Instead of a standard MLP (128->512->128, ~131K params), the LC layer operates on harmonic bands natively:
+- **Resonance**: per-band amplitude gain and phase rotation (128 params)
+- **Coupling**: cross-band interaction via 5-wide shifted matmuls (20 params)
+- **GELU** nonlinearity
+
+Total: 148 params per layer vs 131K for standard MLP (890x reduction).
+
+### Phase 20 Results (Candle/Rust)
+
+| Mode | Val Loss | vs Standard | FFN Params/Layer |
+|---|---|---|---|
+| frozen_standard (MLP) | 3.0966 | baseline | 131,712 |
+| lc_layer | 3.0793 | +0.56% | 148 |
+
+LC appeared to OUTPERFORM MLP. But all LC parameters were frozen at init values (gain=1.0, phase=0.0, coupling=0.0) for all 2000 iterations. The LC layer was effectively just GELU(x). This is Corrective Finding #7 again: candle autograd doesn't propagate gradients through the LC layer's operations.
+
+### Phase 20 PyTorch Verification
+
+PyTorch confirmed LC parameters DO learn:
+
+| Layer | Gain Range | Phase Range | Coupling RMS |
+|---|---|---|---|
+| 0 | [0.72, 1.27] | [-0.22, +0.14] | 0.094 |
+| 1 | [0.69, 1.21] | [-0.26, +0.12] | 0.092 |
+| 2 | [0.74, 1.23] | [-0.22, +0.18] | 0.120 |
+| 3 | [0.73, 1.25] | [-0.20, +0.17] | 0.106 |
+
+| Mode | Val Loss | vs Standard | FFN Params |
+|---|---|---|---|
+| frozen_standard (MLP) | 1.6583 | baseline | 526K |
+| lc_layer | 2.0432 | -23.5% | 592 |
+
+Gradients are real (gain grad rms ~0.006, coupling grad rms ~0.007). Gain differentiates by band, coupling activates progressively, phase rotates meaningfully. The learning dynamics are healthy -- the concept works mechanically but with 890x fewer parameters, it can't match MLP capacity.
+
+The candle "LC beats MLP" was a double artifact: (1) frozen params meant LC layer = GELU(x), and (2) at candle's higher loss floor (~3.09), attention alone with GELU suffices.
+
+---
+
+## Phase 20b: Expanded LC Layer -- Fair Capacity Test
+
+Phase 20's 148 params vs 131K was not a fair comparison. Phase 20b gives the LC architecture a fair parameter budget while preserving frequency-native structure:
+
+- **Per-band FFN**: each of 64 bands gets a small 2->16->2 network with GELU (5,248 params/layer)
+- **Cross-band coupling**: linear mixing across bands, cos and sin independently (8,192 params/layer)
+- **Total**: 13,440 params per layer vs 131,712 for MLP (9.8x reduction)
+
+This mirrors LC circuit physics: per-band FFN = multi-stage resonator, cross-band coupling = mutual inductance network. The architecture "knows" about harmonic bands; MLP treats all 128 dims as independent.
+
+### Results (PyTorch, CUDA)
+
+| Mode | Val Loss | Train Loss | vs Standard | Total Params | FFN Params |
+|---|---|---|---|---|---|
+| frozen_standard (MLP) | 1.6458 | 1.4540 | baseline | 801K | 526K |
+| lc_expanded | 1.9967 | 1.8718 | -21.3% | 328K | 53K |
+
+### Convergence
+
+| Step | Standard | LC Expanded | Gap |
+|---|---|---|---|
+| 0 | 4.1993 | 4.2208 | -0.5% |
+| 500 | 2.1874 | 2.4017 | -9.8% |
+| 1000 | 1.8874 | 2.2393 | -18.7% |
+| 1500 | 1.7399 | 2.0874 | -20.0% |
+| 1999 | 1.6458 | 1.9967 | -21.3% |
+
+Gap widens throughout training -- MLP has a higher expressiveness ceiling.
+
+### LC Parameter Analysis
+
+All parameters learn vigorously (confirmed by gradient check at iter 0):
+
+- **Per-band FFN**: weight norms grow and differentiate by layer. Layer 3 develops largest norms (up_norm=0.44, down_norm=0.33). Layer 1 stays smallest (0.29, 0.22). Per-band variance increases, showing bands specialise.
+- **Cross-band coupling**: activates strongly. Frobenius norms grow to 2.0-3.4 (from 0). Sparsity drops from 100% to 4-7%, meaning nearly all band-to-band connections activate. Layer 3's coupling is largest (cos=3.36, sin=2.90).
+
+### Key Finding: Architectural, Not Parametric
+
+Going from 148 to 13,440 FFN params per layer (91x increase) only improved the gap by 2.2 percentage points (23.5% -> 21.3%). This means:
+
+1. **The bottleneck is structural, not capacity**. The factored LC architecture (per-band FFN + linear coupling) can't match dense MLP expressiveness regardless of parameter count.
+
+2. **Why**: In MLP, GELU operates on representations that combine ALL 128 dims (via 128->512 expansion). The MLP learns nonlinear functions of multiple frequency bands simultaneously. In expanded LC, the GELU only operates within each band's 2-dim space. Cross-band interaction is linear-only. The LC cannot learn nonlinear multi-band features.
+
+3. **Positive**: 10x fewer FFN params for ~80% of performance (8.1x efficiency ratio). Frequency-native structure does provide useful inductive bias -- just not enough to fully replace dense interaction.
+
+### Phase 20 Series Complete Picture
+
+| Experiment | FFN Params/Layer | vs MLP | What It Showed |
+|---|---|---|---|
+| Phase 20 tiny LC | 148 | -23.5% | Concept works (params learn) but starved |
+| Phase 20b expanded LC | 13,440 | -21.3% | 91x more params -> only 2.2pp better |
+| Standard MLP | 131,712 | baseline | Dense nonlinear interaction is needed |
+
+The 2.2pp improvement from 91x more capacity proves the limitation is architectural: the factored structure (per-band nonlinear + cross-band linear) cannot replace the MLP's dense nonlinear cross-dimension interaction.
+
+### Implication for the Framework
+
+This extends the substrate incompatibility insight from a boundary into a theorem: **frequency-native computation is necessary but not sufficient**. The LC layer correctly identifies and processes harmonic bands. But language modelling requires nonlinear relationships between bands that only emerge from dense cross-dimensional interaction. The missing primitive is not "per-band processing" (we have that) but "nonlinear multi-band fusion" -- a frequency-aware dense operation that doesn't yet exist.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -1057,4 +1161,6 @@ The question this raises is not "how do we make matrices harmonic" but "what com
 | 17b. Curriculum Specialisation | Does frequency curriculum change weight spectra? | **NULL** — curriculum teaches frequency patterns but does not restructure weight spectra. Boundary: wave coherence is representation/retrieval primitive, not training primitive. |
 | 18. Harmonic Attention Heads | Do harmonic-structured Q/K projections improve attention? | **NO** — 5.2% worse than standard. Uniform entropy (4.56) across all heads/layers = model cannot discriminate tokens. Q/K must remain unconstrained. Boundary extended: harmonic structure helps representations, not learned projections. |
 | 19. Spectral Interference | Can embedding interference replace learned Q/K? | **NO** — 5.3% worse. Same uniform entropy (4.56). Embedding dot products don't discriminate between tokens. Matches Phase 18 result exactly (3.2503 vs 3.2511) — confirming Phase 18's Q/K converged to producing same uniform attention as having no Q/K at all. |
-| 19b. Harmonic Attention Bias | Does an additive harmonic bias improve standard attention? | **NO** — 1.1% worse (candle, lambda stuck). PyTorch verification: lambda DOES learn (avg 0.1→0.215, low-freq heads amplify, high-freq suppress) but loss still -0.4%. Model detects harmonic signal but cannot exploit it for prediction. **Corrective Finding #7: candle autograd doesn't propagate gradients through frozen tensor products.** |
+| 19b. Harmonic Attention Bias | Does an additive harmonic bias improve standard attention? | **NO** -- 1.1% worse (candle, lambda stuck). PyTorch verification: lambda DOES learn (avg 0.1->0.215, low-freq heads amplify, high-freq suppress) but loss still -0.4%. Model detects harmonic signal but cannot exploit it for prediction. **Corrective Finding #7: candle autograd doesn't propagate gradients through frozen tensor products.** |
+| 20. LC Circuit Layer | Can frequency-native computation replace MLP? | **NO** -- 148 params/layer, 23.5% worse. Concept works (params learn meaningful patterns in PyTorch) but extreme capacity starvation. Candle autograd blocked gradients again (Finding #7). |
+| 20b. Expanded LC Layer | Fair capacity test: 13.4K params/layer (10x fewer than MLP)? | **NO** -- 21.3% worse. 91x more params only bought 2.2pp improvement. Bottleneck is architectural: per-band nonlinear + cross-band linear cannot match dense MLP's nonlinear multi-band interaction. Frequency-native structure helps (8.1x efficiency ratio) but cannot replace dense computation. |
