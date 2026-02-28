@@ -1099,6 +1099,31 @@ A token mixing mechanism that operates entirely in the frequency domain. Instead
 
 A gating mechanism (analogous to GRU/LSTM gates) where the gate signal is derived from harmonic coherence rather than learned projections. The gate for band n opens when the coherence between input and memory at harmonic n exceeds a threshold. This creates frequency-selective memory — the network remembers information at specific frequency bands and forgets at others. Unlike standard gating which operates on arbitrary learned features, harmonic gating has interpretable frequency semantics.
 
+### 51.6 Kerr-ODE Neural Layer (Nonlinear Optical Resonator)
+
+A transformation layer modelled on coupled optical resonators with Kerr nonlinearity, replacing matrix-multiplication-based MLP entirely. Each frequency band is treated as a complex oscillator Z_k = r_k + i·s_k evolving under an ODE with four physical terms: linear damping (-gamma_k · Z_k), linear dispersion (i·omega_k · Z_k), Kerr self-phase modulation (i·alpha · |Z_k|^2 · Z_k), and cross-phase modulation from neighbouring bands (i·beta · sum_neighbours(|Z_j|^2) · Z_k). Integration via Euler method with configurable step count (4 or 8 steps). Output projected through a single learned linear layer.
+
+The key insight is that Kerr nonlinearity provides nonlinear multi-band fusion — something that linear per-band processing (Pattern 51.1) fundamentally cannot achieve. The |Z_j|^2 cross-phase term couples bands through their energy, enabling the nonlinear interactions that matrix multiplication provides but in a frequency-native substrate.
+
+**Experimental validation (Phase 21):**
+- 4-step Kerr-ODE: 92% of MLP performance at 12.7% of FFN parameters (16,642 vs 131,072)
+- 8-step Kerr-ODE: 92.3% of MLP performance (7.66% gap), stable after softplus damping fix
+- Depth-dependent nonlinearity: deep layers amplify Kerr effect (alpha +22% above init), shallow layers suppress it (alpha -38% below init). Deep layers also learn minimum dissipation (lowest gamma). This mirrors optical systems where deeper cavities develop stronger nonlinear coupling.
+- Linear LC layer (Pattern 51.1) achieved only 78.7% of MLP performance — adding Kerr nonlinearity closed 60% of the remaining gap
+
+**Implementation pattern:**
+- Input vector x of dimension d reinterpreted as N = d/2 complex bands: Z_k = x[2k] + i·x[2k+1]
+- Expanded to real-valued ODE: dr/dt = -gamma·r - phi·s, ds/dt = -gamma·s + phi·r, where phi = omega + alpha·(r^2+s^2) + beta·neighbour_sum
+- Cross-phase modulation via depthwise conv1d with fixed kernel [1,1,0,1,1] (nearest-two-neighbour coupling)
+- Damping enforced positive via softplus: gamma = log(1 + exp(gamma_raw)), preventing anti-damping (lasing instability)
+- State clamped to [-10, 10] after each integration step for numerical stability
+- Output projection: Linear(d, d) maps ODE output back to embedding space
+- Total parameters per layer: 5 scalars (N gammas, N omegas, 1 alpha, 1 beta) + d^2 projection = approximately d^2 + 2N + 2
+
+**References:**
+- Pal et al. (2024), arXiv:2404.05646v2 — Coupled Lugiato-Lefever equation, Kerr self-phase and cross-phase modulation terms
+- Kato et al. (2024), arXiv:2407.12937v1 — Neural ODE framework for multi-band signal processing, ODE-based differentiable layers
+
 ---
 
 ## 52. Ternary-Harmonic Hybrid Engine
@@ -1177,7 +1202,7 @@ A pruning strategy that leverages the frequency structure of harmonic embeddings
 | 48 | Selective band loading (RAM-disk membrane) | Computing / AI |
 | 49 | Autocrine signalling (self-monitoring) | AI |
 | 50 | Curriculum-induced harmonic specialisation | AI / Training |
-| 51 | Frequency-native transformation engine | Computing / AI / Hardware |
+| 51 | Frequency-native transformation engine (incl. Kerr-ODE) | Computing / AI / Hardware / Optics |
 | 52 | Ternary-harmonic hybrid engine | Hardware / AI |
 
 ---
