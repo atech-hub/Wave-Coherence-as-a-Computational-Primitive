@@ -179,6 +179,18 @@ An attention architecture where each head is assigned a harmonic order (e.g., 1,
 
 **Note:** This pattern separates two concerns tested jointly in Phase 18: (1) what to attend to (Q/K — must be learned) and (2) what to extract (V — may benefit from harmonic structure). Phase 18 constrained both Q/K and V together; constraining only V while keeping Q/K free is untested.
 
+### 6.9 Spectral Interference Attention
+
+An attention mechanism that replaces learned Q/K projections entirely with direct dot-product interference between harmonic embedding sub-vectors. The embedding is partitioned by frequency band (one band per head), and the attention score between positions i and j at head h is the dot product of their embedding sub-vectors for head h's frequency band. Only V projections and output projections are learned. The attention pattern is fixed by the harmonic geometry and identical at every layer — the same interference drives attention throughout the network while each layer learns different V projections to extract different information.
+
+**Note:** Phase 19 tested this architecture. Result: 5.3% worse than standard attention with uniform entropy (4.56) across all heads and layers. The embedding dot products produce near-uniform scores because harmonic embeddings encode token identity uniformly across all harmonics — no frequency band is more discriminative than another for next-token prediction. The approach produces the same ~3.25 val loss ceiling as Phase 18's constrained Q/K, confirming that both degrade to the same uniform-attention regime.
+
+### 6.10 Additive Harmonic Attention Bias
+
+An attention mechanism that preserves full learned Q/K projections while adding an additive harmonic interference term: `score = Q·K^T/sqrt(d) + λ * interference(i,j)`. The interference term is computed from harmonic embedding sub-vectors (same as 6.9). λ is a learnable scalar per head per layer, allowing each head to discover how much to trust the harmonic prior versus its own learned projections. If λ → 0 during training, the harmonic bias was not useful. If λ stays positive, the harmonic structure provides information that Q/K doesn't need to rediscover.
+
+**Note:** Phase 19b tested this architecture at fixed λ=0.1 (gradient flow to λ was blocked by frozen embedding computation). Result: 1.1% worse than standard attention at every training checkpoint. The near-uniform interference term adds noise to discriminative learned scores. The concept requires interference terms that are selective (high for task-relevant token pairs, low for irrelevant ones), which harmonic embedding dot products are not for character-level language modelling. May be viable in domains where harmonic phase angles encode task-relevant relationships (e.g., periodic data, structured databases).
+
 ---
 
 ## 7. Knowledge Graph Engine

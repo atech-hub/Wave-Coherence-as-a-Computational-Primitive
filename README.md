@@ -61,7 +61,7 @@ These properties emerge from training methodology, not from explicit design. The
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
-| `experiments/` | 18 training experiments (Phases 1-18) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, harmonic attention heads, and more |
+| `experiments/` | 20 training experiments (Phases 1-19b) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, harmonic attention experiments, and more |
 | `experiments/rust-experiments/` | Pure Rust cross-language validation of math-only experiments (Phases 4, 5, 16). Zero dependencies, zero GPU. 14 tests, all passing. |
 | `ENGINE-PATTERNS.md` | Defensive publication: 50 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, analogue/neuromorphic hardware, and 15 other domains |
 
@@ -211,9 +211,9 @@ Null results are findings. Phases 17, 17b, and 18 established where harmonic str
 
 - **Representation layer — works.** Frozen harmonic embeddings outperform learned embeddings. Wave packets enable selective loading with 25% of bands. Proven across Phases 1-16.
 - **Weight layer — no effect.** Weight matrices remain spectrally flat regardless of embedding type or training curriculum. The optimiser (AdamW) determines weight spectral profile, not the input data. Proven null twice (Phase 17, 17b).
-- **Attention layer — harmful.** Constraining Q/K projections to harmonic structure produces uniform attention patterns that cannot discriminate between tokens. Q/K projections require full-rank freedom. Proven in Phase 18.
+- **Attention layer — harmful.** Constraining, replacing, or biasing Q/K projections with harmonic structure produces uniform or near-uniform attention patterns that cannot discriminate between tokens. Three independent approaches tested (Phases 18, 19, 19b) — all degrade performance. Q/K projections require full-rank freedom to learn task-specific attention patterns.
 
-The wave packet concept applies to the representation layer, not the computation layer.
+The wave packet concept applies to the representation layer, not the computation layer. Harmonic embeddings encode token identity uniformly across all harmonics — no frequency band is more predictive than another for next-token prediction. That task-specific discrimination must be learned, which is exactly what Q/K projections do.
 
 ### Knowledge Graph / RAG
 Typed retrieval that surfaces not just "documents about X" but "documents about things that enable X" or "documents about things X conflicts with" — relationship-typed retrieval that cosine similarity alone cannot express.
