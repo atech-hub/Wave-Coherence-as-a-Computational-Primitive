@@ -1008,6 +1008,30 @@ A training procedure that combines progressive curriculum learning (build harmon
 
 ---
 
+## 50. Curriculum-Induced Harmonic Specialisation Engine
+
+### 50.1 Structure-Before-Content Training
+
+A training procedure where the model first learns that its inputs are harmonically structured — a curriculum phase with synthetic tasks where the answer depends on specific frequency relationships — before real data arrives. The curriculum teaches the model that band 3 carries different information than band 47. When real training data follows, the model routes information through specific frequency bands instead of treating all bands equally. Without curriculum, weight matrices develop broad-spectrum energy (Phase 17 null result). With curriculum, the model has incentive to specialise by frequency, potentially producing band-sparse weights where computation can be skipped.
+
+### 50.2 Frequency-Aware Gradient Routing
+
+A training architecture where curriculum-learned frequency awareness causes gradients to flow preferentially through specific bands during backpropagation. The model learns which bands matter for which tasks during the curriculum phase. When real data arrives, gradient updates concentrate in task-relevant bands rather than distributing uniformly across all frequencies. Weight matrices develop band-sparse structure as a natural consequence of frequency-selective gradient flow.
+
+### 50.3 Band-Selective Weight Pruning via Curriculum
+
+A pruning strategy informed by curriculum-induced specialisation. After curriculum training reveals which frequency bands each weight matrix relies on, bands carrying negligible energy can be zeroed out without retraining. The curriculum provides a principled basis for pruning — not arbitrary magnitude thresholds, but frequency-domain relevance learned from structured pre-training. The Phase 17 DFT analysis infrastructure (train + dump + analyze) provides the measurement tool.
+
+### 50.4 Progressive Frequency Curriculum
+
+A multi-stage curriculum that introduces frequency bands progressively — low bands first (structural patterns), then mid bands (semantic content), then high bands (fine detail). Each stage trains the model to process a specific frequency range before adding the next. This mirrors how the brain learns: patterns first, then content. By the time complex information arrives, the neural pathways already know which channels to use. Extends Phase 6 progressive curriculum (which improved loss by 1.8%) into the frequency domain.
+
+### 50.5 Curriculum-Guided Computation Skipping
+
+An inference engine that exploits curriculum-induced band sparsity for computational efficiency. If curriculum training produces weight matrices where 30-40% of frequency bands carry negligible energy, the corresponding multiply-accumulate operations can be skipped at inference time. The efficiency gain is not from clever coding but from the math not needing to happen — the curriculum taught the model to concentrate computation into fewer bands. This extends wave packet selective loading from retrieval into the forward pass itself.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1061,6 +1085,7 @@ A training procedure that combines progressive curriculum learning (build harmon
 | 47 | Confidence-guided decoding | AI |
 | 48 | Selective band loading (RAM-disk membrane) | Computing / AI |
 | 49 | Autocrine signalling (self-monitoring) | AI |
+| 50 | Curriculum-induced harmonic specialisation | AI / Training |
 
 ---
 
