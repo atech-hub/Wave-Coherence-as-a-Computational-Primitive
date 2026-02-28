@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 27, 2026
+**Date:** February 28, 2026
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -840,9 +840,33 @@ An engine that represents quantum circuits by the harmonic profile of their acti
 
 ---
 
-## 44. Wave Packet Query Engine
+## 44. Analogue/Neuromorphic Computing Engine
 
-### 44.1 Sparse DFT Query Format
+### 44.1 Analogue Harmonic Computation
+
+Continuous-signal processors using harmonic basis functions as native compute primitives. Wave-based computation where the mathematical framework operates directly on analogue waveforms. Band energy thresholds define hardware precision requirements per frequency — high-energy bands get precise circuits, low-energy bands get cheap ones or are omitted entirely.
+
+### 44.2 Frequency-Domain Noise Rejection
+
+Built-in error correction for analogue systems. Signal concentrates in bands with energy above threshold. Noise distributes uniformly across all bands. Selective band loading at the circuit level: physical bandpass filters implement what software does via DFT. No digital conversion required — noise rejection happens in the analogue domain.
+
+### 44.3 Neuromorphic Harmonic Processing
+
+Spiking neural networks where spike timing encodes phase relationships. Harmonic coherence measured between spike trains rather than voltage levels. Phase-encoded similarity detection in biological-inspired hardware. Extends autocrine signalling (Pattern 49) to physical neuromorphic chips.
+
+### 44.4 Mixed-Signal Band Allocation
+
+Hybrid analogue-digital architecture where high-energy bands are processed in precise digital circuits and low-energy bands are processed in cheap analogue circuits or discarded. The framework's band energy profile determines the digital/analogue boundary dynamically per query. Optimises power consumption by matching circuit precision to information content.
+
+### 44.5 Analogue Wave Packet Queries
+
+Physical implementation of wave packet queries (Pattern 45). Query as a waveform injected into an analogue crossbar array. Resonance detection via physical interference rather than computed dot products. Amplitude-weighted phase coherence emerges from circuit physics rather than software calculation. Retrieval time becomes propagation delay — effectively constant regardless of database size.
+
+---
+
+## 45. Wave Packet Query Engine
+
+### 45.1 Sparse DFT Query Format
 
 A query engine where queries are represented as wave packets — sparse DFT representations of embedding vectors. Given an embedding vector **v** ∈ ℝ^d, its DFT yields complex coefficients V_n = |V_n| · e^(iφ_n). The wave packet retains only the selected bands:
 
@@ -850,7 +874,7 @@ A query engine where queries are represented as wave packets — sparse DFT repr
 
 where S ⊆ {1, ..., N} is the set of selected band indices. The query carries only the bands relevant to the search, not the full vector.
 
-### 44.2 Resonance Matching
+### 45.2 Resonance Matching
 
 A matching engine that scores query-to-entry similarity using amplitude-weighted phase coherence:
 
@@ -858,7 +882,7 @@ R(**W**, **U**) = Σ_{n ∈ S} |V_n| · |U_n| · cos(φ_n - ψ_n)
 
 Each term simultaneously weighs query confidence (|V_n|), stored signal strength (|U_n|), and phase alignment (cos(φ_n - ψ_n)). The phase coherence term is the same coherence function C(θ_a, θ_b) = cos(θ_a - θ_b) from the core framework. Normalised form: R_norm = R / (‖A_S‖ · ‖U_S‖) where ‖A_S‖ = √(Σ_{n∈S} |V_n|²).
 
-### 44.3 Self-Regulating Query Bandwidth
+### 45.3 Self-Regulating Query Bandwidth
 
 A query engine where the number of bands in the wave packet (|S|) self-regulates based on the embedding's energy distribution:
 - Confident query -> few bands with high amplitude -> narrow packet -> precise results
@@ -866,7 +890,7 @@ A query engine where the number of bands in the wave packet (|S|) self-regulates
 
 The uncertainty principle applies naturally: wide bandwidth (many bands) = localised in the database (few matches). Narrow bandwidth (few bands) = spread across the database (many matches). No manual tuning of query breadth required.
 
-### 44.4 Band Selection Strategies
+### 45.4 Band Selection Strategies
 
 A query engine supporting multiple band selection methods:
 - **Amplitude threshold:** S = {n : |V_n| > τ} -- the model's own energy distribution decides what matters
@@ -877,9 +901,9 @@ All strategies produce wave packets compatible with the same resonance matching 
 
 ---
 
-## 45. Harmonic Translator Engine
+## 46. Harmonic Translator Engine
 
-### 45.1 DFT-Based Translator Pipeline
+### 46.1 DFT-Based Translator Pipeline
 
 A translator that converts between human language and harmonic database representations using only foundational mathematical operations:
 
@@ -896,23 +920,23 @@ A translator that converts between human language and harmonic database represen
 
 The translator is DFT -> band selection -> inverse DFT, sandwiched between existing model components. Every operation is foundational mathematics (DFT: Cooley-Tukey 1965, matrix multiplication, array indexing).
 
-### 45.2 Bidirectional Model-Database Bridge
+### 46.2 Bidirectional Model-Database Bridge
 
 A system where the same translator serves both directions: the model's embedding layer decomposes input into harmonic bands (already happens implicitly), and the lm_head recomposes harmonic bands back to tokens (already happens implicitly). The translator makes this decomposition explicit rather than implicit, enabling the harmonic database to interface directly with the model's native representation.
 
-### 45.3 Band-Decomposed Storage
+### 46.3 Band-Decomposed Storage
 
 A storage engine where embedding vectors are not stored as opaque blobs but decomposed into their independent frequency bands via DFT. Each band is stored and indexed separately. Queries target specific bands without loading the full vector. Reconstruction uses inverse DFT on the retrieved bands with zero-fill for unretrieved bands.
 
 ---
 
-## 46. Confidence-Guided Decoding Engine
+## 47. Confidence-Guided Decoding Engine
 
-### 46.1 Mid-Band Energy as Confidence Signal
+### 47.1 Mid-Band Energy as Confidence Signal
 
 A decoding engine that reads the model's mid-band harmonic energy during inference as a real-time confidence signal. Mid-band activation is 1.6x higher during confident predictions than uncertain ones. The signal requires no additional training or parameters -- it is already present in the model's hidden states.
 
-### 46.2 Adaptive Beam Width Decoding
+### 47.2 Adaptive Beam Width Decoding
 
 A beam search decoder where beam width is dynamically adjusted based on mid-band energy:
 - High mid-band energy (model is confident) -> narrow beam -> commit to top candidates
@@ -920,15 +944,15 @@ A beam search decoder where beam width is dynamically adjusted based on mid-band
 
 This produces 13.4% improvement over fixed greedy decoding on knowledge-probing tasks. The decoder reads the model's own confidence signal without the model being aware it is broadcasting.
 
-### 46.3 Confidence-Mode Switching
+### 47.3 Confidence-Mode Switching
 
 A decoder that classifies each token prediction as KNOW mode (high mid-band energy, narrow search) or GUESS mode (low mid-band energy, broad search) and applies different decoding strategies to each. The mode switching is per-token and adapts within a single generation sequence.
 
 ---
 
-## 47. Selective Band Loading Engine (RAM-Disk Membrane)
+## 48. Selective Band Loading Engine (RAM-Disk Membrane)
 
-### 47.1 Band-Level Storage Tiering
+### 48.1 Band-Level Storage Tiering
 
 A storage engine where model parameters or database entries are stored decomposed by frequency band, with different bands on different storage tiers:
 - High-priority bands (mid+high, minimum viable set) -> RAM
@@ -937,7 +961,7 @@ A storage engine where model parameters or database entries are stored decompose
 
 The engine loads bands on demand based on query frequency, enabling useful inference from a fraction of the full model in RAM.
 
-### 47.2 Wave Packet Triggered Loading
+### 48.2 Wave Packet Triggered Loading
 
 A loading engine where incoming wave packet queries trigger selective band loading from disk to RAM. The query's frequency signature determines which dormant bands to activate:
 - Query frequency matches a dormant band -> load that band
@@ -945,19 +969,19 @@ A loading engine where incoming wave packet queries trigger selective band loadi
 
 Phase matching acts as a natural filter: only relevant data moves between storage tiers.
 
-### 47.3 Predictive Band Pre-Fetching
+### 48.3 Predictive Band Pre-Fetching
 
 A pre-fetching engine that monitors query patterns and pre-loads bands that are likely to be needed based on the harmonic profile of recent queries. If recent queries activate bands 20-30, the engine pre-fetches bands 15-19 and 31-35 anticipating related queries.
 
-### 47.4 Minimum Viable Band Set Inference
+### 48.4 Minimum Viable Band Set Inference
 
 An inference engine that runs a language model using only the minimum viable band set (mid+high bands) in RAM while keeping low bands on disk. The engine provides degraded but functional inference from approximately half the parameters, enabling useful AI assistants on devices with 1-2GB of available RAM.
 
 ---
 
-## 48. Autocrine Signalling Engine (Self-Monitoring)
+## 49. Autocrine Signalling Engine (Self-Monitoring)
 
-### 48.1 Internal Confidence Feedback Loop
+### 49.1 Internal Confidence Feedback Loop
 
 A neural network architecture where the model's mid-band energy at layer N is decoded into a confidence signal that modulates processing at layer N+1. The confidence signal is not an external decoder -- it is an internal feedback loop within the forward pass:
 - High mid-band energy -> next layer narrows attention, commits to current direction
@@ -965,11 +989,11 @@ A neural network architecture where the model's mid-band energy at layer N is de
 
 The model adjusts its own processing depth and width based on its own confidence signal.
 
-### 48.2 Learned Confidence Receptors
+### 49.2 Learned Confidence Receptors
 
 A small learned module inserted between transformer layers that reads band-level energy from the previous layer's output and produces a modulation signal for the next layer. The receptor is trained end-to-end with the model. The receptor responds only to genuine confidence signals because noise doesn't phase-match the learned receptor pattern -- self-regulating by construction.
 
-### 48.3 Band-Level Self-Regulation
+### 49.3 Band-Level Self-Regulation
 
 A self-regulation mechanism where different frequency bands carry different self-signals:
 - Low bands: structural/syntactic confidence
@@ -978,7 +1002,7 @@ A self-regulation mechanism where different frequency bands carry different self
 
 Each band's self-signal modulates a different aspect of downstream processing. The model develops differentiated self-awareness across frequency bands without explicit supervision.
 
-### 48.4 Progressive Training with Autocrine Receptors
+### 49.4 Progressive Training with Autocrine Receptors
 
 A training procedure that combines progressive curriculum learning (build harmonic structure first) with autocrine receptor modules (let the model listen to that structure). The progressive training produces richer internal signals; the receptors enable the model to respond to those signals. The combination produces a model that self-regulates its confidence and processing depth without external decoders.
 
@@ -1031,11 +1055,12 @@ A training procedure that combines progressive curriculum learning (build harmon
 | 41 | Climate and meteorology | Earth Sciences |
 | 42 | Defence and security | Defence |
 | 43 | Quantum computing | Quantum / Computing |
-| 44 | Wave packet query engine | Computing / AI |
-| 45 | Harmonic translator engine | Computing / AI |
-| 46 | Confidence-guided decoding | AI |
-| 47 | Selective band loading (RAM-disk membrane) | Computing / AI |
-| 48 | Autocrine signalling (self-monitoring) | AI |
+| 44 | Analogue/neuromorphic computing | Hardware / Computing |
+| 45 | Wave packet query engine | Computing / AI |
+| 46 | Harmonic translator engine | Computing / AI |
+| 47 | Confidence-guided decoding | AI |
+| 48 | Selective band loading (RAM-disk membrane) | Computing / AI |
+| 49 | Autocrine signalling (self-monitoring) | AI |
 
 ---
 

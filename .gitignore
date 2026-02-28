@@ -4,4 +4,7 @@ __pycache__/
 python/data/
 rust-transformer/data/
 rust-transformer/target/
+experiments/phase17-weight-analysis/target/
+experiments/phase17-weight-analysis/data/
+experiments/phase17-weight-analysis/weights/
 research-lab/
