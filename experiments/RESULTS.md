@@ -975,6 +975,24 @@ Candle (HuggingFace's Rust ML framework) does not propagate gradients through pr
 
 This is the seventh time cross-language/cross-framework validation has caught a hidden assumption. Corrective Finding #6 was caught by Rust; Corrective Finding #7 was caught by Python.
 
+### Interpretation: Frequency-Stratified Signal
+
+The lambda pattern reveals the model performing frequency-dependent triage on the harmonic prior:
+
+- **Low-frequency harmonics (Head 0, Head 1): amplified** (λ up to +0.54). These encode broad token-class distinctions — "this is a vowel," "this is punctuation." Coarse geometric structure that maps to real character categories. The model says "yes, this is useful context."
+- **High-frequency harmonics (Head 3): suppressed or inverted** (λ down to -0.08). These encode fine-grained identity distinctions — "this specific character is three positions from that one on the phase circle." The model says "this is noise, remove it."
+- **Mid-frequency harmonics (Head 2): ignored** (λ stays near 0.1). Neither signal nor noise.
+
+The model can see the difference between useful and useless frequency bands and responds accordingly. It just cannot turn that categorical signal into better prediction because learned Q/K already captures the same information more flexibly.
+
+### Future Work Hypothesis: Vocabulary Complexity Scaling
+
+The Shakespeare character set has 65 tokens with coarse category structure — vowels, consonants, punctuation, digits. A 50,000-token vocabulary has rich hierarchical category structure — nouns, verbs, medical terms, legal terms, subcategories within subcategories.
+
+The low-frequency harmonic signal that the Shakespeare model found "partially useful" (λ increased but loss unchanged) might become genuinely useful when the vocabulary is rich enough to have deep categorical structure worth encoding geometrically. The finding is not "harmonic attention fails" but "harmonic attention provides frequency-stratified signal that scales with vocabulary complexity." At 65 tokens, not enough structure to matter. At 50,000 tokens, it might.
+
+This is a clean, testable hypothesis that follows directly from the lambda pattern.
+
 ### Phase 18-19b Complete Picture
 
 | Phase | Approach | Val Loss | vs Standard | Root Cause |
@@ -985,13 +1003,13 @@ This is the seventh time cross-language/cross-framework validation has caught a 
 
 All three approaches fail because harmonic embedding dot products encode token identity, not token relevance. PyTorch verification (Phase 19b) refined this: the model CAN detect frequency-dependent structure (lambda learns to amplify low-frequency heads and suppress high-frequency heads), but this geometric knowledge doesn't help predict which characters follow which. That statistical relationship must be LEARNED, which is exactly what Q/K projections do.
 
-### Boundary Finalised
+### Boundary Finalised (Revised)
 
 Wave coherence operates on what models produce (representations, retrieval), not on how they compute (attention, weights). The boundary between where harmonic structure helps and where it hurts is the learned projection:
 
 - **Before the projection** (embeddings): harmonic structure helps. Frozen beats learned.
-- **The projection itself** (Q/K weights): must remain unconstrained. Cannot be replaced, constrained, or biased by harmonic structure.
-- **After the projection** (attention patterns): emergent, task-specific, non-harmonic. The model must discover its own attention patterns through gradient descent.
+- **The projection itself** (Q/K weights): must remain unconstrained. Cannot be replaced or constrained by harmonic structure. Additive bias is tolerated but not beneficial at 65-token vocabulary. Whether richer vocabularies change this is an open question.
+- **After the projection** (attention patterns): emergent, task-specific. The model must discover its own attention patterns through gradient descent.
 
 ---
 
