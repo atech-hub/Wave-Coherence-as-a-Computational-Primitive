@@ -1304,6 +1304,31 @@ Verdict: 75% irreversible-nonlinear (L1-L3), 25% reversible (L0). The nonlinear 
 
 ---
 
+## Phase 22b: Analytical L0 Replacement
+
+Phase 22 showed L0 is 100% reversible. Can we replace L0's 8-step ODE with a per-band 2x2 linear transform?
+
+**Three modes tested:**
+
+| Mode | Val Loss | vs MLP | vs Full Kerr |
+|---|---|---|---|
+| MLP baseline | 1.7134 | - | -4.92% |
+| Full Kerr-ODE 8s | 1.8020 | +5.17% | baseline |
+| Hybrid (analytical L0, trained from scratch) | 1.8142 | +5.89% | +0.68% |
+| Post-hoc replacement (trained Kerr, L0 swapped at inference) | 4.7429 | +176.8% | +163.2% |
+
+**Post-hoc replacement: catastrophic failure.** The analytical linear approximation (ignoring Kerr terms) has 158% relative error on L0's output. Val loss goes from 1.80 to 4.74. Reversible does not mean linear. L0's alpha/beta are small (0.05) but over 8 Euler steps the accumulated nonlinear effect creates a specific output distribution that L1-L3 are trained to expect. Swapping it out breaks the contract.
+
+**Hybrid training: works.** Training from scratch with PerBandLinear at L0 gives +0.68% vs full Kerr-ODE. The learned L0 transforms are near-identity (Frobenius norm 1.40 vs identity's 1.41, determinant 0.98, trace 1.98), confirming L0 barely transforms the signal.
+
+**Key insight -- impedance matching:** L0's function is not to transform the signal. Its function is to condition it. Near-identity, barely changes anything, but establishes the distribution that the nonlinear layers (L1-L3) expect as input. The Kerr-ODE at L0 acts as a handshake protocol -- the content is nearly a no-op, but downstream layers check for the exact signature. This is not wasted compute; it is impedance matching between the embedding layer and the nonlinear computation layers.
+
+**Implication for clamping experiment:** If downstream layers adapt to the exact output distribution of upstream layers -- including clamping artifacts -- then widening clamps post-hoc will cause the same distribution shift. The safe approach: train from scratch with wider clamps.
+
+Verdict: Reversible does not equal replaceable. The 25% ODE compute saving IS achievable (+0.68% cost) but only through hybrid training from scratch, not post-hoc substitution. L0 performs impedance matching, not computation.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -1335,3 +1360,4 @@ Verdict: 75% irreversible-nonlinear (L1-L3), 25% reversible (L0). The nonlinear 
 | 21. Kerr-ODE Layer | Can nonlinear optics ODE replace MLP? | **PARTIALLY** -- 7.7-8.5% worse with 7.9x fewer FFN params. Kerr nonlinearity (|Z|^2 cross-band coupling) cuts the gap from LC's 21.3% to 7.7%. Depth-dependent nonlinearity: deep layers amplify Kerr effect, shallow layers suppress it. First wave-native primitive that meaningfully competes with matmul. |
 | 21b. Per-Band Kerr | Does per-band alpha_k/beta_k close the 8% gap? | **NO** -- 0.54pp improvement over scalar (negligible). All layers' alpha/beta std < 0.02 (clustered). Integration depth (8 vs 4 steps) matters 4x more than per-band freedom. Same pattern as Phase 17: freedom granted, freedom ignored. |
 | 22. Inverse Kerr | What does the Kerr-ODE actually compute? | **Binary split**: L0 100% reversible (spectral remixing), L1-L3 100% irreversible-nonlinear (genuine computation). Zero damping-irreversibility. Clamping gradient: L3 has 95% of bands hitting the clamp -- information bottleneck. Three interventions: analytical L0, wider clamps, RK4 for L1-L3. |
+| 22b. Analytical L0 | Can L0's ODE be replaced with a linear transform? | **PARTIALLY** -- Hybrid training from scratch: +0.68% vs full Kerr (viable, 25% ODE compute saving). Post-hoc replacement: +163% (catastrophic). Reversible does not equal replaceable. L0 performs impedance matching -- near-identity conditioning that downstream layers are calibrated to expect. |
