@@ -1230,6 +1230,14 @@ This is the first wave-native computation primitive that meaningfully competes w
 
 The Kerr nonlinearity provides what the LC layer couldn't: **intensity-dependent frequency coupling**. In optical physics, this is what enables wavelength conversion, four-wave mixing, and soliton formation. In neural computation, it enables bands to create nonlinear features of each other's content.
 
+### References
+
+The Kerr-ODE layer's dynamics are adapted from two independent lines of work:
+
+**Kerr physics**: Pal et al. (2024), "Linear and Nonlinear Coupling of Light in Twin-Resonators with Kerr Nonlinearity" (arXiv:2404.05646v2). Their coupled Lugiato-Lefever equation (Eq. 1) provides the self-phase modulation term (i|E|^2 E) and cross-phase modulation term (i*2|E'|^2 E) that we adapt as alpha * |Z_k|^2 * Z_k and beta * sum(|Z_j|^2) * Z_k. The physical substrate -- coupled optical microresonators with Kerr nonlinearity -- is the direct analog of our computational layer: resonant cavities exchanging energy through nonlinear coupling.
+
+**Neural ODE for signal processing**: Kato et al. (2024), "Multi-Band Wi-Fi Neural Dynamic Fusion" (arXiv:2407.12937v1, ICASSP 2024). Their multi-encoder -> learned ODE evolution -> latent alignment -> fusion -> decoder architecture demonstrates that neural ODEs work as practical computation primitives for multi-band signal processing. Our approach applies the same principle (ODE integration as a computation layer) but replaces their learned neural dynamics with physics-based Kerr dynamics, and replaces their multi-band Wi-Fi signals with harmonic transformer embeddings.
+
 ---
 
 ## Summary
