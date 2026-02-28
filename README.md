@@ -61,9 +61,9 @@ These properties emerge from training methodology, not from explicit design. The
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
 | `python/harmonic_transformer.py` | Test 25: Character-level harmonic transformer — no tokens, pure geometry (requires `torch` with CUDA) |
 | `rust-transformer/` | Test 25 cross-language reproduction: harmonic transformer in pure Rust using candle (HuggingFace's Rust ML framework) |
-| `experiments/` | 16 training experiments (Phases 1-16) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, and more |
+| `experiments/` | 17 training experiments (Phases 1-17) with results — spectral persistence, progressive learning, harmonic decoding, wave packet engine, weight spectral analysis, and more |
 | `experiments/rust-experiments/` | Pure Rust cross-language validation of math-only experiments (Phases 4, 5, 16). Zero dependencies, zero GPU. 14 tests, all passing. |
-| `ENGINE-PATTERNS.md` | Defensive publication: 48 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, and 15 other domains |
+| `ENGINE-PATTERNS.md` | Defensive publication: 50 engine pattern families (160+ implementations) as prior art across computing, AI, healthcare, finance, aerospace, automotive, robotics, energy, quantum computing, analogue/neuromorphic hardware, and 15 other domains |
 
 ## Reproduce the Validation
 
