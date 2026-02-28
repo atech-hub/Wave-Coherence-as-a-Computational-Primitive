@@ -1329,6 +1329,37 @@ Verdict: Reversible does not equal replaceable. The 25% ODE compute saving IS ac
 
 ---
 
+## Phase 22c: Wider Clamps -- Is the Ceiling the Clamp or the Dynamics?
+
+Phase 22 found 95% of L3 bands hitting the [-10, 10] clamp. Phase 22b showed post-hoc changes cause distribution shift. This experiment trains from scratch with different clamp bounds.
+
+**Results:**
+
+| Mode | Val Loss | vs MLP | vs [-10, 10] |
+|---|---|---|---|
+| MLP baseline | 1.7198 | - | -5.01% |
+| Kerr [-10, 10] | 1.8105 | +5.27% | baseline |
+| Kerr [-50, 50] | 1.7813 | +3.57% | -1.61% |
+| Kerr unclamped [-1000] | 1.8198 | +5.81% | +0.51% |
+
+**The sweet spot is moderate widening, not removal.** [-50, 50] closes ~1.7pp of the gap to MLP (from +5.27% to +3.57%). Unclamped actually hurts -- Euler integration produces transient spikes up to 178 million in L2-L3 that corrupt learning. Some clamping is needed as regularisation against Euler instability.
+
+**Dynamic range analysis (peak magnitudes per layer):**
+
+| Clamp | L0 | L1 | L2 | L3 |
+|---|---|---|---|---|
+| [-10, 10] | 178 | 180 | 179 | 178 |
+| [-50, 50] | 19,728 | 21,750 | 22,172 | 22,297 |
+| unclamped | 6.9M | 168M | 177M | 178M |
+
+Even with [-10, 10] clamp, the Euler integrator produces transient values up to 178 before being clipped. Without constraint, values reach hundreds of millions. The dynamics do NOT naturally saturate -- the clamp is providing essential regularisation against Euler instability, not just truncating signal.
+
+**Interpretation:** The [-10, 10] clamp was slightly too tight (cutting real signal), but the problem is fundamentally Euler integration producing transient spikes, not the architecture limiting dynamic range. A higher-order integrator (RK4) that doesn't produce these spikes might be more effective than simply widening the clamp -- it would give the model stable access to whatever dynamic range the computation naturally needs without requiring an arbitrary ceiling.
+
+Verdict: Minor bottleneck. Wider clamp [-50, 50] recovers ~30% of the MLP gap. The remaining ~3.6% gap is architectural, not clamp-induced. The transient spike data suggests RK4 integration as the more principled solution.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
