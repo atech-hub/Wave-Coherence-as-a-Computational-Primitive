@@ -1360,6 +1360,39 @@ Verdict: Minor bottleneck. Wider clamp [-50, 50] recovers ~30% of the MLP gap. T
 
 ---
 
+## Phase 22d: RK4 Integration -- Does Integration Quality Close the Gap?
+
+Phase 22c found unclamped Euler produces 178M transient spikes. If those are integration artifacts (not real dynamics), RK4 should eliminate them and allow stable unclamped operation.
+
+**Results:**
+
+| Mode | Val Loss | vs MLP | vs Euler | Time |
+|---|---|---|---|---|
+| MLP baseline | 1.6883 | - | - | 65s |
+| Kerr Euler 8s [-50,50] | 1.8294 | +8.36% | baseline | 106s |
+| Kerr RK4 8s [-50,50] | 1.7982 | +6.51% | -1.71% | 268s |
+| Kerr RK4 8s unclamped | 1.8011 | +6.68% | -1.55% | 268s |
+
+**The 178M peaks were 100% Euler artifacts.** Under RK4, the natural dynamic range of the Kerr-ODE is tiny:
+
+| Integrator | L0 peak | L1 peak | L2 peak | L3 peak |
+|---|---|---|---|---|
+| Euler [-50,50] | 13,202 | 22,171 | 22,172 | 22,100 |
+| RK4 [-50,50] | 4.8 | 5.1 | 6.1 | 6.5 |
+| RK4 unclamped | 4.5 | 5.1 | 5.7 | 6.2 |
+
+Zero bands exceed 10 under RK4. Zero bands exceed 50. The clamp is never triggered. The entire clamping discussion from Phases 22-22c was about managing Euler instability, not constraining real dynamics.
+
+**RK4 improves by 1.71% over Euler** (same clamp, same step count). The improvement comes from accurate integration, not wider dynamic range. Unclamped RK4 matches clamped RK4 because the dynamics don't need the range.
+
+**The remaining MLP gap is ~6.5%.** This is the architectural ceiling of the Kerr-ODE. Not integration quality, not clamping, not per-band expressiveness -- the ODE structure itself. RK4 closed 1.85 percentage points of the gap; the rest is what |Z|^2 cross-band coupling costs you versus dense matmul.
+
+**Compute cost:** RK4 takes 2.5x longer (4 derivative evaluations per step vs 1). For 1.71% improvement, this is a steep trade-off. In practice, Euler with [-50,50] clamp captures most of the benefit at much lower cost.
+
+Verdict: RK4 confirms the 178M peaks were pure Euler artifacts. The Kerr-ODE's natural dynamics are well-behaved (peak magnitude 6.5). Integration quality contributes ~1.7pp of the MLP gap. The remaining ~6.5% gap is architectural -- the ceiling of what this wave-native primitive can achieve.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -1392,3 +1425,5 @@ Verdict: Minor bottleneck. Wider clamp [-50, 50] recovers ~30% of the MLP gap. T
 | 21b. Per-Band Kerr | Does per-band alpha_k/beta_k close the 8% gap? | **NO** -- 0.54pp improvement over scalar (negligible). All layers' alpha/beta std < 0.02 (clustered). Integration depth (8 vs 4 steps) matters 4x more than per-band freedom. Same pattern as Phase 17: freedom granted, freedom ignored. |
 | 22. Inverse Kerr | What does the Kerr-ODE actually compute? | **Binary split**: L0 100% reversible (spectral remixing), L1-L3 100% irreversible-nonlinear (genuine computation). Zero damping-irreversibility. Clamping gradient: L3 has 95% of bands hitting the clamp -- information bottleneck. Three interventions: analytical L0, wider clamps, RK4 for L1-L3. |
 | 22b. Analytical L0 | Can L0's ODE be replaced with a linear transform? | **PARTIALLY** -- Hybrid training from scratch: +0.68% vs full Kerr (viable, 25% ODE compute saving). Post-hoc replacement: +163% (catastrophic). Reversible does not equal replaceable. L0 performs impedance matching -- near-identity conditioning that downstream layers are calibrated to expect. |
+| 22c. Wider Clamps | Is [-10,10] clamp an information bottleneck? | **MINOR** -- [-50,50] improves 1.61%. Unclamped hurts (-0.51%) due to Euler transient spikes (178M). Moderate widening helps; removal exposes integration instability. |
+| 22d. RK4 Integration | Does integration quality close the MLP gap? | **PARTIALLY** -- RK4 improves 1.71% over Euler. Peak magnitudes drop from 22,000 to 6.5 -- the 178M spikes were 100% Euler artifacts. Remaining MLP gap: ~6.5%. This is the architectural ceiling. |
