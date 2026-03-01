@@ -1393,6 +1393,52 @@ Verdict: RK4 confirms the 178M peaks were pure Euler artifacts. The Kerr-ODE's n
 
 ---
 
+## Phase A: Full Stack Integration Test
+
+Do the validated components work together as a system? Assemble everything and measure.
+
+**Components:**
+- Embeddings: frozen harmonic (no gradient)
+- Layer 0: PerBandLinear (analytical, no ODE) -- from Phase 22b
+- Layers 1-3: Kerr-ODE with RK4 solver (no clamp needed) -- from Phase 22d
+- Attention: standard learned Q/K (unchanged)
+- Training: progressive curriculum (bands 1-8, 1-24, 1-64) -- from Phase 6
+
+**Results:**
+
+| Mode | Val Loss | Train Loss | Params | Time |
+|---|---|---|---|---|
+| MLP baseline | 1.7096 | 1.5157 | 801,664 | 65s |
+| Full stack | 1.7635 | 1.5889 | 341,638 | 221s |
+
+**Gap: +3.15%. Performance: 96.8% of MLP. Parameters: 42.6% (460K fewer).**
+
+This beats the 93.5% component-level ceiling (Phase 22d). The components synergise rather than interfere.
+
+**Convergence (full stack uses progressive bands):**
+
+| Step | MLP | Full stack | Gap |
+|---|---|---|---|
+| 0 | 4.229 | 4.193 | -0.9% |
+| 200 | 2.460 | 3.946 | +60% (8 bands only) |
+| 600 | 2.132 | 4.062 | +91% (8 bands only) |
+| 800 | 2.024 | 3.574 | +77% (24 bands) |
+| 1200 | 1.870 | 4.183 | +124% (24 bands) |
+| 1400 | 1.808 | 2.048 | +13% (all 64 bands) |
+| 1600 | 1.763 | 1.856 | +5.3% |
+| 1800 | 1.749 | 1.808 | +3.4% |
+| 1999 | 1.710 | 1.764 | +3.2% |
+
+The progressive curriculum spends 2/3 of training on restricted bands. When evaluated with all 64 bands, those stages look catastrophic because the masked bands are zero. But the model is building internal structure -- when all bands activate at step 1334, it converges to 1.764 in only 666 steps. The slope at step 1999 shows the model is still learning (not plateaued).
+
+**Dynamics are well-behaved:** Peak magnitudes across all Kerr-ODE layers stay within [-7, 7]. No clamping triggered. L0's PerBandLinear Frobenius norm stays at ~1.36 (near-identity, as expected from Phase 22b).
+
+**Band energy distribution:** The full stack concentrates more energy in its top bands (23.1% in top 8 vs MLP's 19.4%), with band 49 alone carrying 4.4%. The wave-native layers produce a more structured frequency distribution.
+
+Verdict: **Infrastructure validated.** The combined stack achieves 96.8% of MLP performance at 42.6% of parameters, beating the component-level prediction. Frozen embeddings, analytical L0, Kerr-ODE RK4, and progressive curriculum work together without interference. The foundation holds.
+
+---
+
 ## Summary
 
 | Phase | Question | Result |
@@ -1427,3 +1473,4 @@ Verdict: RK4 confirms the 178M peaks were pure Euler artifacts. The Kerr-ODE's n
 | 22b. Analytical L0 | Can L0's ODE be replaced with a linear transform? | **PARTIALLY** -- Hybrid training from scratch: +0.68% vs full Kerr (viable, 25% ODE compute saving). Post-hoc replacement: +163% (catastrophic). Reversible does not equal replaceable. L0 performs impedance matching -- near-identity conditioning that downstream layers are calibrated to expect. |
 | 22c. Wider Clamps | Is [-10,10] clamp an information bottleneck? | **MINOR** -- [-50,50] improves 1.61%. Unclamped hurts (-0.51%) due to Euler transient spikes (178M). Moderate widening helps; removal exposes integration instability. |
 | 22d. RK4 Integration | Does integration quality close the MLP gap? | **PARTIALLY** -- RK4 improves 1.71% over Euler. Peak magnitudes drop from 22,000 to 6.5 -- the 178M spikes were 100% Euler artifacts. Remaining MLP gap: ~6.5%. This is the architectural ceiling. |
+| A. Full Stack | Do the components work together as a system? | **YES + SYNERGY** -- 96.8% of MLP at 42.6% parameters (1.7635 vs 1.7096). Beats 93.5% component ceiling. Frozen harmonic embeddings + analytical L0 + Kerr-ODE RK4 L1-L3 + progressive curriculum. Infrastructure validated. |
