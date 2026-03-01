@@ -1116,13 +1116,32 @@ The key insight is that Kerr nonlinearity provides nonlinear multi-band fusion �
 - Expanded to real-valued ODE: dr/dt = -gamma·r - phi·s, ds/dt = -gamma·s + phi·r, where phi = omega + alpha·(r^2+s^2) + beta·neighbour_sum
 - Cross-phase modulation via depthwise conv1d with fixed kernel [1,1,0,1,1] (nearest-two-neighbour coupling)
 - Damping enforced positive via softplus: gamma = log(1 + exp(gamma_raw)), preventing anti-damping (lasing instability)
-- State clamped to [-10, 10] after each integration step for numerical stability
+- State clamped to [-50, 50] after each integration step for Euler numerical stability; under RK4 integration (4th-order Runge-Kutta), no clamping is needed — dynamics naturally stay within [-7, 7]
 - Output projection: Linear(d, d) maps ODE output back to embedding space
 - Total parameters per layer: 5 scalars (N gammas, N omegas, 1 alpha, 1 beta) + d^2 projection = approximately d^2 + 2N + 2
 
 **References:**
 - Pal et al. (2024), arXiv:2404.05646v2 — Coupled Lugiato-Lefever equation, Kerr self-phase and cross-phase modulation terms
 - Kato et al. (2024), arXiv:2407.12937v1 — Neural ODE framework for multi-band signal processing, ODE-based differentiable layers
+
+### 51.7 Integrated Wave-Native Transformer Stack
+
+A complete transformer architecture assembling validated wave-native components into a single system: frozen harmonic embeddings (no gradient, pure trigonometric lookup), analytical per-band linear transform for the first FFN layer (learned 2x2 matrix per frequency band, replacing the ODE with a closed-form operation), Kerr-ODE with RK4 integration for remaining FFN layers (no clamping required — dynamics bounded within [-7, 7] under 4th-order integration), standard learned attention (Q/K projections must remain unconstrained), and progressive band curriculum training (structure-first schedule exposing bands 1-8, then 1-24, then all N bands across training stages).
+
+The key insight is that the components synergise: the integrated system achieves better performance than component-level testing predicts. The progressive curriculum builds internal structure during restricted-band stages that accelerates convergence when all bands activate. The analytical L0 performs impedance matching (near-identity signal conditioning) that the downstream Kerr-ODE layers are calibrated to expect. Replacing L0 post-hoc is catastrophic; training from scratch is viable.
+
+**Experimental validation (Phase A):**
+- Full stack: 96.8% of MLP performance at 42.6% of parameters (341K vs 801K)
+- Beats component-level ceiling of 93.5% — components synergise rather than interfere
+- Progressive curriculum converges to final performance in only 666 full-band steps after 1334 restricted-band steps
+- Dynamics bounded: peak magnitude 6.5 across all Kerr-ODE layers, zero clamping triggered
+
+**Implementation pattern:**
+- Layer 0 FFN: PerBandLinear — learned 2x2 transform per band (W_k @ [r_k, s_k] + b_k) initialised as identity, plus output projection Linear(d, d)
+- Layers 1-N FFN: Kerr-ODE with RK4 integration, 8 steps, no clamp
+- Embeddings: frozen harmonic table, cos(n*theta) and sin(n*theta) for n=1..N/2, scaled by 1/sqrt(N/2)
+- Progressive schedule: stage boundaries at 1/3 and 2/3 of total training steps
+- Evaluation always uses all bands regardless of training stage
 
 ---
 
@@ -1202,7 +1221,7 @@ A pruning strategy that leverages the frequency structure of harmonic embeddings
 | 48 | Selective band loading (RAM-disk membrane) | Computing / AI |
 | 49 | Autocrine signalling (self-monitoring) | AI |
 | 50 | Curriculum-induced harmonic specialisation | AI / Training |
-| 51 | Frequency-native transformation engine (incl. Kerr-ODE) | Computing / AI / Hardware / Optics |
+| 51 | Frequency-native transformation engine (incl. Kerr-ODE, integrated stack) | Computing / AI / Hardware / Optics |
 | 52 | Ternary-harmonic hybrid engine | Hardware / AI |
 
 ---
