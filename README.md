@@ -9,8 +9,8 @@ A validated mathematical framework that uses phase encoding on the unit circle a
 The framework includes:
 
 - **A geometric relationship catalog** — every structural relationship pattern discoverable on a phase circle, stripped of all domain-specific interpretation, expressed as pure mathematics
-- **A validation paper** — 25 tests, 6 corrective findings, all passing, with reproducible Rust and Python code
-- **An architecture proposal** — applying wave mechanics as a substrate for LLM attention and knowledge representation
+- **A validation paper** — 25 tests, 7 corrective findings, all passing, with reproducible Rust and Python code
+- **An architecture proposal** — applying wave mechanics as a substrate for LLM embeddings, FFN computation, and knowledge representation
 
 ## Origin
 
@@ -21,7 +21,7 @@ The key theoretical insights:
 1. **Harmonic coherence (an established Fourier operation) works as a universal relationship operator for database queries.** One function, parameterized by frequency, detects any angular relationship. No relationship-specific code paths needed.
 2. **Some relationships are non-geometric.** Structural pairings exist independent of angular distance, requiring explicit lookup tables alongside the geometric engine.
 3. **Harmonics are infinite.** The relationship detection capacity is unbounded — not limited to a fixed set of patterns. The geometric invariants (symmetry groups on circles) remain valid at every frequency.
-4. **The same primitives that work for database queries map onto LLM attention mechanisms.** Transformers effectively discover wave-like structure through training. Pre-building that structure as the computational substrate could improve efficiency and reasoning capability.
+4. **The same primitives that work for database queries map onto LLM embedding and FFN layers.** Transformers effectively discover wave-like structure through training. Pre-building that structure as the computational substrate reduces parameters and improves efficiency. Attention Q/K projections require full-rank learned weights (Phase 18-19), but embeddings and feed-forward computation benefit from harmonic structure.
 
 ## What Is and Is Not New
 
@@ -35,7 +35,7 @@ The key theoretical insights:
 - Using harmonic coherence as a database query operator, replacing JOINs with frequency-parameterized scans
 - The geometric relationship catalog — a comprehensive taxonomy of relationship types (symmetric, asymmetric, directed, structural, compound) derived from cross-civilizational analysis of circle-division systems, stripped of interpretive layers
 - Harmonic fingerprinting for collision resolution — using multi-harmonic probing to disambiguate phase-encoded values, with a validated closed-form formula: `n = ⌈arccos(t) / Δθ⌉`
-- The proposal that these primitives could serve as a substrate for LLM attention mechanisms
+- The proposal that these primitives could serve as a substrate for LLM embeddings and FFN computation (attention Q/K projections proven to require full-rank learned weights — Phases 18-19)
 
 We make no claim of having discovered new mathematics. The contribution, if any, is in recognising that established mathematical tools solve a specific class of problems (relationship-dense queries) more elegantly than the methods currently used, and in compiling the relationship type catalog that defines what the tools can express.
 
@@ -196,7 +196,7 @@ The implication for LLM architecture: harmonic embeddings could serve as **struc
 - Directed phase relationships as native reasoning chain primitives
 - Infinite harmonic capacity without additional parameters
 
-The hypothesis: learned embeddings discover through gradient descent a structure that harmonic encoding provides by construction. If true, pre-building the harmonic structure could reduce training cost, improve interpretability, and lower energy consumption.
+The hypothesis — now partially demonstrated: learned embeddings discover through gradient descent a structure that harmonic encoding provides by construction. Tests 25 and Phase A confirm this for the embedding layer (frozen harmonic embeddings match or outperform learned ones) and for the FFN layer (Kerr-ODE achieves 96.8% of MLP at 42.6% of parameters in the full stack). Pre-building harmonic structure reduces training cost, improves interpretability, and lowers energy consumption. The remaining open question is whether these gains scale to larger architectures.
 
 ### Language-Independent Training
 
@@ -236,7 +236,7 @@ Sun et al. (2019) established with RotatE that modeling relations as rotations i
 
 Moriya (2025) demonstrated with the Surface-Enhanced Coherence Transform (SECT) that decomposing aggregate coherence into surface and propagation components recovers physical structure that ensemble averaging destroys. His admissibility conditions for valid coherence kernels -- Hermiticity, positive-definiteness, normalization, spectral scaling -- provide the formal contract validated in Test 22 of the present work. The structural parallel is exact: his aggregate coherence loses information the same way cosine similarity does in Test 21, and his per-component decomposition recovers it the same way harmonic sweep does.
 
-Pal et al. (2024) characterized linear and nonlinear coupling in twin optical microresonators with Kerr nonlinearity. Their coupled Lugiato-Lefever equation (Eq. 1) provides the self-phase modulation (i|E|^2 E) and cross-phase modulation (i*2|E'|^2 E) terms that Phase 21 adapts as the computational primitive for a wave-native transformer FFN layer. The physical substrate -- coupled resonant cavities exchanging energy through intensity-dependent phase shifts -- is the direct analog of harmonic bands interacting through amplitude-squared coupling. The Kerr-ODE layer achieves 92% of MLP performance with 7.9x fewer parameters, confirming that nonlinear optics provides a viable computation model for frequency-structured neural network data.
+Pal et al. (2024) characterized linear and nonlinear coupling in twin optical microresonators with Kerr nonlinearity. Their coupled Lugiato-Lefever equation (Eq. 1) provides the self-phase modulation (i|E|^2 E) and cross-phase modulation (i*2|E'|^2 E) terms that Phase 21 adapts as the computational primitive for a wave-native transformer FFN layer. The physical substrate -- coupled resonant cavities exchanging energy through intensity-dependent phase shifts -- is the direct analog of harmonic bands interacting through amplitude-squared coupling. The Kerr-ODE layer achieves 92% of MLP performance standalone (Phase 21) and 96.8% in the full stack integration (Phase A) at 42.6% of total parameters, confirming that nonlinear optics provides a viable computation model for frequency-structured neural network data.
 
 Kato et al. (2024) demonstrated that neural ODEs serve as practical computation primitives for multi-band signal processing in their Wi-Fi neural dynamic fusion architecture. Their multi-encoder to learned ODE evolution to latent alignment pipeline proves the viability of ODE integration as a trainable computation layer. Phase 21 applies the same principle -- ODE integration as a layer -- but replaces learned neural dynamics with physics-based Kerr dynamics, operating on harmonic transformer embeddings rather than Wi-Fi channel state information.
 
@@ -252,7 +252,7 @@ Kato et al. (2024) demonstrated that neural ODEs serve as practical computation 
 
 This work is a collaboration between Marco (conceptual framework, key theoretical insights, architectural direction) and Claude (Anthropic's AI assistant — mathematical formalization, documentation, test design, and code generation). 
 
-The core insights — that ancient geometric relationship catalogs encode a complete taxonomy of structural relationships, that harmonics are infinite and geometric invariants persist across all frequencies, and that these primitives map onto LLM attention mechanisms — originated from Marco's observations and questions during extended collaborative sessions.
+The core insights — that ancient geometric relationship catalogs encode a complete taxonomy of structural relationships, that harmonics are infinite and geometric invariants persist across all frequencies, and that these primitives map onto LLM embedding and FFN layers — originated from Marco's observations and questions during extended collaborative sessions.
 
 ## License
 
