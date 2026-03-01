@@ -56,6 +56,8 @@ These properties emerge from training methodology, not from explicit design. The
 | `docs/wave-test-program.md` | Test program specification — 20 tests validating the core math |
 | `docs/wave-mechanics-validation-paper-theoretical.md` | Pre-test validation paper — formal framework and expected results (written before code execution) |
 | `docs/wave-mechanics-validation-paper-empirical.md` | Post-test validation paper — actual results, real numbers, corrective findings from running the code |
+| `docs/MATHEMATICS.md` | Formal mathematical foundations — definitions, propositions, and design constraints in standard notation (language-independent) |
+| `docs/KERR-ODE-MATHEMATICS.md` | Kerr-ODE mathematical foundations — the ODE system, integration, reversibility, analytical solutions, and the integrated architecture. Mathematics from nonlinear optics and numerical methods applied as a wave-native FFN replacement |
 | `src/` | Rust source code for the validation test suite (~2400 lines, zero dependencies) |
 | `python/` | Python translation of the full test suite (Python 3.10+, zero dependencies) |
 | `python/embedding_analysis.py` | Test 24: Harmonic structure analysis of real transformer embeddings (requires `sentence-transformers`) |
