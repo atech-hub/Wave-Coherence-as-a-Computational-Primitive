@@ -209,6 +209,7 @@ The circle sees a wall. The embedded method sees a landscape.
 | 5 | Embedded method produces genuinely different view | Proven |
 | 6 | Embedded achieves 100% retrieval vs 12% circle on synthetic data | Proven |
 | 7 | Linear z-score: α*=0.001 for 23/23, but discrimination gap ~zero | Proven |
+| 8 | Quantile confirms structural bottleneck — T16 is the wall, not outliers | Proven |
 
 **The embedded formula:**
 ```
@@ -269,37 +270,64 @@ The circle sees a wall. The embedded method sees a landscape.
 - T14 (harmonic orthogonality) breaks at α = 0.030
 - 11 tests never fail regardless of alpha
 
-**Conclusion:** The linear z-score formula `adj = α × (mag − μ) / σ` cannot simultaneously maintain backward compatibility AND provide discrimination at 51.5% CV. The operating window is effectively zero. The formula variant matters — need to test alternatives (quantile mapping, tanh compression, per-band alpha, selective application, band selection) to find one that opens the window.
+**Conclusion:** The linear z-score formula `adj = α × (mag − μ) / σ` cannot simultaneously maintain backward compatibility AND provide discrimination at 51.5% CV. The operating window is effectively zero.
 
 ---
 
-## Next: Formula Variant Sweep
+## Phase 8: Quantile Variant — Confirming the Structural Bottleneck
 
-Before proceeding to Option A (word-level transformer), test whether alternative formulas can open the operating window that the linear z-score cannot.
+**File:** `variant_quantile_sweep.rs` — linear vs quantile head-to-head, zero dependencies
 
-Five variants to test:
-1. **Quantile:** adj = α × (2 × rank_percentile − 1) — bounded output, no outliers
-2. **Tanh:** adj = α × tanh(z-score) — squashes extremes
-3. **Per-Band Alpha:** α_i = α₀ / CV_i — trust tight bands more
-4. **Selective:** Only apply when circle score ∈ [0.90, 0.99]
-5. **Band Selection:** Only adjust top-K bands by magnitude variance
+**Question:** Does bounding the adjustment to [-α, +α] via rank percentile mapping open the operating window?
+
+**Formula:** `adj = α × (2 × rank_percentile(mag) − 1)`
+
+**Hypothesis:** The 1.7-sigma outlier problem broke tests at α=0.1. Quantile maps every magnitude to [0,1] regardless of distribution shape — no outliers, no fat tails. Should allow higher α while preserving backward compatibility.
+
+**Head-to-head results:**
+
+| alpha | Linear Pass | Linear Gap | Quantile Pass | Quantile Gap | Winner |
+|-------|-------------|------------|---------------|--------------|--------|
+| 0.100 | 11/23 | 0.030545 | 16/23 | 0.010412 | Quantile |
+| 0.050 | 16/23 | 0.007670 | 19/23 | 0.002607 | Quantile |
+| 0.010 | 20/23 | 0.000307 | 20/23 | 0.000104 | Tie |
+| 0.005 | 20/23 | 0.000077 | 22/23 | 0.000026 | Quantile |
+| 0.001 | 23/23 | 0.000003 | 23/23 | 0.000001 | Tie |
+
+**Quantile is more robust:** 16 tests never fail (vs linear's 11). At every alpha, quantile passes equal or more tests. But both hit 23/23 at the same α* = 0.001, with effectively zero discrimination.
+
+**The bottleneck is T16.** 360-resolution (1° discrimination) breaks at α = 0.003 for both variants. T16 tests whether the circle can uniquely identify each of 360 entities spaced 1° apart. Any phase perturbation above ~0.003 rad destroys this. No formula variant can escape this geometry.
+
+**Remaining 4 variants abandoned.** Tanh, per-band alpha, selective application, and band selection all perturb phase. T16 constrains all of them identically. Two data points (linear + quantile) are sufficient to establish the structural bound.
+
+**The pivot:** T16 is not the problem — it's the proof that the circle works. Sub-degree precision and magnitude ranking are two different jobs. A microscope and a scale measure different things. Embedding magnitude into phase asks one channel to do both. The data says this is structurally impossible.
+
+**Architectural decision: Dual channel, not embedded.** Circle score (detection + precision) and magnitude score (within-group ranking) should be reported separately per pair. The circle output is never perturbed. T16 never sees a perturbation. Magnitude adds information alongside.
 
 ---
 
-## After Variants: Option A — Word-Level Transformer Validation
+## Next: Option A — Word-Level Transformer (Dual-Channel)
 
-The synthetic test proves the mechanism. The open question is whether trained transformers naturally develop magnitude structure the embedded method can exploit.
+The synthetic tests used uniform random magnitudes — maximum chaos, 51.5% CV. A real optimizer doesn't produce random magnitudes. It produces magnitudes that serve the loss function. The global CV might be high but the local CV within semantically meaningful groups could be much lower.
 
-**The experiment:**
-1. Train a word-level Shakespeare transformer with harmonic embeddings
-2. Three modes: (A) pure circle, (B) embedded α=0.1, (C) trainable magnitude + frozen phase
-3. Run full test suite (Tests 1–25) in all three modes
-4. Measure: Does magnitude correlate with semantic similarity within word families? Does embedded coherence rank better? Does the α=0.1 sweet spot hold on real data?
+**The fundamental question:** Does training build magnitude structure that correlates with meaning?
 
-**Success criteria:**
-- Mode A results identical to existing (backward compatibility)
-- Mode B preserves all detections, adds within-group ranking on real data
-- Mode C closes part of the 3.2% remaining gap
+If yes — the information exists and we find a way to use it (dual channel, separate scoring, or something we haven't thought of yet).
+
+If no — magnitude is noise shaped by optimizer dynamics, and the investigation closes honestly.
+
+**Measure magnitude properties FIRST, before running coherence tests:**
+1. CV per harmonic band
+2. CV within semantic word families (names, verbs, emotions, etc.)
+3. Correlation between magnitude distance and semantic distance
+4. Distribution shape (uniform? peaked? clustered?)
+
+These measurements tell us what the optimizer built before we try to exploit it.
+
+**Three embedding modes to train:**
+1. **Baseline** — standard `nn.Embedding`, fully trainable (control)
+2. **Frozen** — harmonic cos/sin embeddings, fully frozen (existing approach)
+3. **Magnitude** — harmonic phases frozen, per-band magnitudes trainable (the hypothesis)
 
 ---
 
@@ -312,7 +340,9 @@ The synthetic test proves the mechanism. The open question is whether trained tr
 ## Open Questions
 
 1. Does the magnitude dimension help close the ~3.2% Kerr gap?
-2. Is 192-dim (128 phase + 64 elevation) worth the 50% size increase, or can magnitude be encoded more efficiently?
+2. ~~Is 192-dim (128 phase + 64 elevation) worth the 50% size increase?~~ **SUPERSEDED: Dual-channel approach — magnitude is a separate score, not embedded in phase.**
 3. What does the MLP coupling profile look like when magnitude structure is present?
 4. Does multi-grid × embedded give compounding benefit?
-5. ~~Is Chebyshev or Legendre better?~~ **ANSWERED: Chebyshev for detection, Legendre for latitude. Keep both — embedded method uses Chebyshev with magnitude-adjusted phase.**
+5. ~~Is Chebyshev or Legendre better?~~ **ANSWERED: Chebyshev for detection, Legendre for latitude.**
+6. ~~Can a formula variant open the operating window?~~ **ANSWERED: No. T16 (1° resolution) constrains all phase-perturbation methods identically. Two variants tested, same wall. Dual channel is the path.**
+7. **NEW:** Does training build magnitude structure that correlates with semantic similarity? (Option A answers this)
