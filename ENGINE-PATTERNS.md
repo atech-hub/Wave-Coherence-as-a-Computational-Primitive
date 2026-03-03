@@ -1251,6 +1251,38 @@ A retrieval enhancement where the circle-based coherence detects group membershi
 
 The tuning parameter α controls the trade-off between group detection (preserved at low α) and within-group discrimination (stronger at moderate α, degraded at high α). Optimal range: α = 0.05 to 0.15. At α = 0.1, the phase shift from magnitude is gentle enough to preserve group coherence while creating a monotonic discrimination gradient. At α > 0.3, the magnitude-induced phase shifts become large enough to disrupt group detection — the ranking signal overwhelms the group signal. At α = 0, the method reduces to standard phase coherence. The optimal α depends on the magnitude distribution of the trained embeddings and the number of harmonics used. The parameter is set once per model, not per query.
 
+### 55.5 Gated Hybrid Combiner
+
+An alternative architecture that combines circular coherence with spherical (Legendre) coherence via a modulation gate:
+
+H(a, b, n, l, β) = cos(n × (φ_a − φ_b)) × [(1−β) + β × P_l(cos(θ_a − θ_b))]
+
+where n is the azimuthal harmonic (Chebyshev, existing circle framework), l is the elevation harmonic (Legendre, new dimension), and β ∈ [0,1] is the modulation depth. At β=0, the formula reduces exactly to standard circle coherence. At β=1, it becomes the full product of circle and sphere signals. The gate ensures backward compatibility: if the elevation difference is zero, the bracket evaluates to 1.0 regardless of β, and the score equals the pure circle score.
+
+Experimental validation: 553/553 circle detections preserved at β=0.5. 137/180 elevation angles discriminated. Three combiners tested — Product (too aggressive, zeroes signal on elevation miss), Sum (breaks backward compatibility), Gated (preserves all detections while adding elevation discrimination). The gated combiner is the safe architectural choice. However, head-to-head comparison shows Spearman ρ = 0.988 vs pure circle — the gated method barely reranks. It modulates but does not transform. The embedded method (Pattern 55.1) produces ρ = 0.029 — a genuinely different ranking. The gated combiner is prior art for defensive purposes; the embedded method is the recommended architecture.
+
+### 55.6 Legendre Coherence Kernel
+
+A coherence function using Legendre polynomials instead of Chebyshev (cosine) polynomials. For two points on a sphere with angular separation γ, the degree-l coherence is:
+
+C_l^sphere(a, b) = P_l(cos γ)
+
+where P_l is computed via the three-term recurrence: P_0(x) = 1, P_1(x) = x, P_{l+1}(x) = ((2l+1)×x×P_l(x) − l×P_{l-1}(x)) / (l+1). Cost: 3 multiplies + 1 add per degree — same computational class as cos(nΔθ). Sphere point encoding: (θ, φ) → (x, y, z) = (sin θ cos φ, sin θ sin φ, cos θ), and cos γ = dot product of unit vectors (no trigonometry needed for the coherence argument itself).
+
+Key characterization: Legendre and Chebyshev agree at the endpoints — P_l(1) = T_n(1) = 1 (exact match), P_l(−1) = T_n(−1) = (−1)^l (opposition) — but disagree at every intermediate angle. Example: at 60°, T_3(cos 60°) = cos(180°) = −1.0, but P_3(cos 60°) = −0.4375. The Legendre kernel detects 0 relationships that the Chebyshev kernel misses (out of 442 strong detections tested). The Legendre kernel's value is latitude discrimination — distinguishing pairs at the same azimuthal separation but different elevations — not equatorial detection. Through degree l=10, the sphere provides 121 modes vs the circle's 21 (5.8× capacity), all from the latitude dimension.
+
+### 55.7 Frozen Phase / Trainable Magnitude Training
+
+A training configuration for harmonic embedding layers where the phase structure is frozen (no gradient, pure trigonometric computation) and only the magnitude (distance from origin) is trainable. The phase components cos(nθ) and sin(nθ) are fixed at initialization and never updated — they serve as the geometric scaffold. The per-band magnitude r_n is initialized uniformly and updated through backpropagation — it learns to encode information the phase alone cannot represent.
+
+This separates the two roles: phase encodes categorical/structural information (which group an entity belongs to, which harmonic family it resonates with), while magnitude encodes graded/continuous information (how strongly it belongs, how typical it is within its group). Frozen phase preserves all harmonic properties validated in Tests 1-25. Trainable magnitude adds the within-group ranking capability demonstrated in Pattern 55.3. The combination achieves the benefits of both frozen embeddings (Pattern 6.1 — no embedding gradient, interpretable structure) and trained embeddings (capacity to learn task-specific representations) without the tradeoffs of either alone.
+
+### 55.8 Sensitivity Characterization: Chebyshev vs Legendre
+
+The empirical finding that Chebyshev-based coherence (circle) is strictly more sensitive than Legendre-based coherence (sphere) for resonance detection at all intermediate angles. Comprehensive sweep across 360 angles × 15 harmonics: 442 pairs where circle coherence |cos(nΔθ)| > 0.95 and sphere coherence |P_l(cos γ)| < 0.50. Zero pairs where the sphere detects and the circle does not. The asymmetry grows with harmonic number — at n=1/l=1 the systems are identical, by n=15/l=15 they diverge substantially. Legendre polynomials spread energy across intermediate angles where Chebyshev concentrates it into sharp peaks.
+
+This characterization has architectural implications: spherical coherence should never replace circular coherence for detection tasks. The sphere's value is in an orthogonal capability — latitude discrimination and within-group ranking — that the circle structurally cannot provide. Any architecture claiming spherical coherence as a superior replacement for cosine-based detection is contradicted by this result. The correct architecture combines both: circle for detection, sphere (or magnitude-adjusted phase) for discrimination.
+
 ---
 
 ## 56. Reversibility Diagnostic for ODE-Based Neural Layers

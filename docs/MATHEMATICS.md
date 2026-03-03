@@ -116,6 +116,28 @@ The composite grid resolves all harmonics from *n* = 1 to *n*_max without aliasi
 
 For *B*₁ = 12, *B*₂ = 10: lcm = 60, *n*_max = 30, gain = 5&times;, using 22 positions instead of 60. For *K* grids, the composite limit extends to lcm(*B*₁, *B*₂, ..., *B*_K) / 2.
 
+**Definition 2.13** (Legendre Coherence).
+For two points on a sphere with angular separation &gamma;, the degree-*l* spherical coherence is
+
+> *C*_l^sphere(*a*, *b*) = *P*_l(cos &gamma;)
+
+where *P*_l is the Legendre polynomial of degree *l*, computed via the three-term recurrence:
+
+> *P*_0(*x*) = 1, &ensp; *P*_1(*x*) = *x*, &ensp; *P*_{*l*+1}(*x*) = ((2*l*+1) &middot; *x* &middot; *P*_l(*x*) &minus; *l* &middot; *P*_{*l*&minus;1}(*x*)) / (*l*+1)
+
+For points encoded as unit vectors **u**, **v** on the sphere: cos &gamma; = **u** &middot; **v** (dot product). Computational cost: 3 multiplies + 1 add per degree, same class as cos(*n*&Delta;&theta;). The Legendre kernel satisfies the admissibility conditions of Proposition 3.4: *P*_l(1) = 1 (normalisation), *P*_l(cos &gamma;) = *P*_l(cos &gamma;) (symmetry), |*P*_l(*x*)| &le; 1 for *x* &in; [&minus;1, 1] (boundedness). Through degree *l* = 10, the sphere provides 121 modes (&Sigma;(2*l*+1) for *l* = 0..10) versus the circle's 21 (2*n*+1 for cosine + sine at each harmonic, but only 2 per *n*).
+
+**Definition 2.14** (Embedded Coherence).
+For embeddings with phase &phi; and magnitude *r*, the *magnitude-adjusted phase* is
+
+> &phi;_eff = &phi; + &alpha; &middot; (*r* &minus; *r*_mean) / *r*_std
+
+where *r*_mean and *r*_std are the population magnitude statistics and &alpha; &ge; 0 is a tuning parameter. The *embedded coherence* at harmonic *n* is
+
+> *C*_n^emb(*a*, *b*) = cos(*n* &middot; (&phi;_eff_a &minus; &phi;_eff_b))
+
+At &alpha; = 0, this reduces exactly to standard harmonic coherence *C*_n(&theta;_a, &theta;_b). At &alpha; &gt; 0, magnitude differences between entities produce phase shifts that the cosine function converts into coherence gradients, enabling within-group ranking that pure phase coherence cannot provide.
+
 ---
 
 ## 3. Propositions
@@ -290,6 +312,36 @@ For *B*₁ = 12, *B*₂ = 10: lcm = 60, *n*_max = 30, gain = 5&times;, using 22 
 
 ---
 
+**Proposition 3.15** (Chebyshev/Legendre Equivalence Conditions).
+*The Chebyshev polynomial T_n(x) = cos(n &middot; arccos(x)) and the Legendre polynomial P_l(x) agree at the endpoints:*
+
+> *T_n(1) = P_l(1) = 1 &ensp; for all n, l*
+>
+> *T_n(&minus;1) = P_l(&minus;1) = (&minus;1)^n &ensp; for all n = l*
+
+*They disagree at every intermediate value x &in; (&minus;1, 1). For x = cos(60&deg;) = 0.5: T_3(0.5) = cos(180&deg;) = &minus;1.0, but P_3(0.5) = &minus;0.4375. This follows from the distinct polynomial definitions: T_2(x) = 2x&sup2; &minus; 1 versus P_2(x) = (3x&sup2; &minus; 1)/2.*
+
+*Consequence: circle coherence cos(n&Delta;&theta;) and sphere coherence P_l(cos &gamma;) are not interchangeable at intermediate angles. They are genuinely different coherence systems that coincide only at exact match (&Delta;&theta; = 0) and opposition (&Delta;&theta; = &pi;).*
+
+*Validation:* Spherical Test 1 --- equator equivalence test confirms T_n &ne; P_l at 60&deg;, 90&deg;, and 120&deg; for l &ge; 2.
+
+---
+
+**Proposition 3.16** (Embedded Coherence Backward Compatibility).
+*At &alpha; = 0, the embedded coherence (Definition 2.14) reduces exactly to standard harmonic coherence:*
+
+> *C_n^emb(a, b)|_{&alpha;=0} = cos(n &middot; (&phi;_a &minus; &phi;_b)) = C_n(&theta;_a, &theta;_b)*
+
+*At &alpha; &gt; 0, if magnitudes are equal (r_a = r_b), the effective phase shift is zero and the score is again identical to standard coherence:*
+
+> *&phi;_eff_a &minus; &phi;_eff_b = (&phi;_a &minus; &phi;_b) + &alpha; &middot; (r_a &minus; r_b) / r_std = &phi;_a &minus; &phi;_b*
+
+*The embedded method modifies scores only when magnitudes differ. It is a strict generalisation: every result of the standard coherence function is a special case of the embedded coherence function.*
+
+*Validation:* Spherical Test 6 --- group detection preserved at α=0.1 (both methods detect same-group pairs equally). All circle detections maintained.
+
+---
+
 ## 4. Design Constraints
 
 **Constraint 4.1** (Threshold Floor).
@@ -369,6 +421,17 @@ For *B*₁ = 12, *B*₂ = 10: lcm = 60, *n*_max = 30, gain = 5&times;, using 22 
 
 ---
 
+**Constraint 4.6** (Embedded Coherence &alpha; Bounds).
+*The tuning parameter &alpha; in the embedded coherence function (Definition 2.14) controls the trade-off between group detection and within-group discrimination. For the phase shift not to exceed one harmonic period at the maximum magnitude deviation:*
+
+> *&alpha; &lt; 2&pi; / (n_max &middot; max(|r &minus; r_mean| / r_std))*
+
+*In practice, &alpha; &in; [0.05, 0.15] preserves group detection while providing useful discrimination. At &alpha; &gt; 0.3, the magnitude-induced phase shifts become large enough to disrupt group detection --- the ranking signal overwhelms the group membership signal. At &alpha; = 0, the method reduces to standard phase coherence with no discrimination capability.*
+
+*Validation:* Spherical Test 6 --- &alpha;=0.1 achieves &rho;=&minus;0.9928 within-group ranking while preserving group detection. &alpha;=0.5 degrades to &rho;=&minus;0.2304. &alpha;=1.0 further degrades to &rho;=&minus;0.1424.
+
+---
+
 ## 5. Density Scaling
 
 **Proposition 5.1** (Collision Probability).
@@ -415,7 +478,7 @@ For readers consulting the accompanying implementation:
 
 ## 8. Summary of Empirical Validation
 
-All propositions and constraints are validated by a deterministic test suite of 25 core tests (21 in Rust, 4 in Python) plus 6 curvature investigation tests (Rust), with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers). Curvature tests validate multi-grid and metric propositions (3.12--3.14, 4.5).
+All propositions and constraints are validated by a deterministic test suite of 25 core tests (21 in Rust, 4 in Python) plus 6 curvature investigation tests and 6 spherical investigation tests (Rust), with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers). Curvature tests validate multi-grid and metric propositions (3.12--3.14, 4.5). Spherical tests validate Chebyshev/Legendre and embedded coherence propositions (3.15--3.16, 4.6).
 
 | Proposition | Statement | Validating test(s) |
 |---|---|---|
@@ -434,6 +497,8 @@ All propositions and constraints are validated by a deterministic test suite of 
 | 3.12 | Grid aliasing identity | Curvature Test 6a |
 | 3.13 | Composite grid resolution | Curvature Test 6b |
 | 3.14 | Geometric comma | Curvature Test 3 |
+| 3.15 | Chebyshev/Legendre equivalence conditions | Spherical Test 1 |
+| 3.16 | Embedded coherence backward compatibility | Spherical Test 6 |
 
 | Constraint | Statement | Validating test(s) |
 |---|---|---|
@@ -442,6 +507,7 @@ All propositions and constraints are validated by a deterministic test suite of 
 | 4.3 | Directed vs. symmetric distance | Test 10 |
 | 4.4 | Harmonic Nyquist limit | Test 16 |
 | 4.5 | Multi-grid Nyquist coverage | Curvature Test 6 |
+| 4.6 | Embedded coherence &alpha; bounds | Spherical Test 6 |
 
 ---
 

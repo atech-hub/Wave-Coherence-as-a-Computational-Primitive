@@ -231,6 +231,8 @@ Deep-dives into specific questions arising from the core framework. Each investi
 
 **[Multi-Grid Harmonic Investigation](investigations/multi-grid/INVESTIGATION.md)** — Six anomalies in ancient geometric catalogues tested against the flat-circle model. Three independent mathematical layers identified: flat harmonics on matched grids, non-uniform metric coherence, and structural rules. Includes the geometric comma theorem (24° = 360°/lcm(3,5)) and the Sexagenary compression proof (two small grids of 10+12 positions encode the harmonic coverage of a 60-position grid). Every result — positive, negative, and null — reported. Six Rust test files, zero external dependencies.
 
+**[Spherical Coherence Investigation](investigations/spherical/INVESTIGATION.md)** — Discovery that embedding magnitude carries usable information discarded by standard cosine similarity and the circle coherence function. Chebyshev (circle) and Legendre (sphere) polynomials are genuinely different coherence systems — sphere is strictly less sensitive (442:0) but adds latitude discrimination. The embedded method (φ_eff = φ + α×(r − r_mean)/r_std) achieves 100% within-group retrieval precision vs 12% for the circle alone on synthetic data, using a single parameter α=0.1. Mechanism proven; real-world validation pending (Option A: word-level transformer). Five Rust test files, zero external dependencies.
+
 ### Knowledge Graph / RAG
 Typed retrieval that surfaces not just "documents about X" but "documents about things that enable X" or "documents about things X conflicts with" — relationship-typed retrieval that cosine similarity alone cannot express.
 
