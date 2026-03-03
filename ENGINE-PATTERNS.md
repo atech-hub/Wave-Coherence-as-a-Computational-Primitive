@@ -1167,6 +1167,148 @@ A pruning strategy that leverages the frequency structure of harmonic embeddings
 
 ---
 
+## 53. Multi-Grid Harmonic Coherence Engine
+
+A single grid of B buckets has a Nyquist limit: harmonics above n = B/2 alias to lower frequencies. cos(n × k × 2π/B) = cos((n mod B) × k × 2π/B) for all integer k — harmonics n and n+B are indistinguishable. Multiple independent traditions discovered that overlaying incommensurate grids (grids whose sizes share small GCDs) extends harmonic resolution far beyond any single grid's limit. Two small grids can provide the harmonic coverage of their LCM grid. This is compression: encoding large-cycle information through small-cycle composition.
+
+### 53.1 Multi-Grid Harmonic Ensemble
+
+A coherence engine that evaluates relationships across multiple grid sizes simultaneously. For a set of grids {B₁, B₂, ..., B_K}, each entity is encoded on every grid: θ_k^(i) = 2π × position / B_i. The coherence at harmonic n on grid B_i is C_n^(B_i)(a, b) = cos(n × (θ_a^(i) − θ_b^(i))). The ensemble output reports the best (grid, harmonic) pair for each entity pair — the grid on which the relationship is sharpest. Different relationship types score highest on different grids: 3-fold symmetry peaks on B=12 (native trine), 5-fold symmetry peaks on B=10 (native quintile), while scoring only 0.300 on B=12 (grid mismatch). The ensemble eliminates single-grid blindness — relationships invisible on one grid become sharp on another.
+
+### 53.2 Grid Affinity Classifier
+
+A classifier that determines which grid(s) a relationship is native to. For a given entity pair, compute the coherence profile across all grids and all harmonics up to each grid's Nyquist limit. The native grid is the one where the maximum coherence occurs at the lowest harmonic number — indicating the relationship fits the grid's natural spacing without forcing. Cross-grid orphans (pairs showing no strong coherence on any grid) are flagged as non-harmonic relationships requiring structural lookup (see Pattern 54.4). The affinity table — mapping each relationship type to its native grid — serves as a metadata layer for query routing: queries about 5-fold relationships are routed to the 10-grid, queries about 3-fold relationships to the 12-grid, without searching all grids.
+
+### 53.3 Incommensurate Nyquist Extension
+
+The Nyquist limit of a single grid B is n_max = B/2. Two grids with sizes B₁ and B₂ where gcd(B₁, B₂) is small extend coverage to n_max = lcm(B₁, B₂)/2. Example: B₁=12 resolves n=1-6. B₂=10 resolves n=1-5. lcm(12,10)=60 gives n=1-30 — a 5× extension from two grids totalling 22 points instead of 60. Adding B₃=27 (gcd(27,12)=3, gcd(27,10)=1) gives lcm(12,10,27)=540 and n=1-270. The principle: grids with small mutual GCDs maximise new harmonic coverage per added point. Grids with large mutual GCDs (e.g., B=24 alongside B=12) add redundancy, not resolution. The 27-fold division extends resolution from n=6 to n=13 — more than doubling it — while sharing only the trine (n=3) with the 12-grid.
+
+### 53.4 Composite Grid Encoder
+
+An encoding scheme that stores entities on a single grid of size lcm(B₁, B₂) and recovers per-grid views by projection. For B₁=12 and B₂=10, store on a 60-slot grid. Project to B=12 by selecting every 5th slot. Project to B=10 by selecting every 6th slot. The composite encoding supports queries at any harmonic up to n=lcm/2 without maintaining separate index structures per grid. Insert is O(1) on the composite grid, and per-grid queries extract the relevant slots in O(1) per entity. This is the computational implementation of the sexagenary compression: 10 Heavenly Stems overlaid with 12 Earthly Branches encode 60-cycle coverage from 22 base positions.
+
+### 53.5 Multi-Grid Sweep Engine
+
+An extension of the harmonic sweep (Pattern 3) that sweeps across both harmonics and grids. For each entity pair, the sweep evaluates C_n^(B_i) for all n ∈ {1, ..., B_i/2} across all grids B_i ∈ {B₁, ..., B_K}. The output is a heat map of (grid, harmonic) → coherence. Planted relationships appear as bright spots at their native (grid, harmonic) coordinate. The sweep detects relationships that are invisible on any single grid by testing all grid-harmonic combinations. Multi-grid sweep replaces the need for curvature or metric warping — instead of forcing a relationship to fit the wrong grid (e.g., quintile on 12-grid scoring 0.300), the sweep finds the right grid where it scores 1.000.
+
+---
+
+## 54. Non-Uniform Metric Coherence Engine
+
+The standard coherence function cos(n × Δθ) assumes uniform arc length — every segment of the circle has equal metric weight. A non-uniform metric assigns variable weights g₀, g₁, ..., g_{B-1} to each segment, making geodesic distance path-dependent. The geodesic from θ_a to θ_b becomes d_g(a, b) = Σ g_i × (segment length) summed over the segments traversed. Two entity pairs at the same coordinate angular distance can have different geodesic distances depending on which path they traverse. The coherence function cos(n × d_g(a, b)) then distinguishes pairs that are indistinguishable on a flat circle. This is the geometric mechanism behind traditions that assign opposite meanings (harmony vs. harm) to pairs at identical angular separations.
+
+### 54.1 Weighted Geodesic Coherence
+
+A coherence function that replaces coordinate distance with geodesic distance on a non-uniformly weighted circle. The circle is divided into B segments, each assigned a weight g_i > 0 with normalisation constraint Σ g_i = B (so the total circumference equals the flat circle). The geodesic from position a to position b (forward direction) traverses segments a, a+1, ..., b-1, each contributing g_i × (2π/B) to the path length. The coherence becomes C_n^g(a, b) = cos(n × d_g(a, b)). When all g_i = 1, this reduces to standard flat coherence. The metric weights are either analytically derived from constraint equations or optimised to satisfy target coherence values for known pairs.
+
+### 54.2 Path-Separation Classifier
+
+A diagnostic engine that identifies whether two relationship sets that share identical flat-circle angular distances can be separated by a non-uniform metric. The method: (1) enumerate which segments each set's pairs traverse, (2) compute the segment-usage difference vector between the two sets, (3) apply DFT to the difference vector — if a non-zero Fourier component exists, a metric shaped to that component will separate the sets. The separation magnitude is bounded by 2.0 (one set at +1.0, the other at −1.0). Experimental validation: pairs sharing angular distances {30°, 30°, 90°, 90°, 150°, 150°} but traversing different segments achieve 1.999 separation (theoretical max 2.0) at harmonic n=7 with zero overlap between sets. The segment-usage difference has dominant Fourier component at k=2 (half-circle period), analytically predicted from path structure.
+
+### 54.3 Geometric Comma Detector
+
+A number-theoretic analyser that identifies incompatibilities between harmonic families on the same grid. The geometric comma is the angular excess when two harmonic systems impose contradictory constraints on segment weights. For p-fold and q-fold symmetry on a B-position grid, the comma is:
+
+comma = 360° / lcm(p, q)
+
+When the comma is non-zero, no single metric can make both symmetries resonate perfectly for all member sets. The comma is a theorem (number-theoretic identity), not an optimisation failure. Experimental validation: 3-fold (trine, 120°) and 5-fold (quintile, 72°) symmetry on a 12-grid produce comma = 24° = 360°/15. Exactly 1 of 4 three-fold triads is broken, and the break is exactly 24°. The remaining 3 triads coexist perfectly with 5-fold constraints. This is the geometric analogue of the Pythagorean comma in music: 12 perfect fifths overshoot 7 octaves by ~23.46 cents. Both arise from rational divisions of a circle that cannot coexist exactly.
+
+### 54.4 Catalogue Decomposition Engine
+
+A classification engine that assigns each relationship in a catalogue to one of three mathematically independent layers:
+
+**Layer 1 — Flat Harmonics on Matched Grids:** Relationships explained by cos(n × Δθ) on the grid where harmonic n is native. No metric warping needed. Most relationships live here. Query method: standard harmonic coherence (Pattern 1).
+
+**Layer 2 — Non-Uniform Metric:** Relationships requiring path-dependent distance to distinguish pairs with identical coordinate angles. Real but bounded — operates within one grid, doesn't cross grids. Operates below the Nyquist limit of its grid. Query method: weighted geodesic coherence (Pattern 54.1).
+
+**Layer 3 — Structural Rules:** Relationships irreducible to any single-parameter geometric function. Asymmetric, combinatorial rules that don't factor into harmonic components. The traditions store these as lookup tables because they don't reduce to functions. Query method: table lookup.
+
+The decomposition itself is a diagnostic tool: given a catalogue of known relationships, classify each one by testing whether flat coherence, then weighted geodesic coherence, then neither can reproduce the catalogue's assignments. The layer assignment determines which query engine to use for each relationship type.
+
+---
+
+## 55. Magnitude-Adjusted Phase Coherence
+
+Standard phase encoding projects embedding vectors onto the unit circle S¹, discarding magnitude information. But trained neural network embeddings are not on the unit circle — they develop magnitude variation through training. Measured at 51.5% coefficient of variation across all 64 frequency bands in a trained 4-layer transformer, starting from uniform magnitude of 0.125 in frozen harmonic embeddings. The training process spontaneously moves tokens off the unit circle — some closer to the centre, some further out — encoding information in the distance from the origin that the phase angle alone cannot capture. The magnitude-adjusted method feeds this information back into the coherence function by using magnitude to shift phase before computing coherence, creating a finer-grained similarity measure.
+
+### 55.1 Embedded Coherence Operator
+
+A coherence function that incorporates embedding magnitude into the phase comparison. For two embeddings with phases φ_a, φ_b and magnitudes r_a, r_b, the effective phase is:
+
+φ_eff = φ + α × (r − r_mean) / r_std
+
+where r_mean and r_std are the population magnitude statistics and α is a tuning parameter. The coherence becomes C_n^emb(a, b) = cos(n × (φ_eff_a − φ_eff_b)). When magnitudes are equal (or α = 0), this reduces to standard phase coherence. When magnitudes differ, the phase shift creates a coherence gradient proportional to magnitude distance. The method embeds the extra dimension (magnitude/elevation) back into the existing 1D detector (circle coherence) rather than building a separate 2D system — analogous to time-delay embedding in dynamical systems analysis, where higher-dimensional structure is projected into a form the lower-dimensional detector can consume.
+
+### 55.2 Spontaneous Magnitude Structure
+
+The observation that training a neural network with harmonic embeddings spontaneously produces structured magnitude variation, even though the initial embeddings are uniform. Frozen (untrained) embeddings have 0% magnitude CV — every band has identical magnitude 0.125. After training on real data, magnitude CV reaches 51.5% — the optimiser pushes tokens to different distances from the origin. This is not noise: different tokens develop characteristic magnitude profiles across frequency bands. The magnitude structure is a natural byproduct of gradient descent on harmonic representations. The framework's original encoding discarded this information by normalising to the unit circle. The embedded coherence operator (Pattern 55.1) recovers it.
+
+### 55.3 Within-Group Ranking via Magnitude
+
+A retrieval enhancement where the circle-based coherence detects group membership (which entities are related) and the magnitude-adjusted coherence ranks within groups (how closely related). Standard coherence treats all group members as equivalent — cos(n × Δθ) ≈ 1.0 for all members of the same harmonic family. Magnitude-adjusted coherence creates a gradient within the group: members with similar magnitudes score higher than members with dissimilar magnitudes. Experimental validation on synthetic controlled data (500 tokens, 5 groups of 100): circle coherence achieves ρ = −0.0008 rank correlation between within-group distance and coherence (completely blind). Embedded coherence at α = 0.1 achieves ρ = −0.9928 (near-perfect ranking). Top-10 retrieval precision: circle 12% (random within group), embedded 100% (exact neighbours). The circle sees a wall of identical scores; the embedded method sees a landscape.
+
+### 55.4 Alpha-Tuned Discrimination
+
+The tuning parameter α controls the trade-off between group detection (preserved at low α) and within-group discrimination (stronger at moderate α, degraded at high α). Optimal range: α = 0.05 to 0.15. At α = 0.1, the phase shift from magnitude is gentle enough to preserve group coherence while creating a monotonic discrimination gradient. At α > 0.3, the magnitude-induced phase shifts become large enough to disrupt group detection — the ranking signal overwhelms the group signal. At α = 0, the method reduces to standard phase coherence. The optimal α depends on the magnitude distribution of the trained embeddings and the number of harmonics used. The parameter is set once per model, not per query.
+
+---
+
+## 56. Reversibility Diagnostic for ODE-Based Neural Layers
+
+A diagnostic technique applicable to any neural layer implemented as an ODE (ordinary differential equation): run the dynamics forward from input to output, then run them backward from output to input, and compare the recovered state to the original input. The reconstruction error classifies the layer's computation into one of three categories with distinct computational roles. This method applies to Kerr-ODE layers (Pattern 51.6), neural ODEs generally, and any differentiable dynamical system used as a transformation.
+
+### 56.1 Three-Category Computation Classification
+
+The forward-backward test produces a reconstruction error ε = ||x_recovered − x_input|| / ||x_input||. Three categories:
+
+**Reversible (ε < threshold):** The layer's transformation can be undone — it permutes, mixes, or rescales information without destroying it. Role: impedance matching, spectral remixing, signal conditioning. The layer moves information between frequency bands but does not create new information. Candidate for replacement by a closed-form analytical transform (e.g., per-band linear, Pattern 51.7).
+
+**Irreversible-Nonlinear (ε >> threshold, low damping):** The layer's transformation cannot be undone because nonlinear interactions create new band couplings that are not invertible. Role: genuine computation — information creation through cross-band nonlinear mixing. This is where the model does its real work. The irreversibility is structural (from |Z|² terms in the ODE), not from energy loss.
+
+**Irreversible-Damping (ε >> threshold, high damping):** The layer's transformation cannot be undone because energy is dissipated — information is destroyed rather than transformed. Role: regularisation, noise suppression, forgetting. Distinguished from irreversible-nonlinear by measuring the damping coefficient independently.
+
+### 56.2 Binary Computation Split
+
+Applying the forward-backward diagnostic to all layers of a multi-layer ODE network reveals a computation architecture. Experimental validation on a 4-layer Kerr-ODE transformer: Layer 0 is 100% reversible (reconstruction error < 10⁻⁶ for all frequency bands). Layers 1-3 are 100% irreversible-nonlinear (reconstruction error > 0.5, near-zero damping). The split is binary — no intermediate layers, no gradual transition. Layer 0 performs impedance matching (near-identity conditioning), while Layers 1-3 perform genuine nonlinear computation. The zero-damping finding across all irreversible layers confirms that the irreversibility comes from Kerr cross-coupling (|Z|² terms), not from energy dissipation.
+
+### 56.3 Information Bottleneck Detection via Clamping Analysis
+
+An extension of the reversibility diagnostic that measures how much of the ODE's dynamic range is actually used during forward propagation. Clamp the ODE state to a range [-C, C] after each integration step and measure what fraction of bands hit the clamp. At C=10 with Euler integration, up to 95% of bands in deep layers hit the clamp — an information bottleneck where the integrator's transient spikes are being truncated. Under RK4 integration, peak magnitudes drop from 22,000 (Euler) to 6.5 (RK4), and zero bands hit the clamp — the transient spikes were 100% integration artifacts, not real dynamics. The clamping analysis distinguishes numerical instability from genuine large-magnitude computation, guiding the choice of integration method and step size.
+
+---
+
+## 57. Progressive Bandwidth as Computational Staging
+
+A general computational principle: in any wave-based system, process low-frequency (structural) components first, mid-frequency (contextual) components second, and high-frequency (discriminative) components last. This is not merely a training schedule (see Pattern 50.4 for that specific application) — it is a staging strategy applicable to inference, database queries, diagnostic analysis, and any computation operating on frequency-decomposed representations. The principle mirrors physical systems: Ricci flow smooths geometry from low to high curvature modes; neural development wires large-scale structure before fine detail; optical systems resolve coarse features before fine ones. Low frequencies establish the structural scaffold; high frequencies refine within it.
+
+### 57.1 Bandwidth-Staged Computation
+
+A computation architecture that processes frequency bands in stages rather than all at once. Each stage operates on a wider bandwidth than the previous:
+
+**Stage 1 (structural):** Process bands 1 through N/4. Establish coarse-grained structure — group membership, category assignment, rough positioning. Computationally cheapest. Sufficient for many queries.
+
+**Stage 2 (contextual):** Process bands 1 through 3N/4. Add mid-frequency detail — relationships within groups, contextual similarity, moderate discrimination. Required when Stage 1 produces ambiguous results.
+
+**Stage 3 (discriminative):** Process all N bands. Full resolution — fine-grained ranking, near-duplicate detection, precise similarity scoring. Most expensive. Used only when Stages 1-2 are insufficient.
+
+Each stage's output includes a confidence measure (e.g., energy fraction in resolved bands). If confidence exceeds a threshold, later stages are skipped — computation proportional to difficulty, not dimension.
+
+### 57.2 Cross-Domain Staging Applications
+
+The progressive bandwidth principle applies across multiple computational domains:
+
+**Training (Pattern 50.4):** Curriculum exposes low-frequency bands first, building structural pathways before adding high-frequency detail. Validated: progressive curriculum improves convergence by 1.8% (Phase 6) and enables integrated stack synergy (Phase A — 96.8% of MLP at 42.6% parameters).
+
+**Inference:** Early-exit at low bandwidth when the structural signal is sufficient. A query about group membership needs only bands 1-8; a query about within-group ranking needs all bands. Bandwidth staging eliminates unnecessary high-frequency computation.
+
+**Database queries:** Wave packet queries (Pattern 45) that load bands progressively — 25% of bands first for coarse filtering, full bands only for final candidates. Selective band loading becomes a staged pipeline rather than a binary all-or-nothing choice.
+
+**Diagnostic analysis:** The reversibility diagnostic (Pattern 56) can be staged — test reversibility at low bandwidth first (cheap, catches gross irreversibility), then add bands to refine the classification. The forward-backward ODE test at N/4 bands costs 1/16th of the full-bandwidth test.
+
+**Resonance detection:** Harmonic sweeps (Pattern 3) that scan low harmonics first. If a strong resonance is found at n=3, higher harmonics are either skipped (sufficient for the query) or constrained (search only multiples of 3). The sweep becomes adaptive rather than exhaustive.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1223,6 +1365,11 @@ A pruning strategy that leverages the frequency structure of harmonic embeddings
 | 50 | Curriculum-induced harmonic specialisation | AI / Training |
 | 51 | Frequency-native transformation engine (incl. Kerr-ODE, integrated stack) | Computing / AI / Hardware / Optics |
 | 52 | Ternary-harmonic hybrid engine | Hardware / AI |
+| 53 | Multi-grid harmonic coherence engine | Computing / Mathematics |
+| 54 | Non-uniform metric coherence engine | Computing / Mathematics |
+| 55 | Magnitude-adjusted phase coherence | AI / Computing |
+| 56 | Reversibility diagnostic for ODE layers | AI / Diagnostics |
+| 57 | Progressive bandwidth as computational staging | Computing / AI / General |
 
 ---
 

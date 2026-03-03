@@ -91,6 +91,31 @@ For a set of phases {&theta;_i}, the *energy fraction* at harmonic *n* is
 
 where *P* is the set of distinct pairs. The *fundamental harmonic* is the lowest *n* at which the signed mean coherence exceeds a threshold (e.g., 0.95), identifying the dominant structural periodicity.
 
+**Definition 2.10** (Multi-Grid Phase Encoding).
+Let {*B*₁, *B*₂, ..., *B*_K} be a set of grid sizes (bucket counts). The phase encoding of a discrete value on grid *B*_i is
+
+> &theta;_k^(i) = 2&pi;k / *B*_i
+
+Each grid induces a different angular spacing between adjacent positions. On grid *B*_i, the spacing is 2&pi;/*B*_i. The coherence between two values at harmonic *n* on grid *B*_i is *C*_n^(*B*_i)(&theta;_a, &theta;_b) = cos(*n*(&theta;_a^(i) &minus; &theta;_b^(i))).
+
+**Definition 2.11** (Grid Aliasing).
+On a grid of size *B*, harmonic *n* is *aliased* to harmonic *n* mod *B*. The coherence values are identical:
+
+> *C*_n^(*B*)(&theta;_a, &theta;_b) = *C*_{n &thinsp; mod &thinsp; B}^(*B*)(&theta;_a, &theta;_b) &ensp; for all &theta;_a, &theta;_b on the grid
+
+This follows from cos(*n* &middot; *k* &middot; 2&pi;/*B*) = cos((*n* mod *B*) &middot; *k* &middot; 2&pi;/*B*) for integer *k*. Harmonics above *n* = *B*/2 fold back to lower frequencies, analogous to the Nyquist sampling limit in signal processing. Example: harmonic *n* = 27 on a 12-grid is indistinguishable from *n* = 3 (since 27 mod 12 = 3).
+
+**Definition 2.12** (Composite Grid Coverage).
+For two grids of sizes *B*₁ and *B*₂, the *composite Nyquist limit* is
+
+> *n*_max = lcm(*B*₁, *B*₂) / 2
+
+The composite grid resolves all harmonics from *n* = 1 to *n*_max without aliasing, using *B*₁ + *B*₂ encoding positions instead of lcm(*B*₁, *B*₂). The harmonic coverage gain over single-grid encoding is:
+
+> gain = lcm(*B*₁, *B*₂) / max(*B*₁, *B*₂)
+
+For *B*₁ = 12, *B*₂ = 10: lcm = 60, *n*_max = 30, gain = 5&times;, using 22 positions instead of 60. For *K* grids, the composite limit extends to lcm(*B*₁, *B*₂, ..., *B*_K) / 2.
+
 ---
 
 ## 3. Propositions
@@ -228,6 +253,43 @@ where *P* is the set of distinct pairs. The *fundamental harmonic* is the lowest
 
 ---
 
+**Proposition 3.12** (Grid Aliasing Identity).
+*For any grid of size B, harmonic n, and positions k, l &in; {0, ..., B &minus; 1}:*
+
+> *cos(n &middot; (k &minus; l) &middot; 2&pi;/B) = cos((n mod B) &middot; (k &minus; l) &middot; 2&pi;/B)*
+
+*Proof.* Let &Delta;k = k &minus; l. Then n &middot; &Delta;k &middot; 2&pi;/B = (n mod B) &middot; &Delta;k &middot; 2&pi;/B + q &middot; &Delta;k &middot; 2&pi; for some integer q. Since cos is 2&pi;-periodic and &Delta;k is an integer, the q &middot; &Delta;k &middot; 2&pi; term vanishes. &square;
+
+*Corollary.* A grid of size B cannot distinguish harmonic n from harmonic n + B. The maximum resolvable harmonic is n = B/2 (the grid Nyquist limit). All harmonics above this limit fold to a lower alias.
+
+*Validation:* Curvature Test 6a --- cos(27 &middot; k &middot; 30&deg;) = cos(3 &middot; k &middot; 30&deg;) confirmed for all 12 positions on a 12-grid. The 27th harmonic is perfectly aliased to the 3rd.
+
+---
+
+**Proposition 3.13** (Composite Grid Resolution).
+*For two grids of coprime-ish sizes B₁ and B₂, the composite grid resolves harmonics that neither grid can resolve alone. Specifically, for any harmonic n &le; lcm(B₁, B₂)/2, there exists at least one grid B_i such that n mod B_i &ne; m mod B_i for all m &lt; n with m &le; B_i/2. That is, harmonic n is not aliased on at least one of the two grids.*
+
+*Example.* Harmonic n = 5 on B₁ = 12: aliased (5 &lt; 6 = B/2, so it IS resolved on 12-grid, but cos(5 &middot; k &middot; 30&deg;) never reaches 1.0 for any grid position because no grid position is an integer multiple of 72&deg;). On B₂ = 10: positions at k &middot; 36&deg; include 0&deg;, 72&deg;, 144&deg;, 216&deg;, 288&deg; --- cos(5 &middot; k &middot; 36&deg;) = +1.0 for all even k. The 5th harmonic is *native* to the 10-grid. The 12-grid sees n = 5 as a partial match (coherence 0.300 at best grid positions); the 10-grid sees it as exact (coherence 1.000).
+
+*Validation:* Curvature Test 6b --- cos(5 &middot; k &middot; 36&deg;) = +1.0 for all Yang-stem positions on the 10-grid. Combined (12 + 10) grid covers harmonics n = 1 through 30 from 22 encoding positions.
+
+---
+
+**Proposition 3.14** (Geometric Comma).
+*For p-fold and q-fold symmetry on a B-position grid with gcd(p, q) &lt; min(p, q), there exist configurations where no single metric on the B-grid can make both symmetries resonate perfectly for all member sets. The angular excess (comma) is:*
+
+> *comma = 360&deg; / lcm(p, q)*
+
+*This is a number-theoretic identity, not an optimisation failure.*
+
+*Example.* For 3-fold (trine, 120&deg;) and 5-fold (quintile, 72&deg;) symmetry on a 12-grid: comma = 360&deg;/15 = 24&deg;. A non-uniform metric that makes all quintile pairs have exactly 72&deg; geodesic distance forces one of four trine triads to have a leg measuring 144&deg; instead of 120&deg; --- an excess of exactly 24&deg;. The other three triads are unaffected.
+
+*Analogue.* The Pythagorean comma in music: 12 perfect fifths overshoot 7 octaves by ~23.46 cents. Both commas arise from rational divisions of a circle that cannot coexist exactly. Both have magnitude determined by the least common multiple of the competing periods.
+
+*Validation:* Curvature Test 3 --- 24&deg; comma confirmed. 3 of 4 triads coexist with quintile constraints; Triad 3 (Tiger-Horse-Dog) absorbs the full 24&deg; excess in one leg. The comma is structural: no metric optimisation can eliminate it.
+
+---
+
 ## 4. Design Constraints
 
 **Constraint 4.1** (Threshold Floor).
@@ -289,6 +351,24 @@ where *P* is the set of distinct pairs. The *fundamental harmonic* is the lowest
 
 ---
 
+**Constraint 4.5** (Multi-Grid Nyquist Coverage).
+*A single grid of size B resolves harmonics n = 1 to n = B/2. To resolve a target harmonic n_target > B/2, either increase B (storage cost) or add a second grid B₂ such that n_target &le; B₂/2 (composition cost). The minimum total encoding positions to cover harmonics 1 through n_target using K grids is:*
+
+> *min(B₁ + B₂ + ... + B_K) &ensp; subject to &ensp; lcm(B₁, ..., B_K)/2 &ge; n_target*
+
+*Grids should be chosen with small pairwise GCDs to maximise coverage per added position. Adding a grid B₂ that divides B₁ (e.g., 24 alongside 12) adds zero new harmonic coverage --- only redundancy.*
+
+| Grid set | Positions | lcm | n_max | Coverage efficiency |
+|----------|-----------|-----|-------|-------------------|
+| {12} | 12 | 12 | 6 | 0.50 harmonics/position |
+| {12, 10} | 22 | 60 | 30 | 1.36 harmonics/position |
+| {12, 10, 27} | 49 | 540 | 270 | 5.51 harmonics/position |
+| {12, 24} | 36 | 24 | 12 | 0.33 harmonics/position |
+
+*Validation:* Curvature Test 6 --- B={12,10} confirmed to resolve harmonics 1-30. B={12,27} confirmed to extend from n=6 to n=13. Redundant grids (multiples of existing grids) confirmed to add no new coverage.
+
+---
+
 ## 5. Density Scaling
 
 **Proposition 5.1** (Collision Probability).
@@ -335,7 +415,7 @@ For readers consulting the accompanying implementation:
 
 ## 8. Summary of Empirical Validation
 
-All propositions and constraints are validated by a deterministic test suite of 25 tests (21 in Rust, 4 in Python) with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers).
+All propositions and constraints are validated by a deterministic test suite of 25 core tests (21 in Rust, 4 in Python) plus 6 curvature investigation tests (Rust), with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers). Curvature tests validate multi-grid and metric propositions (3.12--3.14, 4.5).
 
 | Proposition | Statement | Validating test(s) |
 |---|---|---|
@@ -351,6 +431,9 @@ All propositions and constraints are validated by a deterministic test suite of 
 | 3.10 | Single-scan group discovery | Test 9 |
 | 3.11 | Dynamic mutability | Test 20 |
 | 5.1 | Collision probability | Test 17 |
+| 3.12 | Grid aliasing identity | Curvature Test 6a |
+| 3.13 | Composite grid resolution | Curvature Test 6b |
+| 3.14 | Geometric comma | Curvature Test 3 |
 
 | Constraint | Statement | Validating test(s) |
 |---|---|---|
@@ -358,6 +441,7 @@ All propositions and constraints are validated by a deterministic test suite of 
 | 4.2 | Nonlinear orb falloff | Test 4 |
 | 4.3 | Directed vs. symmetric distance | Test 10 |
 | 4.4 | Harmonic Nyquist limit | Test 16 |
+| 4.5 | Multi-grid Nyquist coverage | Curvature Test 6 |
 
 ---
 
