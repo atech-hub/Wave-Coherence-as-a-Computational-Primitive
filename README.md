@@ -22,6 +22,7 @@ The key theoretical insights:
 2. **Some relationships are non-geometric.** Structural pairings exist independent of angular distance, requiring explicit lookup tables alongside the geometric engine.
 3. **Harmonics are infinite.** The relationship detection capacity is unbounded — not limited to a fixed set of patterns. The geometric invariants (symmetry groups on circles) remain valid at every frequency.
 4. **The same primitives that work for database queries map onto LLM embedding and FFN layers.** Transformers effectively discover wave-like structure through training. Pre-building that structure as the computational substrate reduces parameters and improves efficiency. Attention Q/K projections require full-rank learned weights (Phase 18-19), but embeddings and feed-forward computation benefit from harmonic structure.
+5. **Multiple incommensurate grids compose into richer harmonic coverage than any single grid.** A single grid of B positions resolves harmonics up to n=B/2 (Nyquist limit). Two grids with sizes sharing a small GCD cover harmonics up to lcm(B₁,B₂)/2 — two small grids (10+12=22 positions) encode the coverage of a 60-position grid. Competing harmonic symmetries on the same grid produce provable incompatibilities: the geometric comma theorem (24°=360°/lcm(3,5)) shows that 3-fold and 5-fold symmetry cannot coexist exactly, analogous to the Pythagorean comma in music.
 
 ## What Is and Is Not New
 
@@ -36,8 +37,10 @@ The key theoretical insights:
 - The geometric relationship catalog — a comprehensive taxonomy of relationship types (symmetric, asymmetric, directed, structural, compound) derived from cross-civilizational analysis of circle-division systems, stripped of interpretive layers
 - Harmonic fingerprinting for collision resolution — using multi-harmonic probing to disambiguate phase-encoded values, with a validated closed-form formula: `n = ⌈arccos(t) / Δθ⌉`
 - The proposal that these primitives could serve as a substrate for LLM embeddings and FFN computation (attention Q/K projections proven to require full-rank learned weights — Phases 18-19)
+- Multi-grid harmonic composition — the finding that incommensurate grids extend harmonic resolution via lcm coverage, and the three-layer decomposition of ancient geometric catalogues into flat harmonics, non-uniform metric, and structural rules
+- The geometric comma theorem — a proven number-theoretic result showing that p-fold and q-fold symmetry on a shared grid produce an irreducible angular excess of 360°/lcm(p,q), analogous to the Pythagorean comma in music tuning
 
-We make no claim of having discovered new mathematics. The contribution, if any, is in recognising that established mathematical tools solve a specific class of problems (relationship-dense queries) more elegantly than the methods currently used, and in compiling the relationship type catalog that defines what the tools can express.
+We make no claim of priority over established mathematics. The geometric comma theorem (Proposition 3.14) is, to our knowledge, a new result — the identification of 24°=360°/lcm(3,5) as a provable incompatibility between 3-fold and 5-fold circular symmetry, and its analogy to the Pythagorean comma. The broader contribution is in recognising that established mathematical tools solve a specific class of problems (relationship-dense queries) more elegantly than the methods currently used, and in compiling the relationship type catalog that defines what the tools can express.
 
 ## Research Note — Emergent Properties
 
