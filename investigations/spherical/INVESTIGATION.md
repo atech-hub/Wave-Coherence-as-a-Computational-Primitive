@@ -208,6 +208,7 @@ The circle sees a wall. The embedded method sees a landscape.
 | 4 | Magnitude signal exists in trained embeddings (51.5% CV) | Measured |
 | 5 | Embedded method produces genuinely different view | Proven |
 | 6 | Embedded achieves 100% retrieval vs 12% circle on synthetic data | Proven |
+| 7 | Linear z-score: α*=0.001 for 23/23, but discrimination gap ~zero | Proven |
 
 **The embedded formula:**
 ```
@@ -222,7 +223,70 @@ The circle sees a wall. The embedded method sees a landscape.
 
 ---
 
-## Next: Option A — Word-Level Transformer Validation
+## Phase 7: Three-Mode Backward Compatibility Harness
+
+**File:** `three_mode_harness.rs` — 23 tests × 3 modes + alpha sweep, zero dependencies
+
+**Question:** Does the embedded coherence formula preserve ALL existing circle properties when magnitudes vary?
+
+**Setup:** Every test from the original 23-test suite runs in three modes:
+- **Mode A (Circle):** cos(n × Δφ) — baseline control
+- **Mode B-Uniform:** Embedded with all magnitudes = 1.0 — MUST reduce to circle exactly
+- **Mode B-Varied:** Embedded with α=0.1, magnitudes ~ U[0.108, 1.892], CV ≈ 51.5%
+
+**Results at α = 0.1:**
+
+| Mode | Score | Purpose |
+|------|-------|---------|
+| A (Circle) | 23/23 | Baseline verified |
+| B-Uniform | 23/23 | Mathematical guarantee — embedded reduces to circle when magnitudes uniform |
+| A/BU Agreement | 23/23 | Perfect match (epsilon < 1e-12) |
+| B-Varied | 11/23 | Shows which properties survive magnitude perturbation |
+
+**T22 (Kernel Admissibility): PASS in all 3 modes.** Symmetry, normalization, PSD, spectral scaling mathematically guaranteed regardless of magnitude variation. The anchor holds.
+
+**The surprise:** Plan predicted ~21/23 for B-Varied, actual is 11/23. The plan estimated ~5.7° max phase shift (1-sigma), but uniform [0.108, 1.892] reaches ~1.7 sigma, giving:
+- Max per-entity adjustment: ~10° (not 5.7°)
+- Worst-case pair delta: ~20°
+- At n=3: ~60° effective shift → cos(60°) = 0.5 (well below 0.95 threshold)
+
+**Alpha sweep — finding the operating point:**
+
+| alpha | Pass | Discrimination gap |
+|-------|------|--------------------|
+| 0.100 | 11/23 | 0.026908 |
+| 0.050 | 15/23 | 0.006890 |
+| 0.010 | 21/23 | 0.000279 |
+| 0.005 | 21/23 | 0.000070 |
+| 0.003 | 22/23 | 0.000025 |
+| 0.001 | 23/23 | 0.000003 |
+
+**Operating point:** α* = 0.001 gives 23/23 backward compatibility, but discrimination gap drops to 0.000003 — effectively zero.
+
+**Test sensitivity ranking (most sensitive first):**
+- T16 (360 resolution) breaks first at α = 0.003
+- T8 (wave = linear scan), T21 (harmonic sweep) break at α = 0.005
+- T14 (harmonic orthogonality) breaks at α = 0.030
+- 11 tests never fail regardless of alpha
+
+**Conclusion:** The linear z-score formula `adj = α × (mag − μ) / σ` cannot simultaneously maintain backward compatibility AND provide discrimination at 51.5% CV. The operating window is effectively zero. The formula variant matters — need to test alternatives (quantile mapping, tanh compression, per-band alpha, selective application, band selection) to find one that opens the window.
+
+---
+
+## Next: Formula Variant Sweep
+
+Before proceeding to Option A (word-level transformer), test whether alternative formulas can open the operating window that the linear z-score cannot.
+
+Five variants to test:
+1. **Quantile:** adj = α × (2 × rank_percentile − 1) — bounded output, no outliers
+2. **Tanh:** adj = α × tanh(z-score) — squashes extremes
+3. **Per-Band Alpha:** α_i = α₀ / CV_i — trust tight bands more
+4. **Selective:** Only apply when circle score ∈ [0.90, 0.99]
+5. **Band Selection:** Only adjust top-K bands by magnitude variance
+
+---
+
+## After Variants: Option A — Word-Level Transformer Validation
 
 The synthetic test proves the mechanism. The open question is whether trained transformers naturally develop magnitude structure the embedded method can exploit.
 
