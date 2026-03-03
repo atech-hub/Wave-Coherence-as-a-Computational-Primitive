@@ -252,6 +252,8 @@ Pal et al. (2024) characterized linear and nonlinear coupling in twin optical mi
 
 Kato et al. (2024) demonstrated that neural ODEs serve as practical computation primitives for multi-band signal processing in their Wi-Fi neural dynamic fusion architecture. Their multi-encoder to learned ODE evolution to latent alignment pipeline proves the viability of ODE integration as a trainable computation layer. Phase 21 applies the same principle -- ODE integration as a layer -- but replaces learned neural dynamics with physics-based Kerr dynamics, operating on harmonic transformer embeddings rather than Wi-Fi channel state information.
 
+Zelenka, Kopáček, & Lukes-Gerakopoulos (2024) demonstrated that recurrence quantifiers of orbits carry imprints of resonant behavior regardless of dimensionality, using LSTM networks to automate resonance detection in gravitational dynamics. Their application -- identifying resonance widths in extreme mass ratio inspirals (compact objects spiraling into supermassive black holes) -- validates from the physics side the same principle this work exploits computationally: resonance is a detectable, structured signal that encodes relationship information. Their finding that recurrence analysis captures resonant signatures across dimensionalities parallels the harmonic sweep (Test 21), where per-channel coherence recovers relationships that aggregate similarity destroys. Different domains, same core insight: resonance carries structure that summation discards.
+
 - Listopad, S. (2025a). *Wave-Based Semantic Memory: A Phase-Aware Alternative to Vector Retrieval.* arXiv:2509.09691. https://arxiv.org/abs/2509.09691
 - Listopad, S. (2025b). *Phase-Coded Memory and Morphological Resonance.* arXiv:2511.11848. https://arxiv.org/abs/2511.11848
 - Sun, Z., Deng, Z.-H., Nie, J.-Y., & Tang, J. (2019). *RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space.* ICLR 2019. https://arxiv.org/abs/1902.10197
@@ -259,6 +261,7 @@ Kato et al. (2024) demonstrated that neural ODEs serve as practical computation 
 - Wang, L. (2025). *Defierithos: The Lonely Warrior Rises from Resonance -- A Self-Resonance Architecture Beyond Attention.* Submitted to NeurIPS 2025.
 - Pal, A., Ghosh, A., Zhang, S., Hill, L., Yan, H., Zhang, H., Bi, T., Alabbadi, A., & Del'Haye, P. (2024). *Linear and Nonlinear Coupling of Light in Twin-Resonators with Kerr Nonlinearity.* arXiv:2404.05646v2. https://arxiv.org/abs/2404.05646 -- Coupled Lugiato-Lefever equation (Eq. 1) provides the self-phase and cross-phase modulation terms adapted in Phase 21's Kerr-ODE layer.
 - Kato, S., Wang, P., Koike-Akino, T., Fujihashi, T., Mansour, H., & Boufounos, P. (2024). *Multi-Band Wi-Fi Neural Dynamic Fusion.* arXiv:2407.12937v1 (ICASSP 2024). https://arxiv.org/abs/2407.12937 -- Demonstrates neural ODEs as practical computation primitives for multi-band signal processing, the framework adapted in Phase 21.
+- Zelenka, O., Kopáček, O., & Lukes-Gerakopoulos, G. (2024). *Combining Machine Learning with Recurrence Analysis for resonance detection.* arXiv:2412.19683. https://arxiv.org/abs/2412.19683 -- Recurrence quantifiers carry resonant imprints regardless of dimensionality; LSTM-automated detection validates resonance as a structured, recoverable signal across domains.
 
 ## Attribution
 
