@@ -133,6 +133,9 @@ class WordDataset:
         self.stoi = {w: i for i, w in enumerate(self.vocab)}
         self.itos = {i: w for w, i in self.stoi.items()}
 
+        # Store word frequencies (for frequency confound analysis)
+        self.word_freq = {self.stoi[w]: counts[w] for w in vocab_words if w in self.stoi}
+
         # Encode
         unk_id = self.stoi[self.unk_token]
         data = [self.stoi.get(t, unk_id) for t in tokens]
@@ -779,6 +782,71 @@ def analyze_magnitudes(model, dataset):
             c_mean = sum(cross_dists) / len(cross_dists) if cross_dists else 0
             ratio = c_mean / w_mean if w_mean > 1e-10 else 0
             print(f"    {fname:>10}  {w_mean:>10.4f}  {c_mean:>10.4f}  {ratio:>8.2f}x")
+
+    # ---- Measurement 6: Frequency confound check ----
+    # Do high-frequency CONTENT words cluster in the same well as function words?
+    # If yes: magnitude clustering = frequency effect (gradient pressure)
+    # If no: magnitude clustering = linguistic role (grammatical class)
+    if model.mode == "baseline" and wells is not None and hasattr(dataset, 'word_freq'):
+        print(f"\n  --- Measurement 6: Frequency confound resolution ---")
+
+        # Find the function-word well (the one 9/10 landed in)
+        func_ids = families.get("function", [])
+        if func_ids:
+            func_wells = wells[func_ids].tolist()
+            func_well = Counter(func_wells).most_common(1)[0][0]
+
+            # Get all word frequencies, sort descending
+            freq_list = [(wid, freq) for wid, freq in dataset.word_freq.items()
+                         if wid != 0]  # skip <unk>
+            freq_list.sort(key=lambda x: x[1], reverse=True)
+
+            # Function word IDs (to exclude from content words)
+            func_set = set(func_ids)
+
+            # Top-20 most frequent CONTENT words (not in function family)
+            top_content = [(wid, f) for wid, f in freq_list
+                           if wid not in func_set][:20]
+
+            # Also show function words for comparison
+            func_freq = [(wid, dataset.word_freq.get(wid, 0)) for wid in func_ids]
+            func_freq.sort(key=lambda x: x[1], reverse=True)
+
+            print(f"    Function-word well: W{func_well}")
+            print(f"\n    Function words (reference):")
+            for wid, freq in func_freq:
+                w = wells[wid].item()
+                match = "<--" if w == func_well else ""
+                print(f"      {dataset.itos[wid]:>12} freq={freq:>5}  W{w} {match}")
+
+            print(f"\n    Top-20 frequent CONTENT words:")
+            n_in_func_well = 0
+            for wid, freq in top_content:
+                w = wells[wid].item()
+                match = "<--" if w == func_well else ""
+                if w == func_well:
+                    n_in_func_well += 1
+                print(f"      {dataset.itos[wid]:>12} freq={freq:>5}  W{w} {match}")
+
+            frac = n_in_func_well / len(top_content) if top_content else 0
+            # Expected fraction (well size / vocab)
+            well_size = (wells == func_well).sum().item()
+            expected = well_size / vocab_size
+
+            print(f"\n    Content words in function-word well: "
+                  f"{n_in_func_well}/{len(top_content)} ({frac:.0%})")
+            print(f"    Expected by chance: {expected:.0%}")
+
+            if frac > expected * 1.5:
+                print(f"    FREQUENCY EFFECT: High-freq content words also cluster "
+                      f"in W{func_well}.")
+                print(f"    Magnitude clustering reflects frequency, not grammatical role.")
+            elif frac < expected * 0.7:
+                print(f"    LINGUISTIC ROLE: High-freq content words AVOID W{func_well}.")
+                print(f"    Function words cluster by role, not by frequency.")
+            else:
+                print(f"    INCONCLUSIVE: Content words land in W{func_well} "
+                      f"at ~chance rate ({frac:.0%} vs {expected:.0%}).")
 
     # ---- Return data for triple-channel evaluation ----
     return {
