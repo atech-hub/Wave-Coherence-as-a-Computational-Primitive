@@ -1106,6 +1106,263 @@ def band_split_analysis(analysis_data, dataset):
 
 
 # =============================================================================
+# Reflection Analysis: Multi-hop coherence (wave sonar)
+# =============================================================================
+
+def reflection_analysis(analysis_data, dataset):
+    """Multi-hop coherence: does path A->C->B carry info that direct A->B misses?
+
+    Direct coherence:  mean_k cos((k+1) * (phi_A,k - phi_B,k))
+    Path through C:    mean_k [cos((k+1) * (phi_A,k - phi_C,k)) * cos((k+1) * (phi_C,k - phi_B,k))]
+
+    Three populations of intermediates:
+      Amplifiers:  path > direct   (C reinforces A-B relationship)
+      Transparent: path ~ 0        (C is irrelevant to A-B)
+      Reflectors:  path < 0        (C is a boundary between A and B)
+    """
+    if analysis_data is None:
+        return
+
+    print(f"\n{'=' * 70}")
+    print(f"  REFLECTION ANALYSIS: Multi-hop coherence (wave sonar)")
+    print(f"{'=' * 70}")
+
+    phases = analysis_data["phases"]
+    vocab_size = phases.shape[0]
+    n_bands = phases.shape[1]
+    families = dataset.get_family_ids()
+    if not families:
+        print("  No semantic families. Cannot evaluate.")
+        return
+
+    # Harmonic numbers for vectorised coherence
+    harmonics = torch.arange(1, n_bands + 1, dtype=torch.float32)  # (n_bands,)
+    all_ids = torch.arange(vocab_size)
+
+    def direct_coherence(id_a, id_b):
+        """Direct coherence between two tokens."""
+        dphi = phases[id_a] - phases[id_b]
+        return torch.cos(harmonics * dphi).mean().item()
+
+    def path_coherences_batch(id_a, id_b, intermediates):
+        """Path coherence A->C->B for all intermediates C. Vectorised."""
+        phi_a = phases[id_a].unsqueeze(0)      # (1, n_bands)
+        phi_b = phases[id_b].unsqueeze(0)      # (1, n_bands)
+        phi_c = phases[intermediates]           # (n_int, n_bands)
+        h = harmonics.unsqueeze(0)             # (1, n_bands)
+
+        coh_ac = torch.cos(h * (phi_a - phi_c))  # (n_int, n_bands)
+        coh_cb = torch.cos(h * (phi_c - phi_b))  # (n_int, n_bands)
+
+        return (coh_ac * coh_cb).mean(dim=1)      # (n_int,)
+
+    # ---- Collect semantic pairs ----
+    family_pairs = []
+    for fname, fids in families.items():
+        for i in range(len(fids)):
+            for j in range(i + 1, len(fids)):
+                family_pairs.append((fname, fids[i], fids[j]))
+
+    # ---- Per-pair reflection profile ----
+    print(f"\n  Within-family pairs: direct vs path distribution")
+    print(f"  {'Pair':>25}  {'Direct':>8}  {'PathMean':>9}  {'PathStd':>9}  {'Amp%':>6}  {'Refl%':>6}")
+
+    all_results = []
+    for fname, id_a, id_b in family_pairs:
+        d_coh = direct_coherence(id_a, id_b)
+        mask = (all_ids != id_a) & (all_ids != id_b) & (all_ids != 0)
+        intermediates = all_ids[mask]
+        p_coh = path_coherences_batch(id_a, id_b, intermediates)
+
+        p_mean = p_coh.mean().item()
+        p_std = p_coh.std().item()
+
+        # Classify intermediates
+        amp_frac = (p_coh > d_coh).float().mean().item() if d_coh > 1e-6 else 0
+        refl_frac = (p_coh < -abs(d_coh)).float().mean().item()
+
+        word_a = dataset.itos[id_a]
+        word_b = dataset.itos[id_b]
+        pair_label = f"{word_a}-{word_b}"
+
+        print(f"  {pair_label:>25}  {d_coh:>8.4f}  {p_mean:>9.4f}  {p_std:>9.4f}  "
+              f"{amp_frac:>5.0%}  {refl_frac:>5.0%}")
+
+        all_results.append({
+            "family": fname, "pair": pair_label,
+            "direct": d_coh, "path_mean": p_mean, "path_std": p_std,
+            "amp_frac": amp_frac, "refl_frac": refl_frac,
+            "path_scores": p_coh, "intermediates": intermediates,
+        })
+
+    # ---- Cross-family pairs for contrast ----
+    import random
+    random.seed(42)
+    family_ids_all = set()
+    for fids in families.values():
+        family_ids_all.update(fids)
+    non_family = [i for i in range(1, vocab_size) if i not in family_ids_all]
+    cross_pairs = []
+    for _ in range(15):
+        a, b = random.sample(non_family, 2)
+        cross_pairs.append((a, b))
+
+    print(f"\n  Cross-family pairs (random, contrast):")
+    print(f"  {'Pair':>25}  {'Direct':>8}  {'PathMean':>9}  {'PathStd':>9}  {'Amp%':>6}  {'Refl%':>6}")
+
+    cross_results = []
+    for id_a, id_b in cross_pairs[:10]:
+        d_coh = direct_coherence(id_a, id_b)
+        mask = (all_ids != id_a) & (all_ids != id_b) & (all_ids != 0)
+        intermediates = all_ids[mask]
+        p_coh = path_coherences_batch(id_a, id_b, intermediates)
+
+        p_mean = p_coh.mean().item()
+        p_std = p_coh.std().item()
+        amp_frac = (p_coh > d_coh).float().mean().item() if d_coh > 1e-6 else 0
+        refl_frac = (p_coh < -abs(d_coh)).float().mean().item()
+
+        word_a = dataset.itos[id_a]
+        word_b = dataset.itos[id_b]
+        pair_label = f"{word_a}-{word_b}"
+        print(f"  {pair_label:>25}  {d_coh:>8.4f}  {p_mean:>9.4f}  {p_std:>9.4f}  "
+              f"{amp_frac:>5.0%}  {refl_frac:>5.0%}")
+        cross_results.append({"direct": d_coh, "path_mean": p_mean, "path_std": p_std})
+
+    # ---- Top amplifiers and reflectors for best semantic pair ----
+    if all_results:
+        best = max(all_results, key=lambda r: r["direct"])
+        print(f"\n  Sonar map for '{best['pair']}' (direct={best['direct']:.4f}):")
+
+        path_scores = best["path_scores"]
+        intermediates = best["intermediates"]
+
+        sorted_desc = torch.argsort(path_scores, descending=True)
+        print(f"\n    Top 10 AMPLIFIERS (path >> direct):")
+        for rank, idx in enumerate(sorted_desc[:10]):
+            cid = intermediates[idx].item()
+            ps = path_scores[idx].item()
+            word = dataset.itos[cid]
+            print(f"      {rank+1:>3}. {word:>15}  path={ps:>8.4f}")
+
+        sorted_asc = torch.argsort(path_scores)
+        print(f"\n    Top 10 REFLECTORS (strongest negative path):")
+        for rank, idx in enumerate(sorted_asc[:10]):
+            cid = intermediates[idx].item()
+            ps = path_scores[idx].item()
+            word = dataset.itos[cid]
+            print(f"      {rank+1:>3}. {word:>15}  path={ps:>8.4f}")
+
+    # ---- Do amplifiers cluster semantically with endpoints? ----
+    if all_results:
+        print(f"\n  Amplifier semantic test:")
+        print(f"    For each family pair, what fraction of top-50 amplifiers")
+        print(f"    belong to the same semantic family?")
+
+        for fname, fids in families.items():
+            fid_set = set(fids)
+            pair_results = [r for r in all_results if r["family"] == fname]
+            if not pair_results:
+                continue
+            hits = 0
+            total = 0
+            for r in pair_results:
+                top50 = torch.argsort(r["path_scores"], descending=True)[:50]
+                top50_ids = set(r["intermediates"][top50].tolist())
+                hits += len(top50_ids & fid_set)
+                total += 50
+            frac = hits / total if total > 0 else 0
+            expected = len(fids) / vocab_size
+            ratio = frac / expected if expected > 0 else 0
+            print(f"    {fname:>10}: {hits}/{total} ({frac:.1%}) vs expected {expected:.1%} "
+                  f"= {ratio:.1f}x enrichment")
+
+    # ---- Key test: disambiguation of moderate-coherence pairs ----
+    print(f"\n  Key test: Do reflections disambiguate moderate-coherence pairs?")
+
+    # First calibrate: what's the distribution of direct coherences?
+    random.seed(88)
+    sample_ids = random.sample(range(1, vocab_size), min(300, vocab_size - 1))
+    direct_sample = []
+    for i in range(0, len(sample_ids), 2):
+        if i + 1 < len(sample_ids):
+            d = direct_coherence(sample_ids[i], sample_ids[i + 1])
+            direct_sample.append(d)
+
+    if direct_sample:
+        d_abs = [abs(d) for d in direct_sample]
+        d_abs.sort()
+        p25 = d_abs[len(d_abs) // 4]
+        p75 = d_abs[3 * len(d_abs) // 4]
+        print(f"    Direct coherence distribution (random pairs):")
+        print(f"    25th pctile: {p25:.4f}, 75th pctile: {p75:.4f}")
+
+    # Find moderate pairs: direct in middle 50% of distribution
+    moderate_pairs = []
+    for i in range(len(sample_ids)):
+        for j in range(i + 1, min(i + 5, len(sample_ids))):
+            d = direct_coherence(sample_ids[i], sample_ids[j])
+            if p25 < abs(d) < p75:
+                moderate_pairs.append((sample_ids[i], sample_ids[j], d))
+
+    if len(moderate_pairs) >= 10:
+        print(f"    Found {len(moderate_pairs)} moderate pairs (|direct| in [{p25:.4f}, {p75:.4f}])")
+        n_test = min(50, len(moderate_pairs))
+        disambiguated = 0
+        amplified = 0
+        reflected = 0
+
+        for id_a, id_b, d_coh in moderate_pairs[:n_test]:
+            mask = (all_ids != id_a) & (all_ids != id_b) & (all_ids != 0)
+            intermediates = all_ids[mask]
+            p_coh = path_coherences_batch(id_a, id_b, intermediates)
+            p_mean = p_coh.mean().item()
+
+            # Strong vote: path mean magnitude > 2x direct magnitude
+            if abs(p_mean) > abs(d_coh) * 2:
+                disambiguated += 1
+                if p_mean > 0:
+                    amplified += 1
+                else:
+                    reflected += 1
+
+        frac = disambiguated / n_test
+        print(f"    Pairs where path votes strongly (|path_mean| > 2x |direct|): "
+              f"{disambiguated}/{n_test} ({frac:.0%})")
+        print(f"      Amplified (path says related):     {amplified}")
+        print(f"      Reflected (path says unrelated):   {reflected}")
+
+        if frac > 0.5:
+            print(f"    REFLECTION CARRIES INFORMATION: Path coherence disambiguates.")
+        elif frac > 0.2:
+            print(f"    PARTIAL SIGNAL: Some moderate pairs clarified by reflections.")
+        else:
+            print(f"    NO DISAMBIGUATION: Path coherence does not add clarity.")
+    else:
+        print(f"    Only {len(moderate_pairs)} moderate pairs found. Insufficient for test.")
+
+    # ---- Summary statistics ----
+    if all_results:
+        print(f"\n  Summary:")
+        avg_amp = sum(r["amp_frac"] for r in all_results) / len(all_results)
+        avg_refl = sum(r["refl_frac"] for r in all_results) / len(all_results)
+        avg_direct = sum(r["direct"] for r in all_results) / len(all_results)
+        avg_path = sum(r["path_mean"] for r in all_results) / len(all_results)
+        print(f"    Within-family avg: direct={avg_direct:.4f}, path_mean={avg_path:.4f}")
+        print(f"    Avg amplifier fraction: {avg_amp:.0%}")
+        print(f"    Avg reflector fraction: {avg_refl:.0%}")
+        if cross_results:
+            avg_cross_d = sum(r["direct"] for r in cross_results) / len(cross_results)
+            avg_cross_p = sum(r["path_mean"] for r in cross_results) / len(cross_results)
+            print(f"    Cross-family avg:  direct={avg_cross_d:.4f}, path_mean={avg_cross_p:.4f}")
+
+        # Path amplification ratio
+        if abs(avg_direct) > 1e-10:
+            amp_ratio = avg_path / avg_direct
+            print(f"    Path/Direct ratio (within-family): {amp_ratio:.2f}x")
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -1176,6 +1433,12 @@ def main():
     # =========================================================================
     if analysis.get("baseline") is not None:
         band_split_analysis(analysis["baseline"], dataset)
+
+    # =========================================================================
+    # Reflection analysis (baseline only — needs learned phase structure)
+    # =========================================================================
+    if analysis.get("baseline") is not None:
+        reflection_analysis(analysis["baseline"], dataset)
 
     # =========================================================================
     # Final Verdict

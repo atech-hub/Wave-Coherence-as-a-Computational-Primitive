@@ -1239,9 +1239,11 @@ A coherence function that incorporates embedding magnitude into the phase compar
 
 where r_mean and r_std are the population magnitude statistics and α is a tuning parameter. The coherence becomes C_n^emb(a, b) = cos(n × (φ_eff_a − φ_eff_b)). When magnitudes are equal (or α = 0), this reduces to standard phase coherence. When magnitudes differ, the phase shift creates a coherence gradient proportional to magnitude distance. The method embeds the extra dimension (magnitude/elevation) back into the existing 1D detector (circle coherence) rather than building a separate 2D system — analogous to time-delay embedding in dynamical systems analysis, where higher-dimensional structure is projected into a form the lower-dimensional detector can consume.
 
-### 55.2 Spontaneous Magnitude Structure
+### 55.2 Spontaneous Magnitude Structure and the Coupling Principle
 
-The observation that training a neural network with harmonic embeddings spontaneously produces structured magnitude variation, even though the initial embeddings are uniform. Frozen (untrained) embeddings have 0% magnitude CV — every band has identical magnitude 0.125. After training on real data, magnitude CV reaches 51.5% — the optimiser pushes tokens to different distances from the origin. This is not noise: different tokens develop characteristic magnitude profiles across frequency bands. The magnitude structure is a natural byproduct of gradient descent on harmonic representations. The framework's original encoding discarded this information by normalising to the unit circle. The embedded coherence operator (Pattern 55.1) recovers it.
+The observation that training a neural network with harmonic embeddings spontaneously produces structured magnitude variation, even though the initial embeddings are uniform. Frozen (untrained) embeddings have 0% magnitude CV — every band has identical magnitude 0.125. After training on real data, magnitude CV reaches 51.5% — the optimiser pushes tokens to different distances from the origin. This is not noise: different tokens develop characteristic magnitude profiles across frequency bands.
+
+**Coupling principle (Option A, Phase 10):** Magnitude structure is not independent of phase — it is coupled to it. When phase is frozen on the harmonic grid (no semantic organisation possible), trainable magnitude produces zero semantic signal: within-family magnitude CV (1.5%) equals global CV (1.4%). Magnitude alone cannot build semantic structure. But when phase is free to organise (baseline mode, both phase and magnitude trainable), magnitude amplifies the phase structure: within-family coherence ratios reach up to 383x (vs 20x for phase-only). Phase builds structure; magnitude amplifies it. Neither works alone. The coupling is asymmetric — phase is the primary semantic carrier, magnitude is the coupled amplifier. This overrides the earlier interpretation of magnitude as an independent information channel. The magnitude structure is real but dependent: it is a frequency-correlated scaling effect (high-frequency tokens develop larger magnitudes) that gains semantic content only when phase provides the organisational scaffold.
 
 ### 55.3 Within-Group Ranking via Magnitude
 
@@ -1277,11 +1279,39 @@ A training configuration for harmonic embedding layers where the phase structure
 
 This separates the two roles: phase encodes categorical/structural information (which group an entity belongs to, which harmonic family it resonates with), while magnitude encodes graded/continuous information (how strongly it belongs, how typical it is within its group). Frozen phase preserves all harmonic properties validated in Tests 1-25. Trainable magnitude adds the within-group ranking capability demonstrated in Pattern 55.3. The combination achieves the benefits of both frozen embeddings (Pattern 6.1 — no embedding gradient, interpretable structure) and trained embeddings (capacity to learn task-specific representations) without the tradeoffs of either alone.
 
+**Equivalence finding (Option A, Phase 10):** The type of embedding freedom — phase or magnitude — is irrelevant for loss. On a word-level Shakespeare transformer with 4 identical variants, phase-only (trainable phase, frozen magnitude) achieves val loss 5.0319 and magnitude-only (frozen phase, trainable magnitude) achieves 5.0303 — a 0.03% gap at identical parameter counts. The optimiser extracts equal value from either degree of freedom. What matters is the quantity of freedom, not its type.
+
+**Regularisation finding:** Freezing one dimension while freeing the other yields 3.7% better validation loss than freeing both (baseline: 5.2215 vs phase-only: 5.0319). The harmonic constraint acts as a regulariser — the geometric scaffold prevents overfitting, even though the baseline has 2x the trainable embedding parameters. This suggests that the optimal embedding configuration is not "maximise freedom" but "constrain one axis, free the other."
+
 ### 55.8 Sensitivity Characterization: Chebyshev vs Legendre
 
 The empirical finding that Chebyshev-based coherence (circle) is strictly more sensitive than Legendre-based coherence (sphere) for resonance detection at all intermediate angles. Comprehensive sweep across 360 angles × 15 harmonics: 442 pairs where circle coherence |cos(nΔθ)| > 0.95 and sphere coherence |P_l(cos γ)| < 0.50. Zero pairs where the sphere detects and the circle does not. The asymmetry grows with harmonic number — at n=1/l=1 the systems are identical, by n=15/l=15 they diverge substantially. Legendre polynomials spread energy across intermediate angles where Chebyshev concentrates it into sharp peaks.
 
 This characterization has architectural implications: spherical coherence should never replace circular coherence for detection tasks. The sphere's value is in an orthogonal capability — latitude discrimination and within-group ranking — that the circle structurally cannot provide. Any architecture claiming spherical coherence as a superior replacement for cosine-based detection is contradicted by this result. The correct architecture combines both: circle for detection, sphere (or magnitude-adjusted phase) for discrimination.
+
+### 55.9 Orthogonal Harmonic Band Channels
+
+The empirical finding that low harmonic bands (n=1-6) and high harmonic bands (n=7-15) carry nearly orthogonal information within a single circle encoding. Pearson correlation between low-band and high-band coherence scores across 270 within-family word pairs: r = 0.0506 — effectively uncorrelated. The two band groups detect different features of the same embedding space.
+
+High harmonics discriminate more strongly than low harmonics for most semantic families. On trained word-level Shakespeare embeddings: nature words low 8.0x vs high 21.3x within/cross ratio; function words low 8.1x vs high 20.6x; royalty low 1.8x vs high 4.8x. High harmonics are not higher-resolution versions of the same signal — they detect finer structure that the low harmonics cannot see.
+
+This connects to the multi-grid finding (Pattern 53) from a different direction. Multi-grid showed that different grid sizes capture different harmonics — the 12-grid sees n=1-6, the 27-grid extends to n=13. Here, within a single grid, the harmonic bands already carry orthogonal information. Different bands within one grid behave like different grids. The practical implication is band-weighted queries: a query that needs broad grouping should weight low harmonics; a query that needs fine discrimination should weight high harmonics. Harmonic band routing within a single grid — same principle as multi-grid routing (Pattern 53.2), but without the overhead of maintaining multiple grid encodings.
+
+Boundary hypothesis test: high-band variance is uniform across all low-band score bins (~0.230-0.237 std), showing that high harmonics do not act as boundary enforcers that split ambiguous pairs into confirmed/rejected populations. They are independent detectors operating on orthogonal features, not validators of low-band judgments.
+
+This finding also provides a mechanistic explanation for progressive curriculum (Pattern 57). If low and high bands build different things — not the same thing at different resolutions — then training them simultaneously creates cross-band interference between orthogonal information channels. Progressive curriculum (low bands first, then add high) lets each band group establish its own structure before the other arrives. The curriculum doesn't just make training easier — it prevents interference between orthogonal channels.
+
+### 55.10 Path Coherence Attenuation Identity
+
+For two tokens A and B, the direct coherence is cos(n × Δθ_AB). The path coherence through an intermediate token C is the product cos(n × Δθ_AC) × cos(n × Δθ_CB) — the "wave" going from A through C to B. Averaging path coherence over all intermediate tokens in the vocabulary yields exactly half the direct coherence:
+
+E_C[cos(n × Δθ_AC) × cos(n × Δθ_CB)] = 0.5 × cos(n × Δθ_AB)
+
+This follows from the product-to-sum identity: cos(α)cos(β) = 0.5[cos(α+β) + cos(α−β)]. The cos(α+β) term equals cos(n × Δθ_AB) (independent of C). The cos(α−β) term equals cos(n × (2θ_C − θ_A − θ_B)), which averages to zero over uniformly distributed intermediates. The result is exact for uniform phase distributions and empirically confirmed on trained embeddings: measured path/direct ratio = 0.49x across 270 within-family pairs with path std remarkably uniform at ~0.044 regardless of direct coherence magnitude.
+
+Consequence: broadcast path coherence (routing through all intermediates) carries no information beyond what direct coherence already provides. The attenuation is a mathematical identity, not a property of specific embeddings. For path coherence to carry additional information, the intermediates must be selected — routed through specific tokens (e.g., same semantic family, same frequency band) rather than averaged over the full vocabulary. Selective routing breaks the uniform distribution assumption and could yield path/direct ratios different from 0.5. This is analogous to the difference between broadcast sonar (illuminating everything, getting uniform reflections) and directed sonar (targeting specific structures, getting informative reflections).
+
+Amplifier semantic test: top-50 amplifiers (intermediates with highest path coherence) show ~1x enrichment for same-family membership — no significant semantic clustering. The rare exceptions (royalty at 1.8x) are marginal. Disambiguation test on moderate-coherence pairs: 0/50 pairs where path coherence votes strongly (|path_mean| > 2x |direct|). Broadcast path coherence is not a disambiguation tool.
 
 ---
 
@@ -1329,7 +1359,7 @@ Each stage's output includes a confidence measure (e.g., energy fraction in reso
 
 The progressive bandwidth principle applies across multiple computational domains:
 
-**Training (Pattern 50.4):** Curriculum exposes low-frequency bands first, building structural pathways before adding high-frequency detail. Validated: progressive curriculum improves convergence by 1.8% (Phase 6) and enables integrated stack synergy (Phase A — 96.8% of MLP at 42.6% parameters).
+**Training (Pattern 50.4):** Curriculum exposes low-frequency bands first, building structural pathways before adding high-frequency detail. Validated: progressive curriculum improves convergence by 1.8% (Phase 6) and enables integrated stack synergy (Phase A — 96.8% of MLP at 42.6% parameters). The orthogonal band finding (Pattern 55.9) provides the mechanistic explanation: low and high harmonics carry independent information (r=0.05), so training them simultaneously creates cross-channel interference. Sequential introduction prevents this.
 
 **Inference:** Early-exit at low bandwidth when the structural signal is sufficient. A query about group membership needs only bands 1-8; a query about within-group ranking needs all bands. Bandwidth staging eliminates unnecessary high-frequency computation.
 
