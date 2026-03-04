@@ -962,6 +962,150 @@ def triple_channel_eval(analysis_data, dataset):
 
 
 # =============================================================================
+# Band-Split Analysis: Low harmonics (lens) vs High harmonics (boundary)
+# =============================================================================
+
+def band_split_analysis(analysis_data, dataset):
+    """Test whether low harmonics detect and high harmonics verify/contain.
+
+    Split cos(n * delta_phi) into two bands:
+      Low (n=1-6): broad resonance, relationship detection
+      High (n=7-15): narrow resonance, boundary enforcement
+
+    If high band is a boundary: moderate low-band pairs split into
+    two populations on the high band (confirmed vs rejected).
+    If both bands do the same job: they correlate strongly.
+    """
+    if analysis_data is None:
+        return
+
+    print(f"\n{'=' * 70}")
+    print(f"  BAND-SPLIT ANALYSIS: Low harmonics (lens) vs High harmonics (boundary)")
+    print(f"{'=' * 70}")
+
+    phases = analysis_data["phases"]
+    vocab_size = phases.shape[0]
+    n_bands = phases.shape[1]
+    families = dataset.get_family_ids()
+    if not families:
+        print("  No semantic families. Cannot evaluate.")
+        return
+
+    # Build cross-family sample
+    family_ids_all = set()
+    for fids in families.values():
+        family_ids_all.update(fids)
+    other_ids = [i for i in range(vocab_size) if i not in family_ids_all and i != 0]
+    import random
+    random.seed(77)
+    cross_sample = random.sample(other_ids, min(200, len(other_ids)))
+
+    LOW_BANDS = range(0, min(6, n_bands))    # n=1-6
+    HIGH_BANDS = range(6, min(15, n_bands))  # n=7-15
+
+    def band_coherence(id_a, id_b, bands):
+        """Mean cos(n * delta_phi) over specified bands."""
+        vals = []
+        for k in bands:
+            dphi = phases[id_a, k].item() - phases[id_b, k].item()
+            vals.append(math.cos((k + 1) * dphi))
+        return sum(vals) / len(vals) if vals else 0
+
+    # ---- Per-family: low vs high band scores ----
+    print(f"\n  Per-family mean coherence by band:")
+    print(f"  {'Family':>10}  {'Type':>8}  {'Low(1-6)':>10}  {'High(7-15)':>10}  {'Ratio':>8}")
+
+    all_within_low = []
+    all_within_high = []
+    all_cross_low = []
+    all_cross_high = []
+
+    for fname, fids in families.items():
+        # Within-family pairs
+        w_low, w_high = [], []
+        for i in range(len(fids)):
+            for j in range(i + 1, len(fids)):
+                w_low.append(band_coherence(fids[i], fids[j], LOW_BANDS))
+                w_high.append(band_coherence(fids[i], fids[j], HIGH_BANDS))
+
+        # Cross-family pairs
+        c_low, c_high = [], []
+        for fi in fids:
+            for oi in cross_sample[:50]:
+                c_low.append(band_coherence(fi, oi, LOW_BANDS))
+                c_high.append(band_coherence(fi, oi, HIGH_BANDS))
+
+        wl = sum(w_low) / len(w_low) if w_low else 0
+        wh = sum(w_high) / len(w_high) if w_high else 0
+        cl = sum(c_low) / len(c_low) if c_low else 0
+        ch = sum(c_high) / len(c_high) if c_high else 0
+        r_low = abs(wl / cl) if abs(cl) > 1e-10 else 0
+        r_high = abs(wh / ch) if abs(ch) > 1e-10 else 0
+
+        print(f"  {fname:>10}  {'within':>8}  {wl:>10.6f}  {wh:>10.6f}")
+        print(f"  {'':>10}  {'cross':>8}  {cl:>10.6f}  {ch:>10.6f}")
+        print(f"  {'':>10}  {'ratio':>8}  {r_low:>10.1f}x  {r_high:>10.1f}x")
+
+        all_within_low.extend(w_low)
+        all_within_high.extend(w_high)
+        all_cross_low.extend(c_low)
+        all_cross_high.extend(c_high)
+
+    # ---- Correlation between low and high bands ----
+    print(f"\n  Low-High correlation (all within-family pairs):")
+    n_pairs = len(all_within_low)
+    if n_pairs > 2:
+        mean_l = sum(all_within_low) / n_pairs
+        mean_h = sum(all_within_high) / n_pairs
+        cov = sum((l - mean_l) * (h - mean_h) for l, h in
+                  zip(all_within_low, all_within_high)) / n_pairs
+        std_l = (sum((l - mean_l)**2 for l in all_within_low) / n_pairs) ** 0.5
+        std_h = (sum((h - mean_h)**2 for h in all_within_high) / n_pairs) ** 0.5
+        corr = cov / (std_l * std_h) if std_l > 1e-10 and std_h > 1e-10 else 0
+        print(f"    r = {corr:.4f} (n={n_pairs} pairs)")
+        if abs(corr) > 0.7:
+            print(f"    STRONG CORRELATION: Both bands doing the same job.")
+        elif abs(corr) > 0.3:
+            print(f"    MODERATE CORRELATION: Partially independent roles.")
+        else:
+            print(f"    WEAK/NO CORRELATION: Bands carry independent information.")
+
+    # ---- Key test: variance of high band at different low-band levels ----
+    print(f"\n  Boundary test: high-band variance by low-band score")
+    print(f"  (If high band enforces boundaries, moderate low-band pairs")
+    print(f"   should show HIGH variance on high band -- split into confirmed/rejected)")
+
+    # Combine within + cross pairs for full range
+    all_low = all_within_low + all_cross_low
+    all_high = all_within_high + all_cross_high
+
+    # Bin by low-band score
+    bins = [(-1.0, -0.3, "low-band < -0.3"),
+            (-0.3, -0.05, "low-band [-0.3,-0.05]"),
+            (-0.05, 0.05, "low-band [-0.05,0.05]"),
+            (0.05, 0.3, "low-band [0.05,0.3]"),
+            (0.3, 1.0, "low-band > 0.3")]
+
+    print(f"  {'Bin':>25}  {'Count':>6}  {'High mean':>10}  {'High std':>10}  {'High CV':>8}")
+    for lo, hi, label in bins:
+        subset_high = [h for l, h in zip(all_low, all_high) if lo <= l < hi]
+        if len(subset_high) >= 5:
+            hm = sum(subset_high) / len(subset_high)
+            hs = (sum((h - hm)**2 for h in subset_high) / len(subset_high)) ** 0.5
+            hcv = abs(hs / hm * 100) if abs(hm) > 1e-10 else 0
+            print(f"  {label:>25}  {len(subset_high):>6}  {hm:>10.6f}  {hs:>10.6f}  {hcv:>7.1f}%")
+        else:
+            print(f"  {label:>25}  {len(subset_high):>6}  (too few)")
+
+    # ---- Interpretation ----
+    print(f"\n  Interpretation:")
+    print(f"    If high-band std is HIGHEST in the moderate low-band bins:")
+    print(f"    -> High harmonics act as boundaries (splitting ambiguous pairs)")
+    print(f"    If high-band std is UNIFORM across bins:")
+    print(f"    -> Both bands do the same detection job at different scales")
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -1026,6 +1170,12 @@ def main():
         if analysis[mode] is not None:
             print(f"\n  --- Triple-Channel for {mode} ---")
             triple_channel_eval(analysis[mode], dataset)
+
+    # =========================================================================
+    # Band-split analysis (baseline only — needs learned phase structure)
+    # =========================================================================
+    if analysis.get("baseline") is not None:
+        band_split_analysis(analysis["baseline"], dataset)
 
     # =========================================================================
     # Final Verdict
