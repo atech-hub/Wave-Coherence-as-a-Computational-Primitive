@@ -342,6 +342,58 @@ At &alpha; = 0, this reduces exactly to standard harmonic coherence *C*_n(&theta
 
 ---
 
+**Theorem 3.17** (Path Coherence Averaging).
+*Let &phi;_a, &phi;_b be two fixed phases and let {&phi;_c}_c=1^N be a set of intermediate phases uniformly distributed on [0, 2&pi;). Define the path coherence through intermediate c as the product*
+
+> *P_n(a, c, b) = cos(n(&phi;_a &minus; &phi;_c)) &middot; cos(n(&phi;_c &minus; &phi;_b))*
+
+*Then the average path coherence over all intermediates converges to exactly half the direct coherence:*
+
+> *lim_{N&rarr;&infin;} (1/N) &sum;_{c=1}^{N} P_n(a, c, b) = &frac12; cos(n(&phi;_a &minus; &phi;_b)) = &frac12; C_n(&theta;_a, &theta;_b)*
+
+*Proof.* Apply the product-to-sum identity:
+
+> cos(&alpha;)cos(&beta;) = &frac12;[cos(&alpha; + &beta;) + cos(&alpha; &minus; &beta;)]
+
+with &alpha; = n(&phi;_a &minus; &phi;_c) and &beta; = n(&phi;_c &minus; &phi;_b):
+
+> P_n(a, c, b) = &frac12;[cos(n(&phi;_a &minus; &phi;_b)) + cos(n(&phi;_a + &phi;_b &minus; 2&phi;_c))]
+
+The first term is independent of c. The second term, cos(n(&phi;_a + &phi;_b &minus; 2&phi;_c)), oscillates as a function of &phi;_c and averages to zero over a uniform distribution on [0, 2&pi;):
+
+> (1/N) &sum;_{c=1}^{N} cos(n(&phi;_a + &phi;_b &minus; 2&phi;_c)) &rarr; 0 &ensp; as N &rarr; &infin;
+
+Therefore:
+
+> (1/N) &sum;_c P_n(a, c, b) &rarr; &frac12; cos(n(&phi;_a &minus; &phi;_b)) &ensp; &marker;
+
+*Consequence:* Broadcast path coherence --- routing a coherence query through all available intermediates --- carries no information beyond what direct coherence already provides. The 0.5 attenuation factor is a mathematical identity, not a property of specific embeddings. For multi-hop coherence to carry additional information, the intermediates must be selectively chosen (breaking the uniform distribution assumption).
+
+*Validation:* Spherical Phase 10 --- measured path/direct ratio of 0.49x across 270 within-family word pairs on trained embeddings, with path std uniform at ~0.044 regardless of direct coherence magnitude. Disambiguation test: 0/50 moderate-coherence pairs clarified by broadcast path coherence. Confirms the identity holds on real trained embeddings.
+
+---
+
+**Proposition 3.18** (Harmonic Band Independence).
+*Let S_L = {1, 2, ..., k} and S_H = {k+1, k+2, ..., N} be two non-overlapping subsets of harmonic indices. Define the band-restricted coherence scores:*
+
+> *C_L(a, b) = (1/|S_L|) &sum;_{n &in; S_L} cos(n &middot; &Delta;&theta;)*
+
+> *C_H(a, b) = (1/|S_H|) &sum;_{n &in; S_H} cos(n &middot; &Delta;&theta;)*
+
+*For a population of pairs with &Delta;&theta; uniformly distributed on [0, 2&pi;), the Pearson correlation &rho;(C_L, C_H) = 0.*
+
+*Proof.* Each term cos(n &middot; &Delta;&theta;) is a distinct Fourier basis function. Distinct Fourier modes are orthogonal under integration over [0, 2&pi;):
+
+> &int;_0^{2&pi;} cos(m&theta;) cos(n&theta;) d&theta; = 0 &ensp; for m &ne; n
+
+Since C_L is a sum of modes {1, ..., k} and C_H is a sum of modes {k+1, ..., N}, their covariance is a sum of cross-mode products, each of which integrates to zero. With zero covariance, the Pearson correlation is zero. The two band-restricted scores carry statistically independent information about the angular separation &Delta;&theta;.
+
+*Note:* On finite, non-uniform populations (e.g., trained embeddings), the correlation is approximately but not exactly zero. The deviation from zero measures how far the population's phase distribution departs from uniformity.
+
+*Validation:* Spherical Phase 10 --- measured r = 0.0506 between low-band (n=1-6) and high-band (n=7-15) coherence on 270 within-family pairs from trained word embeddings. The near-zero correlation confirms band independence on real data. Additionally, high harmonics show stronger discrimination ratios than low harmonics for several semantic families (e.g., nature: 21.3x vs 8.0x; function words: 20.6x vs 8.1x), demonstrating that the bands detect qualitatively different features, not the same features at different resolutions.
+
+---
+
 ## 4. Design Constraints
 
 **Constraint 4.1** (Threshold Floor).
@@ -478,7 +530,7 @@ For readers consulting the accompanying implementation:
 
 ## 8. Summary of Empirical Validation
 
-All propositions and constraints are validated by a deterministic test suite of 25 core tests (21 in Rust, 4 in Python) plus 6 curvature investigation tests and 6 spherical investigation tests (Rust), with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers). Curvature tests validate multi-grid and metric propositions (3.12--3.14, 4.5). Spherical tests validate Chebyshev/Legendre and embedded coherence propositions (3.15--3.16, 4.6).
+All propositions and constraints are validated by a deterministic test suite of 25 core tests (21 in Rust, 4 in Python) plus 6 curvature investigation tests and 6 spherical investigation tests (Rust), with zero failures and zero external dependencies (Rust) or minimal dependencies (Python: PyTorch, sentence-transformers). Curvature tests validate multi-grid and metric propositions (3.12--3.14, 4.5). Spherical tests validate Chebyshev/Legendre and embedded coherence propositions (3.15--3.16, 4.6). Theorem 3.17 and Proposition 3.18 are derived from trigonometric and Fourier identities respectively, with experimental confirmation from Spherical Phase 10 (word-level trained embeddings).
 
 | Proposition | Statement | Validating test(s) |
 |---|---|---|
@@ -499,6 +551,8 @@ All propositions and constraints are validated by a deterministic test suite of 
 | 3.14 | Geometric comma | Curvature Test 3 |
 | 3.15 | Chebyshev/Legendre equivalence conditions | Spherical Test 1 |
 | 3.16 | Embedded coherence backward compatibility | Spherical Test 6 |
+| 3.17 | Path coherence averaging (theorem) | Spherical Phase 10 |
+| 3.18 | Harmonic band independence | Spherical Phase 10 |
 
 | Constraint | Statement | Validating test(s) |
 |---|---|---|
