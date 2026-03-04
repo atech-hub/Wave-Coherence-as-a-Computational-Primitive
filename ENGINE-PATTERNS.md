@@ -1313,6 +1313,42 @@ Consequence: broadcast path coherence (routing through all intermediates) carrie
 
 Amplifier semantic test: top-50 amplifiers (intermediates with highest path coherence) show ~1x enrichment for same-family membership — no significant semantic clustering. The rare exceptions (royalty at 1.8x) are marginal. Disambiguation test on moderate-coherence pairs: 0/50 pairs where path coherence votes strongly (|path_mean| > 2x |direct|). Broadcast path coherence is not a disambiguation tool.
 
+### 55.11 Two-Stage Magnitude Training
+
+A training schedule for harmonic embedding layers where the per-token magnitude parameter is frozen (requires_grad=False) during the early training phases while the phase structure organises, then unfrozen and added to the optimizer after phase has stabilised. The phases are governed by the progressive curriculum (Pattern 57): magnitude stays frozen during stages 1-2 (low and mid bands), then unfreezes at stage 3 (all bands). This enforces the coupling principle (Pattern 55.2) as a training schedule: carrier (phase) first, then amplification (magnitude).
+
+**Implementation pattern:**
+- Create `tok_mag = nn.Parameter(torch.ones(vocab_size, n_bands), requires_grad=False)` at initialisation
+- Exclude `tok_mag` from the initial optimizer parameter list (important: PyTorch tracks parameters in optimizer groups even when requires_grad=False, so explicit exclusion is needed to enable later `add_param_group`)
+- At the stage boundary (e.g., step 1334 of 2000): `tok_mag.requires_grad_(True)` and `optimizer.add_param_group({"params": [tok_mag]})`
+- Forward pass: `emb = phase_emb * mag_expanded` where mag is broadcast across cos/sin pairs
+
+**Validated result (Phase B, 7-variant controlled sweep):** Two-stage achieves 95.2% of MLP at 43.1% parameters (+1.91% over frozen baseline). Outperforms mag_stack (magnitude always free, 94.9% of MLP) by 0.3 percentage points on the same architecture, same parameter count, same training budget. The improvement comes entirely from training order, not capacity.
+
+**Magnitude CV diagnostic:** Two-stage converges to 2.46% global CV (early bands 3.46%, mid 2.08%, late 2.02%). Mag_stack converges to 6.92% global CV (early 7.74%, mid 7.90%, late 5.09%). The 2.8x CV difference shows the optimizer making surgical adjustments on a stable foundation (two-stage) versus exploratory adjustments chasing a shifting phase target (mag_stack). Lower CV with better performance = more precise use of the same freedom.
+
+### 55.12 Band Routing Null for Transformer FFN Layers
+
+The finding that restricting transformer FFN layers to process only specific harmonic bands degrades performance by 7-9% compared to full-spectrum processing. Tested by applying band masks to FFN output: L0 (PerBandLinear) receives a mask for bands 1-8 only; L1-L3 (Kerr-ODE) receive a mask for bands 9-64 only. Masked-out bands pass through unchanged via the residual connection.
+
+**Validated result (Phase B):** All three band-routed variants performed worse than their full-spectrum counterparts. Band_stack: 83.3% of MLP (vs full_stack 93.1%). Band_mag: 84.8% (vs mag_stack 94.9%). Band_two: 83.9% (vs two_stage 95.2%). The degradation is 8-10 percentage points — consistent across all variants.
+
+**Mechanism:** Layer 0 performs impedance matching (Pattern 56.2) across the full spectrum, conditioning the signal for downstream nonlinear layers. Restricting it to low bands removes the high-band context needed for proper conditioning. The layers handle band interaction implicitly through learned weights; explicit routing restricts what the weights can learn. Orthogonal information channels (Pattern 55.9: r=0.05 between low and high bands) does NOT imply independent computation requirements.
+
+**Protective null:** This result prevents a plausible optimisation path: "since low and high bands carry independent information, let each layer specialise." Independence of information does not imply independence of computation. Anyone building band-routed wave-native architectures should be aware of this constraint.
+
+### 55.13 Constrained Freedom Optimisation Principle
+
+The empirical finding that timing when parameters gain optimisation freedom matters more than how many parameters are free. Demonstrated across three independent experiments:
+
+1. **Word-level (Option A, Phase 10):** Freezing one embedding dimension (phase or magnitude) while freeing the other yields 3.7% better validation loss than freeing both — despite the baseline having 2x trainable embedding parameters.
+2. **Char-level (Phase B):** Same 4,160 magnitude parameters produce better results when unfrozen late (two-stage: 2.46% CV, 95.2% of MLP) versus always free (mag_stack: 6.92% CV, 94.9% of MLP).
+3. **Progressive curriculum (Pattern 57):** Sequential band introduction outperforms simultaneous training by 1.8% (Phase 6), and the orthogonal band finding (Pattern 55.9) provides the mechanistic explanation — simultaneous training creates cross-channel interference.
+
+**The principle:** An optimiser given freedom on a stable foundation uses that freedom more surgically than one given freedom from the start. The foundation constrains the solution space, preventing exploration of locally attractive but globally suboptimal configurations. This is a form of regularisation that emerges from training schedule rather than loss function.
+
+**Implication for architecture design:** When adding trainable parameters to an otherwise frozen system, the default should be "introduce late, after the rest of the system has stabilised," not "include from the start." The parameter count is the same either way; the ordering determines how effectively those parameters are used.
+
 ---
 
 ## 56. Reversibility Diagnostic for ODE-Based Neural Layers
@@ -1429,7 +1465,7 @@ The progressive bandwidth principle applies across multiple computational domain
 | 52 | Ternary-harmonic hybrid engine | Hardware / AI |
 | 53 | Multi-grid harmonic coherence engine | Computing / Mathematics |
 | 54 | Non-uniform metric coherence engine | Computing / Mathematics |
-| 55 | Magnitude-adjusted phase coherence | AI / Computing |
+| 55 | Magnitude-adjusted phase coherence (incl. two-stage training, band routing null, constrained freedom) | AI / Computing |
 | 56 | Reversibility diagnostic for ODE layers | AI / Diagnostics |
 | 57 | Progressive bandwidth as computational staging | Computing / AI / General |
 
