@@ -1,6 +1,6 @@
 # Spherical Coherence Investigation: From Circle to Sphere
 
-## Status: Mechanism proven — awaiting real-world validation (Option A)
+## Status: φ_eff closed (3 experiments, T16 wall). Triple-channel architecture. Option A next.
 
 ## Context
 
@@ -8,7 +8,7 @@ The Wave Coherence framework encodes relationships as harmonic phase angles on a
 
 The Kerr aliasing test identified the gap as architectural: ~4.9% of spectral energy sits in Kerr stop-bands, and the MLP coupling profile is flat across all band distances. The circle framework cannot capture this energy because it operates in one dimension — phase only.
 
-But every embedding pair (cos_val, sin_val) has TWO properties: a phase angle and a magnitude. The framework extracts the phase and discards the magnitude. Frozen embeddings have constant magnitude (0.125) — they sit exactly on the unit circle. Trained embeddings have wildly variable magnitude (0.003 to 0.076, 51.5% coefficient of variation) — the optimizer pushes tokens off the ring. Training builds a second dimension of structure that the framework cannot read.
+But every embedding pair (cos_val, sin_val) has TWO properties: a phase angle and a magnitude. The framework extracts the phase and discards the magnitude. Frozen embeddings have constant magnitude (0.125) — they sit exactly on the unit circle. Trained embeddings have wildly variable magnitude (0.003 to 0.076, 51.5% per-band CV — though the mean-across-bands CV is only 6.2%, as Phase 9 discovered) — the optimizer pushes tokens off the ring. Training builds a second dimension of structure that the framework cannot read.
 
 The circle was always a sphere. We had one eye closed.
 
@@ -210,6 +210,7 @@ The circle sees a wall. The embedded method sees a landscape.
 | 6 | Embedded achieves 100% retrieval vs 12% circle on synthetic data | Proven |
 | 7 | Linear z-score: α*=0.001 for 23/23, but discrimination gap ~zero | Proven |
 | 8 | Quantile confirms structural bottleneck — T16 is the wall, not outliers | Proven |
+| 9 | Boundary wells: 6.2% global CV (not 51.5%), wells contain to 0.8%, α* still 0.001 | Proven |
 
 **The embedded formula:**
 ```
@@ -306,15 +307,64 @@ The circle sees a wall. The embedded method sees a landscape.
 
 ---
 
-## Next: Option A — Word-Level Transformer (Dual-Channel)
+## Phase 9: Boundary-Contained Embedded Coherence
 
-The synthetic tests used uniform random magnitudes — maximum chaos, 51.5% CV. A real optimizer doesn't produce random magnitudes. It produces magnitudes that serve the loss function. The global CV might be high but the local CV within semantically meaningful groups could be much lower.
+**File:** `boundary_embedded_test.rs` — well assignment + full 23-test harness, zero dependencies
+
+**Question:** Do spherical harmonic wells (Legendre polynomial zeros) contain magnitude variation enough to open the embedded formula's operating window?
+
+**Background:** Late-night analysis (Marco + Claude Desktop) proposed that high harmonics create boundaries — proven in QM (particle in a box), plasma physics (tokamak boundary), photonic crystals (band gaps), and our own Kerr-ODE (L1-L3 irreversible). A plausibility test (`research-lab/boundary_plausibility.rs`) confirmed 8.56× within/cross-well coherence ratio at l=8 with circle coherence perfectly independent (1.000000).
+
+**Major correction — global CV is 6.2%, not 51.5%:**
+
+The 51.5% figure was per-band CV. When averaged across 64 bands, variation cancels. The actual mean-magnitude-per-token CV is **6.2%**. This changes the landscape — the real magnitude structure is 8× tighter than we assumed through Phases 7-8.
+
+**Within-well CV drops further:**
+
+| l | Avg within-well CV | Avg z-range (global norm) | Global z-range |
+|---|---|---|---|
+| 2 | 2.7% | 1.42 | 4.32 |
+| 4 | 1.4% | 0.70 | 4.32 |
+| 6 | 1.1% | 0.51 | 4.32 |
+| 8 | 0.8% | 0.36 | 4.32 |
+
+Wells DO contain magnitude spread. The z-score range with global normalization drops from 4.3 to 0.36 at l=8 — a 12× compression.
+
+**23-test harness at α=0.1:**
+
+| Mode | Pass | Notes |
+|------|------|-------|
+| Circle | 23/23 | Baseline |
+| B-Global (real mags) | 13/23 | Real embeddings, global norm |
+| B-WellGlobal (l=4) | 20/23 | Same mags, well-contained |
+| B-WellGlobal (l=6) | 20/23 | Even tighter wells |
+| B-Varied (synthetic) | 11/23 | Old synthetic comparison |
+
+Wells rescued 7 tests at α=0.1. The containment works for everything except T16.
+
+**But α* = 0.001 for ALL modes.** T16 (1° resolution) requires α ≤ 0.001 regardless of well membership, normalization scheme, or CV. Three experiments (linear, quantile, boundary wells), same wall. The φ_eff formula is **definitively closed**.
+
+**Verdict:** The well structure is mathematically real and provides genuine containment (0.8% CV, 12× z-range compression). But as a vehicle for the embedded phase-perturbation formula, it cannot escape T16. The value of wells lies elsewhere — as a discrete classification channel.
+
+---
+
+## Architectural Pivot: Triple-Channel (Post Phase 9)
+
+Three independent channels per pair, none interfering with any other:
+
+1. **Circle phase:** `cos(n × Δφ)` — untouched, 23/23 always. Detection and precision.
+2. **Well membership:** Which l=8 well does each token's magnitude place it in? Discrete classification (same well = similar magnitude class). Binary signal, no perturbation.
+3. **Within-well magnitude distance:** `|r_a - r_b|` for same-well pairs. Continuous ranking. The 0.8% CV means this channel has real resolution within wells.
+
+Phase finds relationships. Wells classify type. Magnitude ranks within type.
+
+---
+
+## Next: Option A — Word-Level Transformer (Triple-Channel)
 
 **The fundamental question:** Does training build magnitude structure that correlates with meaning?
 
-If yes — the information exists and we find a way to use it (dual channel, separate scoring, or something we haven't thought of yet).
-
-If no — magnitude is noise shaped by optimizer dynamics, and the investigation closes honestly.
+The boundary test proved the magnitude structure IS tight (6.2% global, 0.8% within-well). The open question is whether that structure carries semantic information or is just optimizer noise.
 
 **Measure magnitude properties FIRST, before running coherence tests:**
 1. CV per harmonic band
@@ -328,6 +378,12 @@ These measurements tell us what the optimizer built before we try to exploit it.
 1. **Baseline** — standard `nn.Embedding`, fully trainable (control)
 2. **Frozen** — harmonic cos/sin embeddings, fully frozen (existing approach)
 3. **Magnitude** — harmonic phases frozen, per-band magnitudes trainable (the hypothesis)
+
+**Post-training analysis now includes triple-channel evaluation:**
+- Circle score per pair (detection)
+- Well membership per token (classification)
+- Within-well magnitude distance per pair (ranking)
+- Combined: do three channels together outperform any subset?
 
 ---
 
@@ -344,5 +400,6 @@ These measurements tell us what the optimizer built before we try to exploit it.
 3. What does the MLP coupling profile look like when magnitude structure is present?
 4. Does multi-grid × embedded give compounding benefit?
 5. ~~Is Chebyshev or Legendre better?~~ **ANSWERED: Chebyshev for detection, Legendre for latitude.**
-6. ~~Can a formula variant open the operating window?~~ **ANSWERED: No. T16 (1° resolution) constrains all phase-perturbation methods identically. Two variants tested, same wall. Dual channel is the path.**
-7. **NEW:** Does training build magnitude structure that correlates with semantic similarity? (Option A answers this)
+6. ~~Can a formula variant open the operating window?~~ **ANSWERED: No. T16 (1° resolution) constrains all phase-perturbation methods identically. Three variants tested (linear, quantile, boundary wells), same wall. φ_eff is definitively closed.**
+7. Does training build magnitude structure that correlates with semantic similarity? (Option A answers this)
+8. **NEW:** Do the three independent channels (circle, well membership, within-well distance) provide combined utility greater than circle alone? (Option A triple-channel evaluation)
