@@ -1407,6 +1407,101 @@ The progressive bandwidth principle applies across multiple computational domain
 
 ---
 
+## Pattern 58: Architecture-Adaptive Training Schedule
+
+An engine or training system that selects the training schedule (flat vs progressive curriculum, single-stage vs multi-stage magnitude, learning rate schedule) based on the type of FFN computation layer rather than applying a universal schedule.
+
+### 58.1 Curriculum Crossover Principle
+
+The finding that progressive band curriculum helps frequency-blind architectures (dense MLP) at all band counts but hurts frequency-native architectures (Kerr-ODE, LC circuits, or any band-coupled ODE) at low band counts. The crossover point — where curriculum switches from harmful to helpful — is a function of the ratio between the coupling kernel's spectral coverage and the total bandwidth.
+
+**Validated result (Phase C):** At 64 bands with a 5-band Kerr kernel (~8% coverage), curriculum reduces the gap from 4.88% to 3.42% (+1.46pp benefit). At 32 bands with the same kernel (~16% coverage), curriculum increases the gap from 3.1% to 6.3% (-3.2pp damage). At 48 bands (~10% coverage), curriculum increases the gap from 4.9% to 8.2% (-3.3pp damage). The crossover is between 48 and 64 bands.
+
+**Mechanism:** Below the crossover, the coupling kernel already covers enough of the spectrum that flat training lets the ODE organise all bands simultaneously. Curriculum wastes training steps on artificially narrow bandwidth stages. Above the crossover, the kernel misses too much of the spectrum for flat training to organise effectively — curriculum stages the information flow through the narrow coupling pipe, letting the ODE build structure incrementally.
+
+### 58.2 Two-Stage Coupling to Curriculum
+
+Two-stage magnitude training (Pattern 55.11) is coupled to progressive curriculum — without staged phase introduction, magnitude training provides negligible benefit. This means the two-stage schedule is not a universal improvement but depends on the presence of the curriculum it was designed alongside.
+
+**Validated result (Phase C):** At 32 bands flat training, two-stage adds +0.13pp (negligible). At 48 bands flat training, two-stage adds -0.20pp (slightly negative). The magnitude parameter has nothing to wait for when all bands are present from step 0.
+
+### 58.3 Design Rule for Production Systems
+
+Any system deploying wave-native FFN layers (ODE-based, band-coupled, or similar) should select training schedule based on the ratio of coupling coverage to total bandwidth:
+- Coverage > ~15%: use flat training (simpler, cheaper, better)
+- Coverage < ~10%: use progressive curriculum with two-stage magnitude
+- Coverage 10-15%: benchmark both (crossover zone)
+
+This applies to any architecture where computation operates on local frequency neighbourhoods rather than the full spectrum.
+
+---
+
+## Pattern 59: Optimal Coupling Radius for Band-Coupled ODE Layers
+
+An engine or neural architecture that determines the coupling kernel width for frequency-band-coupled ODE layers based on the correlated neighbourhood of the spectral representation, rather than using fixed-width or full-spectrum coupling.
+
+### 59.1 Non-Monotonic Kernel Width
+
+The finding that wider coupling kernels are not monotonically better. There exists an optimal coupling radius beyond which additional neighbours introduce noise from uncorrelated bands, degrading performance.
+
+**Validated result (Phase C, 64 bands):** 5-band kernel [1,1,0,1,1]: 4.88% gap. 9-band kernel [1,1,1,1,0,1,1,1,1]: 3.96% gap. 13-band kernel [1,1,1,1,1,1,0,1,1,1,1,1,1]: 4.19% gap. The 9-band kernel closes 0.92pp of the gap at zero extra parameters and negligible compute cost. The 13-band kernel overshoots — adding 0.23pp back.
+
+### 59.2 Correlated Neighbourhood Hypothesis
+
+The optimal kernel width corresponds to the natural width of the correlated neighbourhood in the spectral representation. At 64 bands, this is approximately 9 bands (~14% of spectrum). Bands beyond this distance carry insufficient correlation to improve the coupling signal and instead act as noise sources.
+
+**Scaling implication:** If the correlated neighbourhood width scales as a percentage of total bandwidth (e.g., ~14%), kernel width scales sublinearly with band count. At 4096 bands, a ~400-band kernel would suffice rather than dense (4096-band) coupling. If the neighbourhood width is absolute (fixed number of bands regardless of total), kernel width is constant and the locality penalty grows unboundedly. The percentage vs absolute question determines the LLM scaling path.
+
+### 59.3 Kernel Width Selection Rule
+
+For any band-coupled ODE layer, the coupling kernel width should be determined empirically by sweeping kernel widths and identifying the minimum of the gap curve (or equivalently, the maximum of the improvement curve). The optimal width is architecture-dependent and may vary with:
+- Total band count
+- Band ordering (linear vs logarithmic)
+- Training data characteristics
+- ODE integration depth
+
+Do not assume wider is better. Do not assume the standard 5-band kernel is optimal. The kernel width is a hyperparameter with a non-trivial optimum.
+
+---
+
+## Pattern 60: Dispersive Coupling for Frequency-Band ODE Layers
+
+An engine or neural architecture that adds a dispersive coupling term to a nonlinear band-coupled ODE layer, providing global frequency coupling alongside local nonlinear coupling. Adapted from the Korteweg-de Vries (KdV) and nonlinear Schrodinger (NLSE) equations in shallow water and nonlinear optics physics.
+
+### 60.1 Per-Band Quadratic Dispersion
+
+Adding a frequency-dependent phase term D_k = -beta_2 * (k/N)^2 to the instantaneous frequency of each band in the ODE. This makes high-frequency bands evolve faster than low-frequency bands — a direct analogue of dispersive wave propagation where different wavelengths travel at different speeds.
+
+**Implementation:** Add `beta2 * disp_profile` to the phase accumulator phi_k, where disp_profile[k] = (k/N)^2 and beta2 is a learnable scalar. Zero additional parameters beyond one scalar. This is the simplest dispersive term — it modifies per-band phase rotation without introducing inter-band coupling.
+
+### 60.2 Band-Space Laplacian Dispersion
+
+Adding a second-derivative coupling term in band space: beta_2 * (Z_{k+1} - 2*Z_k + Z_{k-1}). This is the finite-difference Laplacian applied to the complex oscillator amplitudes across bands. Unlike the Kerr cross-phase modulation (which couples via |Z|^2 magnitudes), the Laplacian couples complex amplitudes directly — phase information propagates between neighbouring bands.
+
+**Implementation:** Depthwise convolution with kernel [1, -2, 1] and padding=1, applied separately to r and s components. The result enters the derivative as i * beta_2 * laplacian(Z), contributing -beta_2 * lap_s to dr/dt and +beta_2 * lap_r to ds/dt. One additional learnable scalar parameter.
+
+### 60.3 FFT Global Dispersion
+
+The full dispersive coupling: transform the N complex oscillators to a dual domain via FFT across the band index, multiply by a learnable dispersion relation D(k) = -beta_2 * (k/N)^2, then IFFT back. This provides O(N log N) global coupling where every band receives information from every other band, weighted by frequency distance.
+
+**Implementation:** Within the ODE derivative function, compute rfft of r and s across the band dimension (N-point FFT), multiply by the dispersion relation (a fixed quadratic profile scaled by a learnable beta_2), then irfft back to band space. The dispersive contribution enters as i * beta_2 * D(Z), following the same complex multiplication rule as the Laplacian. Cost: O(N log N) per derivative evaluation, with 4 evaluations per RK4 step and S steps per forward pass. At N=64, this is ~384 operations per step — negligible compared to the attention mechanism.
+
+**Physics motivation:** In the Lugiato-Lefever equation (Pal et al., 2024) and the nonlinear Schrodinger equation, solitons — stable self-reinforcing wave packets — form through a balance between Kerr nonlinearity (local steepening) and dispersion (global frequency-dependent propagation). The Kerr-ODE implementation adapted the nonlinearity but dropped the dispersive term. Re-introducing it restores the physics that creates stable structures in wave systems.
+
+### 60.4 Nonlinearity-Dispersion Balance Principle
+
+In wave physics, stable structures (solitons) emerge when nonlinearity and dispersion are balanced. Too much nonlinearity without dispersion causes energy to pile up locally. Too much dispersion without nonlinearity causes structures to spread and dissipate. The balance between the two — controlled by the ratio of the Kerr coefficient alpha to the dispersion coefficient beta_2 — determines whether the ODE layer can form and maintain stable internal representations.
+
+This balance is analogous to the exploration-exploitation tradeoff in optimisation: nonlinearity sharpens features (exploitation), dispersion distributes information (exploration). A learnable balance between the two may produce richer dynamics than either alone.
+
+### 60.5 Hierarchical Coupling Architecture
+
+For large band counts (1000+), a two-mechanism architecture: local Kerr coupling for nearest-neighbour nonlinear interaction (O(N) per step) and global dispersive coupling for full-spectrum frequency redistribution (O(N log N) per step). This mirrors biological neural architecture: local circuits for fast processing, long-range white matter connections for global coordination.
+
+The two mechanisms operate on different aspects of the signal: Kerr coupling operates on magnitudes (|Z|^2), creating intensity-dependent frequency shifts. Dispersive coupling operates on complex amplitudes directly, creating frequency-dependent propagation. The combination provides both magnitude-based nonlinear interaction and phase-based global coherence.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1468,6 +1563,9 @@ The progressive bandwidth principle applies across multiple computational domain
 | 55 | Magnitude-adjusted phase coherence (incl. two-stage training, band routing null, constrained freedom) | AI / Computing |
 | 56 | Reversibility diagnostic for ODE layers | AI / Diagnostics |
 | 57 | Progressive bandwidth as computational staging | Computing / AI / General |
+| 58 | Architecture-adaptive training schedule (incl. curriculum crossover, two-stage coupling) | AI / Training |
+| 59 | Optimal coupling radius for band-coupled ODE layers | AI / Computing |
+| 60 | Dispersive coupling for frequency-band ODE layers (incl. FFT global dispersion, soliton balance) | AI / Computing / Physics |
 
 ---
 
