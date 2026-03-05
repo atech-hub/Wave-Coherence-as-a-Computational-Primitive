@@ -106,4 +106,4 @@ The 4.8% gap between the full Kerr-ODE stack (95.2%) and MLP baseline (100%) is 
 
 It is the cost of |Z|^2 cross-band coupling versus dense matmul. The Kerr nonlinearity operates on nearest-neighbour bands; MLP operates on all dimensions simultaneously. The gap is the price of locality in frequency space.
 
-Whether this gap narrows or widens at scale is an open question. The frequency experiments (band count sweep, higher harmonic ceiling) address this directly.
+Phase C frequency experiments (band count sweep, curriculum isolation, higher bandwidth) confirmed: **the gap widens with bandwidth.** The Kerr locality penalty scales from 0.4% at 8 bands (kernel covers full spectrum) to 5.4% at 96 bands (kernel covers ~5% of spectrum). More bands means more information falls in the Kerr kernel's stop-bands. Additionally, the progressive curriculum designed for 64 bands actively damages performance at lower band counts (~3pp), and two-stage magnitude training is coupled to the curriculum — without staged phase introduction, magnitude training provides no benefit.

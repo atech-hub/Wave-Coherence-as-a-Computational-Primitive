@@ -49,9 +49,9 @@ The full integrated stack (Phase A/B):
 | Attention | Standard learned Q/K | Harmonic structure in Q/K destroys discrimination |
 | Training | Progressive band curriculum + two-stage magnitude | Structure first, detail second, magnitude last |
 
-**Result:** 95.2% of MLP performance at 43.1% of parameters (345K vs 801K).
+**Result:** 95.2% of MLP performance at 43.1% of parameters (345K vs 801K). The Kerr-ODE locality penalty grows with bandwidth (0.4% at 8 bands to 5.4% at 96 bands), and the progressive curriculum is coupled to the architecture — flat training is optimal for Kerr-ODE at lower band counts.
 
-For the complete experimental record across 30 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
+For the complete experimental record across 31 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
 
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 
@@ -86,11 +86,11 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/MATHEMATICS.md](docs/MATHEMATICS.md) | Formal mathematical foundations in standard notation |
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
-| [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 30 phases, all results, all nulls |
+| [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 31 phases, all results, all nulls |
 | [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 57 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
-| experiments/ | 30+ training experiments with PyTorch |
+| experiments/ | 31+ training experiments with PyTorch |
 | investigations/ | Multi-grid and spherical deep-dive investigations |
 
 ## Reproduce the Validation
