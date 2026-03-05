@@ -49,9 +49,9 @@ The full integrated stack (Phase A/B):
 | Attention | Standard learned Q/K | Harmonic structure in Q/K destroys discrimination |
 | Training | Progressive band curriculum + two-stage magnitude | Structure first, detail second, magnitude last |
 
-**Result:** 95.2% of MLP performance at 43.1% of parameters (345K vs 801K). The Kerr-ODE locality penalty grows with bandwidth (0.4% at 8 bands to 5.4% at 96 bands), and the progressive curriculum is coupled to the architecture — flat training is optimal for Kerr-ODE at lower band counts.
+**Result:** 95.2% of MLP performance at 43.1% of parameters (345K vs 801K). The Kerr-ODE locality penalty grows with bandwidth (0.4% at 8 bands to 5.4% at 96 bands), plateauing between 48-64 bands. A wider 9-band coupling kernel closes ~1pp of the gap at zero cost, but 13-band overshoots — an optimal coupling radius exists. Progressive curriculum helps above ~48-64 bands but hurts below; flat training is optimal for Kerr-ODE at lower band counts.
 
-For the complete experimental record across 31 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
+For the complete experimental record across 33 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
 
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 

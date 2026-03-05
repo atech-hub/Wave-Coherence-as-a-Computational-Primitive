@@ -1521,9 +1521,9 @@ Verdict: **Two-stage wins.** 95.2% of MLP at 43.1% parameters. The new ceiling f
 
 ---
 
-## Phase C: Frequency Experiments — Band Count, Curriculum Isolation, Higher Bandwidth
+## Phase C: Frequency Experiments — Band Count, Curriculum Isolation, Higher Bandwidth, Kernel Width
 
-Three experiments answering: what's the minimum bandwidth for target performance, and how does the Kerr-ODE scale with bandwidth?
+Five experiments answering: what's the minimum bandwidth for target performance, how does the Kerr-ODE scale with bandwidth, and can wider coupling close the gap?
 
 Architecture: 4L/4H, variable dimension (N_EMBD = N_BANDS * 2). Two-stage Kerr-ODE (Phase B winner) vs MLP baseline at each band count. 2000 steps, batch 64, lr 3e-4, RTX 4070 Ti.
 
@@ -1579,22 +1579,65 @@ Complete locality penalty curve (all flat training except 64* which used curricu
 | 8 | 2.5247 | 2.5346 | +0.4% |
 | 32 | 2.0141 | 2.0758 | +3.1% |
 | 48 | 1.8263 | 1.9165 | +4.9% |
+| 64 | 1.6988 | 1.7818 | +4.88% |
 | 64* | 1.6932 | 1.7511 | +3.4% |
 | 96 | 1.5453 | 1.6291 | +5.4% |
 | 128 | 1.5690 | 1.5739 | +0.3% |
 
-The locality penalty grows: 0.4% at 8 bands (kernel covers all) to 5.4% at 96 bands (kernel covers ~5% of spectrum). More bands = more information in Kerr stop-bands.
+The locality penalty grows: 0.4% at 8 bands (kernel covers all) to 5.4% at 96 bands (kernel covers ~5% of spectrum). More bands = more information in Kerr stop-bands. The penalty plateaus between 48 and 64 bands (4.9% vs 4.88%) -- the marginal cost of additional bands drops once the kernel is already missing most of the spectrum.
 
 128-band result confounded: MLP at 128 bands (1.5690) is worse than MLP at 96 (1.5453) -- a 3.17M parameter model undertrained at 2000 steps. Both MLP and Kerr hit training budget limits, not architecture limits. The 0.3% gap is not meaningful.
 
-The 64-band curriculum result (3.4%) sits below the flat trend because the curriculum was designed for 64 bands -- it's the one band count where the curriculum helps rather than hurts.
+The 64-band curriculum result (3.4%*) sits below the flat trend because the curriculum was designed for 64 bands -- at this band count and above, curriculum compensates for the narrow coupling pipe (see Experiment 4).
 
-### Four Findings
+### Experiment 4: Flat 64-Band Kerr-ODE (flat_64band.py)
+
+Does the 95.2% Phase B ceiling move without curriculum? Phase B measured the Kerr gap WITH curriculum at 64 bands (3.42%). The flat trend (32b=3.1%, 48b=4.9%) suggested the curriculum might still help at 64 -- or 64 might be the crossover point.
+
+| 64 bands | Val loss | Gap vs MLP |
+|----------|---------|-----------|
+| MLP flat | 1.6988 | -- |
+| Kerr flat | 1.7818 | +4.88% |
+| Kerr + curriculum (Phase B) | 1.7511 vs 1.6932 | +3.42% |
+
+Flat gap at 64 bands: **4.88%** -- worse than curriculum's 3.42%. Curriculum earns its keep at 64 bands. The crossover is between 48 and 64 bands.
+
+Complete curriculum crossover table (all flat except where noted):
+
+| Bands | Flat gap | Curriculum gap | Curriculum effect |
+|-------|---------|---------------|-------------------|
+| 8 | 0.4% | -- | N/A (single stage) |
+| 32 | 3.1% | 6.3% | Hurts (-3.2pp) |
+| 48 | 4.9% | 8.2% | Hurts (-3.3pp) |
+| 64 | 4.88% | 3.42% | Helps (+1.46pp) |
+| 96 | 5.4% | 4.6% | Helps (+0.8pp) |
+
+The locality penalty plateaus between 48 and 64 bands (4.9% vs 4.88%), then the curriculum crosses over and starts helping. Below 48 bands, curriculum wastes steps on stages too narrow. Above 48, staged introduction gives the Kerr-ODE time to organise what the kernel can reach before the full spectrum opens.
+
+### Experiment 5: Wider Kerr Kernel (wider_kerr_kernel.py)
+
+Does wider coupling close the locality gap? The standard 5-band kernel [1,1,0,1,1] covers ~8% of the spectrum at 64 bands. Test 9-band (~14%) and 13-band (~20%) kernels.
+
+| Kernel | Val loss | Gap vs MLP | Coverage |
+|--------|---------|-----------|----------|
+| 5-band [1,1,0,1,1] | 1.7818 | +4.88% | ~8% |
+| 9-band [1,1,1,1,0,1,1,1,1] | 1.7662 | +3.96% | ~14% |
+| 13-band [1,1,1,1,1,1,0,1,1,1,1,1,1] | 1.7701 | +4.19% | ~20% |
+
+**Non-monotonic result**: 9-band is the sweet spot, closing 0.92pp of the gap. 13-band overshoots -- distant bands aren't correlated strongly enough to help, and the extra coupling introduces noise. There's an optimal coupling radius, not a simple "wider = better" relationship.
+
+The 9-band kernel at 3.96% gap is competitive with curriculum alone (3.42%). These are orthogonal interventions: wider kernel reduces stop-band penalty, curriculum stages information flow. The combination is untested but likely sub-3%.
+
+Implication for scaling: if the correlated neighbourhood has a natural width (~14% of spectrum at 64 bands), kernel width scales sublinearly with band count. At 4096 bands you'd need ~400-band kernels, not dense MLP.
+
+### Six Findings
 
 1. **MLP budget curve**: 48 bands (96D) achieves 92% of 64-band (128D) performance. The cost of halving bandwidth is ~8%.
 2. **Curriculum was half the Kerr gap**: ~3pp damage at 32 and 48 bands. Flat Kerr at 32b: 3% gap (not 6.3%).
 3. **Two-stage is coupled to curriculum**: Without staged phase organisation, magnitude training provides no benefit. The training schedule compensates for architectural limitations.
 4. **Locality penalty grows with bandwidth**: Kerr gap 0.4% at 8 bands to 5.4% at 96 bands. Scaling bandwidth helps MLP more than Kerr -- the local coupling kernel becomes a larger liability.
+5. **Curriculum crossover at ~48-64 bands**: Below 48, flat wins. Above 48, curriculum compensates for the narrow coupling pipe by staging information flow. The crossover maps a design parameter for production systems.
+6. **Optimal coupling radius exists**: 9-band kernel closes ~1pp of the gap at zero extra parameters. 13-band overshoots. The correlated neighbourhood has a natural width -- wider isn't simply better.
 
 ---
 
@@ -1634,4 +1677,4 @@ The 64-band curriculum result (3.4%) sits below the flat trend because the curri
 | 22d. RK4 Integration | Does integration quality close the MLP gap? | **PARTIALLY** -- RK4 improves 1.71% over Euler. Peak magnitudes drop from 22,000 to 6.5 -- the 178M spikes were 100% Euler artifacts. Remaining MLP gap: ~6.5%. This is the architectural ceiling. |
 | A. Full Stack | Do the components work together as a system? | **YES + SYNERGY** -- 96.8% of MLP at 42.6% parameters (1.7635 vs 1.7096). Beats 93.5% component ceiling. Frozen harmonic embeddings + analytical L0 + Kerr-ODE RK4 L1-L3 + progressive curriculum. Infrastructure validated. |
 | B. Integration Sweep | Can spherical coherence findings improve the stack? | **TWO-STAGE WINS** -- 95.2% of MLP at 43.1% params (same-run). Two-stage magnitude training (frozen during phase learning, freed after) improves +1.91% over frozen baseline. Band routing HURTS (-9.15%). Magnitude CV: 2.46% (surgical) vs 6.92% (exploratory). Constrained freedom principle confirmed. |
-| C. Frequency Experiments | What's the cost of intelligence in bandwidth? How does Kerr scale? | **FOUR FINDINGS**: (1) MLP budget curve -- 48 bands at 92% of 64-band performance is the sweet spot. (2) Curriculum was half the Kerr gap -- ~3pp damage at 32 and 48 bands; flat training cuts Kerr gap from 6.3% to 2.9% at 32 bands. (3) Two-stage is coupled to curriculum -- without staged phase organisation, magnitude training is negligible. (4) Locality penalty grows with bandwidth -- Kerr gap: 0.4% at 8 bands (kernel covers all), 3.1% at 32, 4.9% at 48, 5.4% at 96. More bands = more information in Kerr stop-bands. |
+| C. Frequency Experiments | What's the cost of intelligence in bandwidth? How does Kerr scale? | **SIX FINDINGS**: (1) MLP budget curve -- 48 bands at 92%. (2) Curriculum was half the Kerr gap at low bands. (3) Two-stage coupled to curriculum. (4) Locality penalty grows with bandwidth. (5) Curriculum crossover at ~48-64 bands -- below: flat wins, above: curriculum helps. (6) Optimal coupling radius -- 9-band kernel closes ~1pp at zero cost, 13-band overshoots. |
