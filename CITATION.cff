@@ -3,7 +3,7 @@ message: "If you use this work, please cite it as below."
 title: "Wave Coherence as a Computational Primitive: Phase-Encoded Relationship Detection via Harmonic Analysis"
 type: software
 authors:
-  - name: "Marco"
+  - name: "Marco Da Cunha"
     affiliation: "Independent researcher"
 date-released: 2025-02-09
 license: MIT

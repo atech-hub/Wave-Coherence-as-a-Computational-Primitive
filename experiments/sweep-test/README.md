@@ -167,9 +167,9 @@ The wave coherence project proves the mathematical primitives work for database 
 
 ## Attribution
 
-This work is a collaboration between Marco (conceptual insight, experimental design) and Claude (Anthropic's AI assistant — mathematical formalization, implementation, documentation).
+This work is a collaboration between Marco Da Cunha (conceptual insight, experimental design) and Claude (Anthropic's AI assistant — mathematical formalization, implementation, documentation).
 
-The core insight — that model embeddings might contain harmonic structure invisible to cosine similarity, analogous to a stereogram image hidden in apparent noise — originated from Marco's observation during collaborative discussion.
+The core insight — that model embeddings might contain harmonic structure invisible to cosine similarity, analogous to a stereogram image hidden in apparent noise — originated from Marco Da Cunha's observation during collaborative discussion.
 
 ## License
 
