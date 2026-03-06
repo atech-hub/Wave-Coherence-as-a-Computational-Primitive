@@ -211,6 +211,8 @@ The circle sees a wall. The embedded method sees a landscape.
 | 7 | Linear z-score: α*=0.001 for 23/23, but discrimination gap ~zero | Proven |
 | 8 | Quantile confirms structural bottleneck — T16 is the wall, not outliers | Proven |
 | 9 | Boundary wells: 6.2% global CV (not 51.5%), wells contain to 0.8%, α* still 0.001 | Proven |
+| 9b | Band split: low vs high harmonics nearly orthogonal (r=0.05), high harmonics discriminate more (21.3x vs 8.0x), boundary hypothesis null | Proven |
+| 9c | Path coherence = 0.5× direct (trig identity), zero disambiguation, broadcast sonar averages out, selective sonar = attention | Proven (theorem) |
 | 10 (Option A) | Phase carries semantics (20x clustering); magnitude amplifies when phase leads (383x); magnitude clustering = frequency effect (not grammatical role); freezing one dimension regularises | Proven |
 
 **The embedded formula:**
@@ -346,6 +348,72 @@ Wells rescued 7 tests at α=0.1. The containment works for everything except T16
 **But α* = 0.001 for ALL modes.** T16 (1° resolution) requires α ≤ 0.001 regardless of well membership, normalization scheme, or CV. Three experiments (linear, quantile, boundary wells), same wall. The φ_eff formula is **definitively closed**.
 
 **Verdict:** The well structure is mathematically real and provides genuine containment (0.8% CV, 12× z-range compression). But as a vehicle for the embedded phase-perturbation formula, it cannot escape T16. The value of wells lies elsewhere — as a discrete classification channel.
+
+---
+
+## Phase 9b: Band Split Analysis — Orthogonal Harmonic Channels
+
+**Question:** Are low and high harmonic bands carrying independent information, or correlated views of the same structure?
+
+**Method:** Using the trained Option A embeddings (both-free baseline, 5000 words, 64 bands), compute coherence scores separately for low bands (n=1-6) and high bands (n=7-15). Measure Pearson correlation between the two band groups across all token pairs.
+
+**Results:**
+
+| Metric | Value |
+|--------|-------|
+| Pearson r (low vs high bands) | **0.05** |
+| Low-band within-family discrimination (nature) | 8.0x |
+| High-band within-family discrimination (nature) | **21.3x** |
+
+r=0.05 — the two band groups are nearly orthogonal. They carry independent information about the same token pairs.
+
+**Key findings:**
+
+1. **High harmonics discriminate MORE strongly** (21.3x vs 8.0x). The finer frequency resolution produces sharper separation between semantic families. This contradicts the intuition that low harmonics carry "more important" information — they carry broader information, but high harmonics carry more discriminative information.
+
+2. **Uniform std across low-band bins.** No evidence that low bands disambiguate pairs that high bands can't distinguish. The bands are independent detectors, not hierarchical refinements.
+
+3. **Boundary hypothesis NULL.** The original hypothesis was that high-l Legendre polynomials create boundary wells that enforce containment, with high harmonics acting as boundary enforcers for magnitude. The data shows high harmonics are independent discriminators operating on phase, not boundary mechanisms operating on magnitude. The 8.56x within/cross-well ratio at l=8 (Phase 9 plausibility test) reflects Legendre polynomial structure, not a causal boundary mechanism.
+
+**Implication for architecture:** The r=0.05 orthogonality between low and high bands means the framework already has two independent detection channels treated as one. This finding directly motivated Integration 2 (band-aware routing in Phase B) — though that integration was later shown to HURT performance because orthogonal information channels do not imply independent computation requirements.
+
+---
+
+## Phase 9c: Path Coherence — The Reflection/Sonar Test
+
+**Question:** Can coherence through intermediate tokens (path coherence) disambiguate pairs that direct coherence cannot?
+
+**Concept:** Instead of measuring cos(n × Δφ) directly between tokens A and B, route through every intermediate token C: compute cos(n × (φ_A - φ_C)) × cos(n × (φ_C - φ_B)) and average over all C. This is "broadcast sonar" — bouncing a signal off every token and measuring what comes back.
+
+**Method:** Using trained Option A embeddings, compute path coherence for 50 moderate pairs (direct coherence between 0.3 and 0.7) through all ~5000 intermediate tokens. Compare path coherence to direct coherence.
+
+**Results:**
+
+| Metric | Value |
+|--------|-------|
+| Path/Direct ratio | **0.49x** (always) |
+| Std across pairs | ~0.044 (uniform) |
+| Disambiguation (moderate pairs clarified) | **0/50** |
+
+**The 0.49x is a trig identity.** The product cos(a-c) × cos(c-b) averaged over uniformly distributed C reduces analytically to:
+
+```
+E_C[cos(a-c) × cos(c-b)] = 0.5 × cos(a-b)
+```
+
+The cos(a+b-2c) cross-term averages to zero over uniform C, leaving exactly half the direct coherence. This is a mathematical property of the phase distribution, not an empirical finding — but confirming it holds on real trained embeddings proves the phases are well-distributed (the analytical prediction matches exactly).
+
+**Key findings:**
+
+1. **Zero disambiguation.** No moderate pair was clarified by routing through intermediates. The path coherence is exactly 0.5× direct coherence for every pair, with no pair-specific signal.
+
+2. **Broadcast sonar averages out.** Routing through ALL tokens produces a blurred half-strength copy of the direct signal. Information is destroyed, not created.
+
+3. **Selective sonar IS attention.** The transformer doesn't average over all tokens equally — it selectively weights paths through specific intermediates based on the query. Each attention head is a selective sonar ping. This test proves WHY attention needs to be learned: uniform path averaging is mathematically guaranteed to return half the direct signal and nothing more. Selective routing (attention) is the only way path coherence carries information.
+
+4. **Phase distribution is well-distributed.** The analytical prediction (0.5× exactly) holding on real trained embeddings confirms the optimizer distributes phases approximately uniformly around the circle, as the harmonic initialisation intended.
+
+**Implication:** The reflection mechanism isn't missing from the architecture — it's already there as learned attention. This test closes the question of whether unweighted multi-hop coherence adds information: it doesn't, and the reason is a trig identity that applies to any uniform phase distribution.
 
 ---
 

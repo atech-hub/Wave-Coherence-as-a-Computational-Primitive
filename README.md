@@ -8,7 +8,7 @@ A validated mathematical framework that uses phase encoding on the unit circle a
 
 **Database query primitive.** A single harmonic coherence scan (`cos(3 * Δθ)`) finds 75 related entities across 3 groups in one pass. The equivalent SQL requires 2-3 JOINs and an explicit relation table. The wave model discovers relationships from geometry; the relational model must enumerate them. Zero false positives across 25 validated tests. ([Full test results](experiments/RESULTS.md))
 
-**LLM architecture substrate.** Harmonic embeddings serve as structural priors for transformers — frozen phase-encoded embeddings (zero gradient, zero training) match or outperform learned embeddings. A Kerr-ODE layer adapted from nonlinear optics replaces matrix multiplication in the FFN, achieving **95.2% of MLP performance at 43.1% of parameters** in the full integrated stack (Phase B, two-stage magnitude training). ([Architecture details](docs/KERR-ODE-MATHEMATICS.md))
+**LLM architecture substrate.** Harmonic embeddings serve as structural priors for transformers — frozen phase-encoded embeddings (zero gradient, zero training) match or outperform learned embeddings. A Kerr-ODE layer adapted from nonlinear optics replaces matrix multiplication in the FFN, achieving **98.1% of MLP performance at 44% of parameters** with a maestro bottleneck for global coordination and progressive curriculum (Phase C). The gap closes with depth (~1pp per 1.5 layers) and the ODE structure provides implicit regularisation — stable where MLP overfits. ([Architecture details](docs/KERR-ODE-MATHEMATICS.md))
 
 **Cosine similarity blindness.** Standard cosine similarity returns 0.0000 between vectors with strong harmonic relationships. A per-channel harmonic sweep recovers coherence of 1.0000 at the correct harmonic. One similarity score hides independent channels of structured information. Confirmed on both synthetic data and production transformer embeddings (all-MiniLM-L6-v2). ([Test 21 and Test 24 details](experiments/RESULTS.md#phase-16-wave-packet-engine))
 
@@ -39,19 +39,19 @@ Progressive curriculum training (Phases 6-15) produces qualitatively different i
 
 ## Architecture Summary
 
-The full integrated stack (Phase A/B):
+The full integrated stack (Phases A/B/C):
 
 | Component | Approach | Key Finding |
 |-----------|----------|-------------|
 | Embeddings | Frozen harmonic (no gradient) | Frozen outperforms learned by 2.8% |
 | Layer 0 (FFN) | Analytical per-band linear transform | Impedance matching — near-identity conditioning |
-| Layers 1-3 (FFN) | Kerr-ODE with RK4 integration | Nonlinear multi-band fusion from optical physics |
+| Layers 1-3 (FFN) | Kerr-ODE with RK4 + maestro bottleneck | Nonlinear multi-band fusion + global coordination |
 | Attention | Standard learned Q/K | Harmonic structure in Q/K destroys discrimination |
 | Training | Progressive band curriculum + two-stage magnitude | Structure first, detail second, magnitude last |
 
-**Result:** 95.2% of MLP performance at 43.1% of parameters (345K vs 801K). The Kerr-ODE locality penalty grows with bandwidth (0.4% at 8 bands to 5.4% at 96 bands), plateauing between 48-64 bands. A wider 9-band coupling kernel closes ~1pp of the gap at zero cost, but 13-band overshoots — an optimal coupling radius exists. Progressive curriculum helps above ~48-64 bands but hurts below; flat training is optimal for Kerr-ODE at lower band counts.
+**Result:** 98.1% of MLP performance at 44% of parameters (354K vs 801K). The maestro bottleneck (16D squeeze-and-excitation) provides global coordination; combined with progressive curriculum, the interventions stack because they attack different mechanisms (coordination vs staging). The gap closes with depth: 4.88% at 4 layers → 2.70% at 7 layers (~1pp per 1.5 layers). At 128 bands, Kerr's structural constraint provides implicit regularisation — stable where MLP overfits.
 
-For the complete experimental record across 33 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
+For the complete experimental record across 34 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
 
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 
@@ -63,7 +63,7 @@ Null results are findings. The framework has clear boundaries established throug
 |-------|-------------------|----------|
 | Embeddings | **Helps** — frozen outperforms learned | Phases 1-16, 17, A, B |
 | Retrieval | **Helps** — per-channel sweep beats cosine similarity | Tests 21, 24, Phase 16 |
-| FFN computation | **Partially replaces** — Kerr-ODE at 95.2% of MLP | Phases 20-22d, A, B |
+| FFN computation | **Partially replaces** — Kerr-ODE at 98.1% of MLP | Phases 20-22d, A, B, C |
 | Attention Q/K | **Hurts** — must remain unconstrained | Phases 18, 19, 19b |
 | Weight matrices | **No effect** — spectrally flat regardless | Phases 17, 17b |
 
@@ -86,11 +86,11 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/MATHEMATICS.md](docs/MATHEMATICS.md) | Formal mathematical foundations in standard notation |
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
-| [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 31 phases, all results, all nulls |
-| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 57 engine pattern families as prior art |
+| [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 34 phases, all results, all nulls |
+| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 64 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
-| experiments/ | 31+ training experiments with PyTorch |
+| experiments/ | 34 training experiments with PyTorch |
 | investigations/ | Multi-grid and spherical deep-dive investigations |
 
 ## Reproduce the Validation

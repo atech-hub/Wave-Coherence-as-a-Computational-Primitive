@@ -1630,14 +1630,46 @@ The 9-band kernel at 3.96% gap is competitive with curriculum alone (3.42%). The
 
 Implication for scaling: if the correlated neighbourhood has a natural width (~14% of spectrum at 64 bands), kernel width scales sublinearly with band count. At 4096 bands you'd need ~400-band kernels, not dense MLP.
 
-### Six Findings
+### Thirteen Findings
 
 1. **MLP budget curve**: 48 bands (96D) achieves 92% of 64-band (128D) performance. The cost of halving bandwidth is ~8%.
 2. **Curriculum was half the Kerr gap**: ~3pp damage at 32 and 48 bands. Flat Kerr at 32b: 3% gap (not 6.3%).
 3. **Two-stage is coupled to curriculum**: Without staged phase organisation, magnitude training provides no benefit. The training schedule compensates for architectural limitations.
-4. **Locality penalty grows with bandwidth**: Kerr gap 0.4% at 8 bands to 5.4% at 96 bands. Scaling bandwidth helps MLP more than Kerr -- the local coupling kernel becomes a larger liability.
-5. **Curriculum crossover at ~48-64 bands**: Below 48, flat wins. Above 48, curriculum compensates for the narrow coupling pipe by staging information flow. The crossover maps a design parameter for production systems.
+4. **Locality penalty is non-monotonic**: Kerr gap peaks at 48-96 bands (4.5-5.4%), then collapses to 0.35% at 128 bands. At 128b, MLP (3.17M params) needs weight decay to avoid overfitting; Kerr (1.34M params) is stable without regularisation.
+5. **Curriculum crossover is schedule-dependent**: The crossover is not a clean band-count threshold. At 80 bands with 64-band curriculum schedule, flat wins by 0.18pp. Curriculum helps at 64 and 96 bands but the schedule must be tuned per band count.
 6. **Optimal coupling radius exists**: 9-band kernel closes ~1pp of the gap at zero extra parameters. 13-band overshoots. The correlated neighbourhood has a natural width -- wider isn't simply better.
+7. **9-band + curriculum don't stack**: Both attack coupling reach from different angles but overlap. Combined: +4.00% gap vs 5-band+curriculum: +3.13%. The interventions compete for the same signal.
+8. **Learnable kernel weights near-null**: 9-band learnable kernel: 0.24pp improvement. Optimiser keeps weights within ±7% of uniform. Freedom granted, freedom ignored (same pattern as Phase 21b per-band alpha/beta).
+9. **Maestro-Add is the efficiency sweet spot**: Additive global coordination via 16D bottleneck closes 1.80pp (4.88% → 3.09%) at 3.7% additional parameters. 97% of MLP at 44% params, same depth. Multiplicative fusion hurts (+0.46pp). Gated fusion marginal (-0.32pp). The bottleneck corrects local computation; it must not replace it.
+10. **Depth convergence**: The Kerr gap closes with depth: 4.88% at 4L → 3.98% at 6L → 2.70% at 7L. ~1pp per 1.5 additional layers. MLP also benefits from depth (fair comparison at equal layer count). Parameter efficiency stable at 42-44% across all depths. Maestro adds ~0.4pp consistently at all depths -- genuine global coordination, not depth compensation.
+11. **Dispersive coupling null**: Three mechanisms tested at 64 bands: per-band quadratic (0.03pp), Laplacian (0.33pp), FFT global (0.00pp). Coupling mechanism is irrelevant -- only reach matters. The bands are Fourier components, not physical waves.
+12. **Implicit regularisation**: At 128 bands (256D, 4000 iters), MLP overfits (val 1.54 → 2.13). Kerr plateaus (1.56-1.58). The ODE structure acts as architecture-inherent regularisation: nearest-neighbour coupling + smooth RK4 integration + shared dynamics prevent memorisation. Kerr's lower parameter count is not a weakness -- it's free regularisation.
+13. **Integrated stack -- they stack**: Maestro + curriculum combined: +1.91% gap (down from 3.09% Maestro alone, 3.13% curriculum alone). They attack different mechanisms -- coordination vs staging -- so they combine where 9-band + curriculum (both attacking reach) didn't. Two-stage magnitude adds nothing on top (+1.93%). **98.1% of MLP at 44% of parameters.**
+
+### Efficiency headline
+
+The optimal configuration for deployment is **4L + Maestro + curriculum**: 98.1% of MLP performance at 44% of parameters, same forward pass depth. This saves 56% of parameter memory with no added compute cost. Deeper stacks (7L) achieve 97.3% but at 175% forward pass cost -- the maestro + curriculum achieves better at 100% cost.
+
+### Locality penalty table (all flat, 2000 iters, 4L)
+
+| Bands | Dim | MLP Params | Kerr Params | Ratio | Gap |
+|-------|-----|-----------|-------------|-------|-----|
+| 8 | 16 | — | — | — | 1.4% |
+| 16 | 32 | — | — | — | 2.3% |
+| 32 | 64 | — | — | — | 3.1% |
+| 48 | 96 | — | — | — | 4.9% |
+| 64 | 128 | 801K | 341K | 42.6% | 4.88% |
+| 80 | 160 | 1,248K | 529K | 42.4% | 4.54% |
+| 96 | 192 | — | — | — | 5.4% |
+| 128 | 256 | 3,176K | 1,339K | 42.2% | 0.35% |
+
+### Depth convergence table (64 bands, flat training)
+
+| Depth | Kerr Gap | Maestro Gap | MLP Params | Kerr Params |
+|-------|----------|-------------|-----------|-------------|
+| 4L | 4.88% | 3.09% | 801K | 341K (354K) |
+| 6L | 3.98% | 3.27% | 1,198K | 508K |
+| 7L | 2.70% | 2.64% | 1,396K | 591K (617K) |
 
 ---
 
@@ -1677,4 +1709,4 @@ Implication for scaling: if the correlated neighbourhood has a natural width (~1
 | 22d. RK4 Integration | Does integration quality close the MLP gap? | **PARTIALLY** -- RK4 improves 1.71% over Euler. Peak magnitudes drop from 22,000 to 6.5 -- the 178M spikes were 100% Euler artifacts. Remaining MLP gap: ~6.5%. This is the architectural ceiling. |
 | A. Full Stack | Do the components work together as a system? | **YES + SYNERGY** -- 96.8% of MLP at 42.6% parameters (1.7635 vs 1.7096). Beats 93.5% component ceiling. Frozen harmonic embeddings + analytical L0 + Kerr-ODE RK4 L1-L3 + progressive curriculum. Infrastructure validated. |
 | B. Integration Sweep | Can spherical coherence findings improve the stack? | **TWO-STAGE WINS** -- 95.2% of MLP at 43.1% params (same-run). Two-stage magnitude training (frozen during phase learning, freed after) improves +1.91% over frozen baseline. Band routing HURTS (-9.15%). Magnitude CV: 2.46% (surgical) vs 6.92% (exploratory). Constrained freedom principle confirmed. |
-| C. Frequency Experiments | What's the cost of intelligence in bandwidth? How does Kerr scale? | **SIX FINDINGS**: (1) MLP budget curve -- 48 bands at 92%. (2) Curriculum was half the Kerr gap at low bands. (3) Two-stage coupled to curriculum. (4) Locality penalty grows with bandwidth. (5) Curriculum crossover at ~48-64 bands -- below: flat wins, above: curriculum helps. (6) Optimal coupling radius -- 9-band kernel closes ~1pp at zero cost, 13-band overshoots. |
+| C. Frequency Experiments | What's the cost of intelligence in bandwidth? How does Kerr scale? | **THIRTEEN FINDINGS**: (1) MLP budget curve -- 48 bands at 92%. (2) Curriculum was half the Kerr gap at low bands. (3) Two-stage coupled to curriculum. (4) Locality penalty non-monotonic (peaks 48-96, collapses at 128). (5) Curriculum crossover is schedule-dependent, not band-count threshold. (6) Optimal coupling radius -- 9-band kernel closes ~1pp at zero cost. (7) 9-band + curriculum don't stack (both attack same coupling reach). (8) Learnable kernel weights near-null (0.24pp). (9) **Maestro-Add: +1.80pp at 3.7% extra params -- new best at 4L.** (10) Depth convergence: gap closes ~1pp per 1.5 layers (4.88% at 4L to 2.70% at 7L). (11) Dispersive coupling null (mechanism irrelevant, only reach matters). (12) **Implicit regularisation: Kerr stable where MLP overfits at 128 bands.** (13) **Integrated stack: Maestro + curriculum = 98.1% of MLP at 44% params (they stack).** |

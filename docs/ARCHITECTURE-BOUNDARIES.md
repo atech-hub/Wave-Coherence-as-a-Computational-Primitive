@@ -10,7 +10,7 @@ This document details the established boundaries of the wave coherence framework
 |-------|-------------------|--------|----------|
 | Embeddings | **Helps** | Frozen outperforms learned by 2.8% | Phases 1-16, 17, A, B |
 | Retrieval | **Helps** | Per-channel sweep beats cosine similarity | Tests 21, 24, Phase 16 |
-| FFN computation | **Partially replaces** | Kerr-ODE at 95.2% of MLP, 43.1% params | Phases 20-22d, A, B |
+| FFN computation | **Partially replaces** | Kerr-ODE at 98.1% of MLP, 44% params | Phases 20-22d, A, B, C |
 | Attention Q/K | **Hurts** | Must remain unconstrained | Phases 18, 19, 19b |
 | Weight matrices | **No effect** | Spectrally flat regardless | Phases 17, 17b |
 
@@ -98,16 +98,26 @@ Seven findings discovered through cross-language and cross-framework validation:
 
 ## The Remaining Gap
 
-The 4.8% gap between the full Kerr-ODE stack (95.2%) and MLP baseline (100%) is architectural. It is not:
+The 1.9% gap between the full Kerr-ODE + Maestro + curriculum stack (98.1%) and MLP baseline (100%) is architectural. It is not:
 - Integration quality (RK4 confirmed, Phase 22d)
 - Clamping (eliminated under RK4)
 - Per-band expressiveness (scalar abstraction sufficient, Phase 21b)
 - Band routing (hurts performance, Phase B)
+- Coupling mechanism (dispersive null — three mechanisms tested, none help, Phase C)
+- Learnable kernel weights (0.24pp improvement, negligible, Phase C)
 
 It is the cost of |Z|^2 cross-band coupling versus dense matmul. The Kerr nonlinearity operates on nearest-neighbour bands; MLP operates on all dimensions simultaneously. The gap is the price of locality in frequency space.
 
-Phase C frequency experiments (band count sweep, curriculum isolation, higher bandwidth, kernel width) confirmed: **the gap widens with bandwidth but can be partially closed.** The Kerr locality penalty scales from 0.4% at 8 bands (kernel covers full spectrum) to 5.4% at 96 bands (kernel covers ~5% of spectrum). The penalty plateaus between 48 and 64 bands as the kernel is already missing most of the spectrum. More bands means more information falls in the Kerr kernel's stop-bands.
+**The gap narrows with scale — this was the open question, now answered.**
 
-A wider 9-band kernel closes ~1pp of the gap at 64 bands (4.88% down to 3.96%) at zero extra parameters. However, the relationship is non-monotonic: a 13-band kernel overshoots (4.19%), suggesting an optimal coupling radius exists. The correlated neighbourhood has a natural width — distant bands aren't correlated strongly enough to help.
+**Depth convergence (Phase C):** The locality gap closes with depth: 4.88% at 4L → 3.98% at 6L → 2.70% at 7L. Approximately 1pp per 1.5 additional layers. MLP also benefits from depth (fair comparison at equal layer count), but the Kerr gap closes proportionally faster. Extrapolation suggests <1% at 12-15 layers.
 
-The progressive curriculum designed for 64 bands actively damages performance at lower band counts (~3pp), but helps above ~48-64 bands by staging information flow through the narrow coupling pipe. Two-stage magnitude training is coupled to the curriculum — without staged phase introduction, magnitude training provides no benefit.
+**Bandwidth scaling is non-monotonic (Phase C):** The locality penalty peaks at 48-96 bands (4.5-5.4%), then collapses to 0.35% at 128 bands. At 128 bands, MLP (3.17M params) overfits catastrophically without weight decay. Kerr (1.34M params) remains stable — the ODE structure acts as implicit regularisation. At high parameter-to-data ratios, the structural constraint transitions from penalty to advantage.
+
+**Maestro bottleneck — the efficiency finding (Phase C):** A 16D squeeze-and-excitation pathway provides additive global coordination at 3.7% parameter cost. Closes 1.80pp at 4L (4.88% → 3.09%). Consistent across all depths (+0.4pp at 7L). Multiplicative fusion hurts; the bottleneck must correct, not replace, local computation.
+
+**Coupling interventions that don't help (Phase C nulls):** 9-band + curriculum don't stack (both attack coupling reach from different angles, but overlap). Three dispersive coupling mechanisms — Laplacian, FFT global, per-band quadratic — all near-null. The bands are Fourier components of embedding vectors, not physical waves; dispersive terms from wave physics don't transfer.
+
+**Maestro + curriculum stack (Phase C integrated test):** The two interventions attack different mechanisms — maestro provides global coordination per step, curriculum stages band introduction. Combined: 1.91% gap (down from 3.09% Maestro alone, 3.13% curriculum alone). Two-stage magnitude adds nothing on top (1.93%). The magnitude freedom is redundant when coordination + staging are both present.
+
+**The efficiency framing:** The architecture does not beat MLP. It achieves equivalent capability at half the parameters. At 4L + Maestro + curriculum: 98.1% performance at 44% parameters, same forward pass depth. Fewer parameters = less memory, less bandwidth, less energy per forward pass. At scale, the ODE provides implicit regularisation that MLP requires explicit tuning to match.
