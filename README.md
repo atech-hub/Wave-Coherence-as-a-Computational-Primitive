@@ -189,6 +189,7 @@ ALL TESTS PASSED
 | Pal et al. (2024) — [Kerr nonlinearity](https://arxiv.org/abs/2404.05646) | Coupled Lugiato-Lefever equation adapted for Phase 21's Kerr-ODE layer |
 | Kato et al. (2024) — [Neural ODE fusion](https://arxiv.org/abs/2407.12937) | ODE integration as computation primitive for multi-band signal processing |
 | Zelenka et al. (2024) — [Resonance detection](https://arxiv.org/abs/2412.19683) | Recurrence quantifiers carry resonant imprints regardless of dimensionality |
+| Luo et al. (2025) — [DyMixOp](https://arxiv.org/abs/2508.13490) | Local-Global Mixing transformation inspired maestro bottleneck (Phase C) |
 
 Full citation details: [docs/REFERENCES.md](docs/REFERENCES.md)
 

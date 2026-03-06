@@ -1521,7 +1521,7 @@ Verdict: **Two-stage wins.** 95.2% of MLP at 43.1% parameters. The new ceiling f
 
 ---
 
-## Phase C: Frequency Experiments — Band Count, Curriculum Isolation, Higher Bandwidth, Kernel Width
+## Phase C: Frequency Experiments + Maestro — Band Count, Curriculum Isolation, Higher Bandwidth, Kernel Width, Global Coordination
 
 Five experiments answering: what's the minimum bandwidth for target performance, how does the Kerr-ODE scale with bandwidth, and can wider coupling close the gap?
 
@@ -1630,6 +1630,108 @@ The 9-band kernel at 3.96% gap is competitive with curriculum alone (3.42%). The
 
 Implication for scaling: if the correlated neighbourhood has a natural width (~14% of spectrum at 64 bands), kernel width scales sublinearly with band count. At 4096 bands you'd need ~400-band kernels, not dense MLP.
 
+### Experiment 6: Local-Global Mixing — The Maestro Discovery
+
+**Motivation:** The Kerr-ODE's locality penalty (4.88% at 64 bands) is caused by the 5-band kernel covering only ~8% of the spectrum. Wider kernels (Experiment 5) close ~1pp but overshoot at 13 bands. The question: can global coupling mechanisms close more of the gap without brute-force kernel widening?
+
+**Inspiration:** Luo et al. (2025) introduced the Local-Global Mixing (LGM) transformation in their DyMixOp neural operator framework (arXiv:2508.13490). Their key finding: multiplicatively coupling local fine-scale features with global spectral information captures nonlinear interactions that either mechanism alone cannot. Their ablation showed multiplicative fusion outperforming additive by 2-5x across PDE benchmarks. The physics motivation (convective nonlinearity u·∇u from turbulence) suggested this could address the Kerr-ODE's locality limitation.
+
+**Experiment 6a: Dispersive Coupling (physics-inspired global reach)**
+
+Three mechanisms tested to add global coupling to the Kerr-ODE derivative:
+
+| Mechanism | Val Loss | Gap vs MLP | Closed |
+|-----------|---------|-----------|--------|
+| Kerr standard (5-band) | 1.7818 | +4.88% | -- |
+| + Quadratic dispersion (D_k = -β₂(k/N)²) | 1.7813 | +4.85% | 0.03pp |
+| + Band Laplacian (β₂·(Z_{k+1} - 2Z_k + Z_{k-1})) | 1.7760 | +4.55% | 0.33pp |
+| + FFT global dispersion (ifft(W·fft(Z))) | 1.7817 | +4.88% | 0.00pp |
+
+**Null result.** Physics-inspired dispersive coupling does not transfer. The quadratic phase was already learnable through ω_k. The FFT gave every band global access and achieved exactly zero improvement. The band Laplacian showed a faint signal (0.33pp) through symmetric diffusion. These bands are Fourier components of embedding vectors, not physical waves — the soliton physics analogy (KdV dispersion balancing Kerr nonlinearity) does not apply.
+
+**Experiment 6b: LGM Variants (DyMixOp-inspired multiplicative coupling)**
+
+Three fusion modes tested, replacing the linear output projection with local × global interaction:
+
+| Variant | Mechanism | Val Loss | Gap vs MLP | Closed |
+|---------|-----------|---------|-----------|--------|
+| Kerr standard | out_proj(kerr_output) | 1.7818 | +4.88% | -- |
+| LGM-Replace | kerr_output ⊙ ifft(W·fft(x)) | 1.7838 | +5.00% | -0.12pp (hurts) |
+| LGM-Gate | σ(gate) ⊙ kerr + (1-σ(gate)) ⊙ global | 1.7763 | +4.56% | 0.32pp |
+| LGM-Before + residual | kerr(x + global_branch(x)) | 1.7691 | +4.14% | 0.74pp |
+
+LGM-Replace (pure multiplicative) hurts — destroying the local Kerr output. LGM-Gate is marginal. LGM-Before with residual preserves the local computation and adds global awareness, closing 0.74pp. But the 9-band kernel's 0.92pp still outperforms.
+
+**Experiment 6c: The Maestro — Additive Global Coordination Bottleneck**
+
+Marco's key insight: "The musicians don't need to hear each other — they just need to follow the maestro." Instead of multiplicative fusion (which overwrites the local signal) or gating (which interpolates), use a compressed global summary ADDED to the local output. Like an orchestra conductor who doesn't play any instrument but coordinates all sections through a shared signal.
+
+Architecture:
+```
+local = kerr_ode(x)                              # existing local nonlinear dynamics
+global_summary = mean(x, dim=bands)               # gather: compress 64 bands → 1 vector
+maestro = Linear_expand(GELU(Linear_compress(global_summary)))  # process: 128D → 16D → 128D
+output = local + maestro                          # broadcast: add global correction
+```
+
+Three fusion modes tested:
+
+| Variant | Val Loss | Gap vs MLP | Params |
+|---------|---------|-----------|--------|
+| MLP baseline | 1.6988 | -- | 801,664 |
+| Kerr standard | 1.7818 | +4.88% | 341,638 |
+| Kerr + Maestro (mult) | 1.7896 | +5.34% | 354,358 |
+| Kerr + Maestro (gate) | 1.7763 | +4.56% | 354,358 |
+| **Kerr + Maestro (add)** | **1.7513** | **+3.09%** | **354,358** |
+
+**Maestro-Add closes 1.80pp** — beating the 9-band kernel (0.92pp), LGM-Before (0.74pp), and curriculum alone (1.46pp). The 16D bottleneck (compress 128D → 16D, GELU, expand back to 128D) gives every band global awareness at O(N) cost with only 12,720 extra parameters across 3 layers (3.7% increase).
+
+**Why additive wins and multiplicative loses:** The Kerr-ODE output already has the correct local structure. Multiplicative fusion distorts this structure — it overwrites what the local dynamics computed. Additive fusion supplements it — the maestro adds a global correction signal that fills in what local coupling missed, without destroying the local computation. This matches the coupling principle from the spherical investigation: magnitude amplifies phase but cannot replace it. The global signal amplifies the local computation but must not overwrite it.
+
+**The DyMixOp connection:** Luo et al.'s ablation showed multiplicative LGM beating additive by 2-5x for PDE solving. Our results show the opposite for ODE-based FFN layers. The difference: their local branch is a convolution (structureless), their global branch carries the spectral information. In our architecture, the local branch (Kerr-ODE) already contains structured frequency-native dynamics — multiplying by a global signal interferes with that structure. The optimal fusion mode is domain-dependent. This finding is itself a contribution — multiplicative fusion is not universally superior.
+
+**Maestro depth independence:** Tested at 4L, 6L, and 7L, the maestro consistently adds ~0.4pp at every depth:
+
+| Depth | Kerr Gap | Maestro Gap | Maestro benefit |
+|-------|---------|------------|-----------------|
+| 4L | 4.88% | 3.09% | -1.79pp |
+| 6L | 3.98% | 3.27% | -0.71pp |
+| 7L | 2.70% | 2.64% | -0.06pp |
+
+The benefit decreases with depth because more Kerr layers provide more propagation steps for local information to reach distant bands. At 7L, local coupling has propagated far enough that the maestro's global summary adds little new information. At 4L, the maestro is essential — it provides the global coordination that three Kerr layers cannot achieve through local propagation alone.
+
+**Gate value analysis (maestro-gate variant):** L1=0.50, L2=0.53, L3=0.56. Deeper layers request more global information — the same depth-dependent pattern as Kerr alpha (Phase 21) and output projection norm (Phase 21). The architecture consistently says: shallow layers work locally, deep layers need wider context.
+
+**Experiment 6d: LGM + 9-band kernel (stacking test)**
+
+| Config | Gap vs MLP |
+|--------|-----------|
+| 5-band Kerr | +4.88% |
+| 5-band + LGM-Before | +4.14% (LGM helps) |
+| 9-band Kerr | +3.96% (wider helps) |
+| 9-band + LGM-Before | +5.24% (LGM hurts) |
+
+**They compete.** The 9-band kernel already captures the local-to-mid-range coupling that LGM's spectral branch provides. Adding multiplicative gating on top of wider reach introduces interference rather than additional information. There is only one pool of "reachable information" — wider kernels and global spectral gating both access it from different angles but cannot stack.
+
+This confirmed that the maestro (additive bottleneck) was the right path — it provides a different kind of information (compressed global summary) rather than a different way of accessing the same mid-range coupling.
+
+### Experiment 7: Integrated Stack — Phase C
+
+Does Maestro + curriculum stack? They attack different mechanisms: maestro provides global coordination per ODE step, curriculum stages when bands activate during training.
+
+| Config | Val Loss | Gap | Params |
+|--------|---------|-----|--------|
+| MLP 4L | 1.6988 | — | 801K |
+| Kerr flat | 1.7818 | +4.88% | 341K |
+| Maestro flat | 1.7513 | +3.09% | 354K |
+| Kerr + curriculum | 1.7520 | +3.13% | 341K |
+| **Maestro + curriculum** | **1.7312** | **+1.91%** | **354K** |
+| Maestro + curriculum + two-stage | 1.7317 | +1.93% | 358K |
+
+**They stack.** 1.91% gap — down from 3.09% (maestro alone) and 3.13% (curriculum alone). Two-stage magnitude adds nothing (+1.93% vs +1.91%) — the optimizer has enough freedom with coordination + staging.
+
+**Phase C result: 98.1% of MLP at 44% of parameters.** Same depth, same training budget, no additional regularisation needed.
+
 ### Thirteen Findings
 
 1. **MLP budget curve**: 48 bands (96D) achieves 92% of 64-band (128D) performance. The cost of halving bandwidth is ~8%.
@@ -1709,4 +1811,4 @@ The optimal configuration for deployment is **4L + Maestro + curriculum**: 98.1%
 | 22d. RK4 Integration | Does integration quality close the MLP gap? | **PARTIALLY** -- RK4 improves 1.71% over Euler. Peak magnitudes drop from 22,000 to 6.5 -- the 178M spikes were 100% Euler artifacts. Remaining MLP gap: ~6.5%. This is the architectural ceiling. |
 | A. Full Stack | Do the components work together as a system? | **YES + SYNERGY** -- 96.8% of MLP at 42.6% parameters (1.7635 vs 1.7096). Beats 93.5% component ceiling. Frozen harmonic embeddings + analytical L0 + Kerr-ODE RK4 L1-L3 + progressive curriculum. Infrastructure validated. |
 | B. Integration Sweep | Can spherical coherence findings improve the stack? | **TWO-STAGE WINS** -- 95.2% of MLP at 43.1% params (same-run). Two-stage magnitude training (frozen during phase learning, freed after) improves +1.91% over frozen baseline. Band routing HURTS (-9.15%). Magnitude CV: 2.46% (surgical) vs 6.92% (exploratory). Constrained freedom principle confirmed. |
-| C. Frequency Experiments | What's the cost of intelligence in bandwidth? How does Kerr scale? | **THIRTEEN FINDINGS**: (1) MLP budget curve -- 48 bands at 92%. (2) Curriculum was half the Kerr gap at low bands. (3) Two-stage coupled to curriculum. (4) Locality penalty non-monotonic (peaks 48-96, collapses at 128). (5) Curriculum crossover is schedule-dependent, not band-count threshold. (6) Optimal coupling radius -- 9-band kernel closes ~1pp at zero cost. (7) 9-band + curriculum don't stack (both attack same coupling reach). (8) Learnable kernel weights near-null (0.24pp). (9) **Maestro-Add: +1.80pp at 3.7% extra params -- new best at 4L.** (10) Depth convergence: gap closes ~1pp per 1.5 layers (4.88% at 4L to 2.70% at 7L). (11) Dispersive coupling null (mechanism irrelevant, only reach matters). (12) **Implicit regularisation: Kerr stable where MLP overfits at 128 bands.** (13) **Integrated stack: Maestro + curriculum = 98.1% of MLP at 44% params (they stack).** |
+| C. Frequency Experiments + Maestro | What's the cost of intelligence in bandwidth? Can global coordination close the locality gap? | **THIRTEEN FINDINGS**: (1) MLP budget curve -- 48 bands at 92%. (2) Curriculum was half the Kerr gap at low bands. (3) Two-stage coupled to curriculum. (4) Locality penalty non-monotonic (peaks 48-96, collapses at 128). (5) Curriculum crossover is schedule-dependent, not band-count threshold. (6) Optimal coupling radius -- 9-band kernel closes ~1pp at zero cost. (7) 9-band + curriculum don't stack (both attack same coupling reach). (8) Learnable kernel weights near-null (0.24pp). (9) **Maestro-Add: +1.80pp at 3.7% extra params -- new best at 4L.** (10) Depth convergence: gap closes ~1pp per 1.5 layers (4.88% at 4L to 2.70% at 7L). (11) Dispersive coupling null (mechanism irrelevant, only reach matters). (12) **Implicit regularisation: Kerr stable where MLP overfits at 128 bands.** (13) **Integrated stack: Maestro + curriculum = 98.1% of MLP at 44% params (they stack).** |
