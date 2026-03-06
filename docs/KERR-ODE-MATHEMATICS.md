@@ -4,7 +4,7 @@
 
 ## Abstract
 
-This document presents the mathematical foundations of the Kerr-ODE layer --- a wave-native replacement for matrix multiplication in the feed-forward (FFN) component of a transformer. The ODE system is adapted from the coupled Lugiato-Lefever equation in nonlinear optics (Pal et al., 2024), where coupled resonators with Kerr nonlinearity exhibit intensity-dependent phase shifts and cross-band energy exchange. We define the system, characterise its integration, establish reversibility properties, derive the analytical closed-form for the linear regime, and present the integrated architecture that achieves 96.8% of MLP performance at 42.6% of parameters.
+This document presents the mathematical foundations of the Kerr-ODE layer --- a wave-native replacement for matrix multiplication in the feed-forward (FFN) component of a transformer. The ODE system is adapted from the coupled Lugiato-Lefever equation in nonlinear optics (Pal et al., 2024), where coupled resonators with Kerr nonlinearity exhibit intensity-dependent phase shifts and cross-band energy exchange. We define the system, characterise its integration, establish reversibility properties, derive the analytical closed-form for the linear regime, and present the integrated architecture that achieves 98.1% of MLP performance at 44% of parameters (Phase C: Kerr-ODE with maestro additive bottleneck and progressive curriculum).
 
 All mathematics here is established --- from nonlinear optics, dynamical systems theory, and numerical methods. The contribution is the application: using these equations as a trainable computation layer in a neural network operating on frequency-structured data.
 
@@ -233,16 +233,103 @@ Training uses progressive band curriculum: bands 1--8 for the first third of tra
 
 *Validation:* Phase B --- all three band-routed variants (band_stack, band_mag, band_two) performed 8--10 percentage points worse than full-spectrum counterparts.
 
+**Definition 7.5** (Progressive Band Curriculum).
+Let *N* be the total number of harmonic bands and *T* be the total training steps. The curriculum defines a sequence of active band sets {*S*_1, *S*_2, ..., *S*_K} with transition steps {*t*_1, *t*_2, ..., *t*_{K&minus;1}}:
+
+> *S*_j = {1, 2, ..., *n*_j} where *n*_1 &lt; *n*_2 &lt; ... &lt; *n*_K = *N*
+
+At training step *t*, the active band set is *S*_j where *t*_{j&minus;1} &le; *t* &lt; *t*_j (with *t*_0 = 0 and *t*_K = *T*).
+
+The band masking operation applies to the harmonic embedding before the transformer layers:
+
+> **x**_masked[2*k*] = **x**[2*k*] &middot; &Iopf;(*k* &in; *S*_j)
+
+> **x**_masked[2*k*+1] = **x**[2*k*+1] &middot; &Iopf;(*k* &in; *S*_j)
+
+where &Iopf;(&middot;) is the indicator function. Bands outside *S*_j are zeroed at the embedding level. During evaluation, all *N* bands are always active (*S*_j = {1, ..., *N*}).
+
+*Standard configuration for N = 64, T = 2000:*
+
+| Stage *j* | Steps | Active bands *S*_j | Fraction of spectrum |
+|-----------|-------|-------------------|---------------------|
+| 1 | 0--666 | {1, ..., 8} | 12.5% |
+| 2 | 667--1333 | {1, ..., 24} | 37.5% |
+| 3 | 1334--2000 | {1, ..., 64} | 100% |
+
+*The curriculum schedule is tuned to the band count. The stage boundaries and band limits are hyperparameters, not derived quantities. Empirically, this schedule helps at N &ge; 64 and hurts at N &le; 48 (Proposition 8.5).*
+
+**Definition 7.6** (Two-Stage Magnitude Training).
+Each token *i* in the vocabulary has a per-band magnitude parameter *m*_{i,k} &in; **R** for *k* = 1, ..., *N*, initialised to 1.0. The harmonic embedding is scaled by magnitude:
+
+> **x**[2*k*] = *m*_{i,k} &middot; cos(*k* &middot; &theta;_i)
+
+> **x**[2*k*+1] = *m*_{i,k} &middot; sin(*k* &middot; &theta;_i)
+
+where &theta;_i is the token's phase position on the harmonic grid (frozen, not trainable).
+
+In two-stage training:
+
+- **Stage 1** (steps 0 to *t*_unfreeze): magnitude parameters are frozen at *m*_{i,k} = 1.0. Only transformer weights receive gradients. Phase structure organises without magnitude interference.
+
+- **Stage 2** (steps *t*_unfreeze to *T*): magnitude parameters are added to the optimizer. Gradients flow through *m*_{i,k}. Magnitude adjusts on a stable phase foundation.
+
+*Standard configuration:* *t*_unfreeze = *t*_{K&minus;1} (the final curriculum stage transition). Magnitude unfreezes when all bands become active.
+
+*The coupling principle:* Phase builds structure; magnitude amplifies. Freezing magnitude early prevents the optimizer from using magnitude adjustments as a shortcut that undermines phase organisation. Unfreezing late allows surgical magnitude refinement on stable structure (2.46% CV vs 6.92% when always free).
+
 ---
 
 ## 8. Bandwidth Scaling Properties
 
-**Proposition 8.1** (MLP budget curve).
+**Definition 8.1** (Maestro Additive Bottleneck).
+For an embedding vector **x** &in; **R**^*d* processed by Kerr-ODE layer &ell;, the maestro operation computes a global coordination signal through three stages:
+
+**(i) Gather** (global mean pooling across bands):
+
+> **&mu;** = (1/*N*) &sum;_{k=1}^{N} [*r*_k, *s*_k] &in; **R**^*d*
+
+This compresses all *N* band oscillators into a single *d*-dimensional vector representing the global state.
+
+**(ii) Process** (learned bottleneck with nonlinearity):
+
+> **h** = GELU(**W**_down &middot; **&mu;** + **b**_down) &in; **R**^*b*
+
+> **m** = **W**_up &middot; **h** + **b**_up &in; **R**^*d*
+
+where **W**_down &in; **R**^{*b*&times;*d*}, **b**_down &in; **R**^*b* are the compression parameters, **W**_up &in; **R**^{*d*&times;*b*}, **b**_up &in; **R**^*d* are the expansion parameters, and *b* &Ll; *d* is the bottleneck dimension (*b* = 16 for *d* = 128). GELU is the Gaussian Error Linear Unit: GELU(*x*) = *x* &middot; &Phi;(*x*), where &Phi; is the standard Gaussian CDF.
+
+**(iii) Broadcast** (additive fusion with ODE output):
+
+> **y**_&ell; = KerrrODE_&ell;(**x**) + **m**
+
+The maestro signal **m** is added to the Kerr-ODE output, not multiplied. This preserves the local coupling structure of the ODE while supplementing it with a global correction.
+
+*Total additional parameters per layer:* *d*&middot;*b* + *b* + *b*&middot;*d* + *d* = 2*db* + *b* + *d*. For *d* = 128, *b* = 16: 4,240 per layer (3.7% of Kerr-ODE layer total).
+
+*Complexity:* O(*N*) for the gather (mean pool), O(*b*&middot;*d*) for the process (two matrix multiplies), O(*d*) for the broadcast (vector addition). No O(*N*&sup2;) operations.
+
+*Critical design choice --- additive not multiplicative:* Multiplicative fusion (**y** = KerrrODE(**x**) &odot; **m**) distorts the ODE output by scaling each band by the global signal. Additive fusion (**y** = KerrrODE(**x**) + **m**) supplements it. Empirically, multiplicative fusion increases the gap by 0.46pp while additive fusion closes it by 1.80pp. The Kerr-ODE already produces correctly structured local dynamics; the global signal must correct, not overwrite.
+
+*The complete Kerr-ODE + Maestro layer computation for layer &ell; &ge; 1 is:*
+
+> **z** = RK4(*f*, **x**, *S*, &Delta;*T*) --- *S* steps of the Kerr-ODE (Definition 2.1) via RK4 (Definition 4.2)
+
+> **p** = **W**_out &middot; **z** + **b**_out --- output projection (Definition 3.1)
+
+> **&mu;** = MeanPool(**x**) --- gather: global mean of input
+
+> **m** = **W**_up &middot; GELU(**W**_down &middot; **&mu;** + **b**_down) + **b**_up --- process: bottleneck transform
+
+> **y**_&ell; = **p** + **m** --- broadcast: additive fusion
+
+*Note that the maestro operates on the original input **x**, not the ODE output **z**. The global summary is computed from the pre-ODE state. This means the maestro provides context about what the layer received, not what it produced --- analogous to an orchestra conductor who reads the score (input), not the sound (output).*
+
+**Proposition 8.2** (MLP budget curve).
 *MLP performance scales smoothly with bandwidth. At 48 bands (96D), MLP achieves 92% of 64-band (128D) performance. At 32 bands (64D), 81%. The cost of halving bandwidth is approximately 8%.*
 
 *Validation:* Phase C --- sweep over 8, 16, 32, 48, 64, 96 bands.
 
-**Proposition 8.2** (Locality penalty scaling).
+**Proposition 8.3** (Locality penalty scaling).
 *The Kerr-ODE performance gap relative to MLP grows with bandwidth:*
 
 | Bands | Kernel coverage | Flat Kerr gap |
@@ -260,30 +347,30 @@ Training uses progressive band curriculum: bands 1--8 for the first third of tra
 | 80 | ~6% (5/80) | +4.54% |
 | 128 | ~4% (5/128) | +0.35% |
 
-*The penalty rises steeply from 8 to 48 bands, plateaus between 48 and 96, then drops sharply at 128. At 128 bands, MLP requires explicit weight decay (0.1) to prevent overfitting, while Kerr remains stable --- see Proposition 8.8.*
+*The penalty rises steeply from 8 to 48 bands, plateaus between 48 and 96, then drops sharply at 128. At 128 bands, MLP requires explicit weight decay (0.1) to prevent overfitting, while Kerr remains stable --- see Proposition 8.10.*
 
 *Validation:* Phase C --- band count sweep plus flat 64-band test.
 
-**Proposition 8.3** (Optimal coupling radius).
+**Proposition 8.4** (Optimal coupling radius).
 *The coupling kernel width has a non-monotonic optimum. At 64 bands, a 9-band kernel [1,1,1,1,0,1,1,1,1] reduces the gap by 0.92 percentage points (4.88% &rarr; 3.96%) at zero extra parameters. A 13-band kernel overshoots (4.19%), and learnable kernel weights provide only 0.24pp further improvement over uniform 9-band. The correlated neighbourhood has a natural width of approximately 14% of the spectrum at 64 bands.*
 
 *Implication:* If the correlated neighbourhood width scales as a percentage of total bandwidth, kernel width scales sublinearly with band count. If absolute, the locality penalty grows unboundedly.
 
 *Validation:* Phase C --- wider kernel sweep (5, 9, 13 bands) and learnable kernel weight experiment.
 
-**Proposition 8.4** (Curriculum crossover).
+**Proposition 8.5** (Curriculum crossover).
 *Progressive band curriculum helps at 64 and 96 bands but hurts at 32, 48, and 80 bands. At 32 bands, curriculum adds 3.2pp to the gap. At 48 bands, 3.3pp. At 64 bands, curriculum reduces the gap by 1.46pp. At 80 bands, curriculum adds 0.18pp (essentially tied). At 96 bands, curriculum helps by 0.8pp. The crossover is not a clean threshold --- it depends on the curriculum schedule being tuned to the band count.*
 
 *Mechanism:* Below the crossover, the kernel covers enough spectrum for flat training to organise all bands simultaneously; curriculum wastes steps on artificially narrow stages. At 80 bands, the curriculum schedule (tuned for 64 bands) spends too long in restricted phases, causing the model to be stuck at high val loss through step 1200 before recovering. The crossover is curriculum-schedule-dependent, not purely band-count-dependent.
 
 *Validation:* Phase C --- flat vs curriculum at 32, 48, 64, 80, 96 bands.
 
-**Proposition 8.5** (Two-stage coupling to curriculum).
+**Proposition 8.6** (Two-stage coupling to curriculum).
 *Two-stage magnitude training (Proposition 7.3) is coupled to progressive curriculum. Without staged band introduction, magnitude training provides negligible benefit (+0.13pp at 32 bands, &minus;0.20pp at 48 bands). The magnitude parameter has nothing to wait for when all bands are present from step 0.*
 
 *Validation:* Phase C --- flat + two-stage vs flat + frozen at 32 and 48 bands.
 
-**Proposition 8.6** (Dispersive coupling null).
+**Proposition 8.7** (Dispersive coupling null).
 *Adding dispersive coupling terms to the Kerr-ODE provides negligible improvement:*
 
 | Mechanism | Gap closed |
@@ -296,14 +383,14 @@ Training uses progressive band curriculum: bands 1--8 for the first third of tra
 
 *Validation:* Phase C --- three dispersive variants tested at 64 bands.
 
-**Proposition 8.7** (Maestro bottleneck coordination).
+**Proposition 8.8** (Maestro bottleneck coordination).
 *A learned bottleneck (squeeze-and-excitation) added to the Kerr-ODE layer provides global coordination at minimal cost. Additive fusion of the bottleneck output with the ODE output closes 1.80pp of the locality gap (4.88% &rarr; 3.09%) at 3.7% additional parameters. Multiplicative fusion hurts (+0.46pp). Gated fusion is marginal (&minus;0.32pp).*
 
 *The bottleneck compresses the full embedding (128D &rarr; 16D), applies GELU, expands back (16D &rarr; 128D), and adds to the ODE output. This provides O(N) global context without breaking the local coupling structure.*
 
 *Validation:* Phase C --- three Maestro variants (Add, Mult, Gate) at 64 bands, 4 layers.
 
-**Proposition 8.8** (Depth convergence).
+**Proposition 8.9** (Depth convergence).
 *The Kerr-ODE locality gap closes with depth:*
 
 | Depth | Kerr gap | Maestro gap | MLP params | Kerr params |
@@ -318,7 +405,7 @@ Training uses progressive band curriculum: bands 1--8 for the first third of tra
 
 *Validation:* Phase C --- depth sweep at 4L, 6L, 7L with Kerr, Maestro, and MLP controls.
 
-**Proposition 8.9** (Implicit regularisation).
+**Proposition 8.10** (Implicit regularisation).
 *At 128 bands (256D), the MLP model (3.17M params) overfits catastrophically on 1.1M characters: val loss reaches 1.54 at step 1600, then diverges to 2.13 at step 4000. The Kerr-ODE model (1.34M params) plateaus at 1.56--1.58 without divergence. With explicit weight decay (0.1), MLP stabilises to match Kerr at the 2000-step mark (1.56 vs 1.57, gap 0.35%).*
 
 *The ODE structure acts as implicit regularisation: nearest-neighbour coupling, smooth RK4 integration, and shared dynamics across bands prevent memorisation of the training set. This is architecture-inherent regularisation, not learned --- no dropout, no weight decay, no early stopping needed.*
@@ -327,7 +414,7 @@ Training uses progressive band curriculum: bands 1--8 for the first third of tra
 
 *Validation:* Phase C --- 128-band training at 4000 iters (overfitting observed) and 2000 iters with weight decay (corrected comparison).
 
-**Proposition 8.10** (Integrated stack --- interventions that stack).
+**Proposition 8.11** (Integrated stack --- interventions that stack).
 *The Maestro bottleneck and progressive curriculum combine because they attack different mechanisms. Maestro provides global coordination per ODE step; curriculum stages when bands activate during training. Combined at 4L/64 bands:*
 
 *Maestro flat: +3.09%. Curriculum flat: +3.13%. Maestro + curriculum: **+1.91%**.*
@@ -354,6 +441,8 @@ The mathematics in this document draws from established fields. This section att
 | Runge-Kutta 4th order | Numerical methods | Runge (1895), Kutta (1901) |
 | Reversibility via time reversal | Dynamical systems theory | Standard |
 | Softplus positivity constraint | Machine learning | Dugas et al. (2001) |
+| Squeeze-and-excitation (channel reweighting) | Computer vision | Hu et al. (2018) |
+| Local-global mixing (multiplicative spectral fusion) | PDE neural operators | Luo et al. (2025) |
 
 The application --- using these equations as a trainable FFN replacement operating on harmonic embeddings --- is the contribution of the present work.
 
@@ -373,16 +462,17 @@ The application --- using these equations as a trainable FFN replacement operati
 | 7.2 | Component synergy (96.8% at 42.6%) | Phase A |
 | 7.3 | Two-stage magnitude training (95.2% at 43.1%) | Phase B |
 | 7.4 | Band routing null (7--9% degradation) | Phase B |
-| 8.1 | MLP budget curve (48b at 92%) | Phase C |
-| 8.2 | Locality penalty scaling (0.4%--5.4%) | Phase C |
-| 8.3 | Optimal coupling radius (9-band, non-monotonic) | Phase C |
-| 8.4 | Curriculum crossover (~48--64 bands) | Phase C |
-| 8.5 | Two-stage coupling to curriculum | Phase C |
-| 8.6 | Dispersive coupling null | Phase C |
-| 8.7 | Maestro bottleneck coordination (+1.80pp at 3.7% params) | Phase C |
-| 8.8 | Depth convergence (4.88% &rarr; 2.70% at 4L &rarr; 7L) | Phase C |
-| 8.9 | Implicit regularisation (ODE stable where MLP overfits) | Phase C |
-| 8.10 | Integrated stack (Maestro + curriculum = 98.1% at 44% params) | Phase C |
+| 8.1 | Maestro additive bottleneck (definition) | Phase C |
+| 8.2 | MLP budget curve (48b at 92%) | Phase C |
+| 8.3 | Locality penalty scaling (0.4%--5.4%) | Phase C |
+| 8.4 | Optimal coupling radius (9-band, non-monotonic) | Phase C |
+| 8.5 | Curriculum crossover (~48--64 bands) | Phase C |
+| 8.6 | Two-stage coupling to curriculum | Phase C |
+| 8.7 | Dispersive coupling null | Phase C |
+| 8.8 | Maestro bottleneck coordination (+1.80pp at 3.7% params) | Phase C |
+| 8.9 | Depth convergence (4.88% &rarr; 2.70% at 4L &rarr; 7L) | Phase C |
+| 8.10 | Implicit regularisation (ODE stable where MLP overfits) | Phase C |
+| 8.11 | Integrated stack (Maestro + curriculum = 98.1% at 44% params) | Phase C |
 
 ---
 
@@ -397,3 +487,7 @@ The application --- using these equations as a trainable FFN replacement operati
 [4] Kutta, M. W. (1901). Beitrag zur n&auml;herungsweisen Integration totaler Differentialgleichungen. *Zeitschrift f&uuml;r Mathematik und Physik*, 46, 435--453.
 
 [5] Dugas, C., Bengio, Y., B&eacute;lisle, F., Nadeau, C., & Garcia, R. (2001). Incorporating Second-Order Functional Knowledge for Better Option Pricing. *Advances in Neural Information Processing Systems*, 13.
+
+[6] Hu, J., Shen, L., & Sun, G. (2018). Squeeze-and-Excitation Networks. In *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*, pp. 7132--7141.
+
+[7] Luo, Z. et al. (2025). DyMixOp: A Neural Operator Designed from a Complex Dynamics Perspective with Local-Global Mixing for Solving PDEs. arXiv:2508.13490.
