@@ -23,3 +23,5 @@ experiments/phase20-lc-layer/target/
 experiments/phase20-lc-layer/data/
 experiments/phase20-lc-layer/weights/
 research-lab/
+checkpoints/
+*.pt

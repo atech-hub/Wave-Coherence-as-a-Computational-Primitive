@@ -17,10 +17,15 @@ Question: Do maestro + curriculum + two-stage stack?
 Expected: if they stack, ~2% gap. If they don't, same ~3% floor.
 """
 
-import math, os, time, urllib.request
+import math, os, time, urllib.request, argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from checkpoint_utils import (
+    save_checkpoint, load_checkpoint, find_latest_checkpoint,
+    get_curriculum_stage, should_magnitude_be_frozen,
+)
 
 N_BANDS = 64
 N_EMBD = 128
@@ -248,20 +253,44 @@ def estimate_loss(model, dataset):
     model.train(); model.n_bands_active = old_nb
     return out
 
-def train(mode, dataset, curriculum=False, two_stage=False, use_maestro=False, label=""):
+def train(mode, dataset, curriculum=False, two_stage=False, use_maestro=False, label="",
+          checkpoint_dir=None, checkpoint_interval=200, resume=True):
     torch.manual_seed(42)
     model = GPT(dataset.vocab_size, mode=mode, use_maestro=use_maestro,
                 use_mag=two_stage).to(DEVICE)
-    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    n_params = sum(p.numel() for p in model.parameters())
     print(f"  {label}: {n_params:,} params")
 
-    # Two-stage: freeze magnitude initially
-    if two_stage:
-        model.mag.requires_grad_(False)
-
+    # Simpler two-stage approach: magnitude always in optimizer,
+    # gradients zeroed during frozen phase. This keeps the optimizer
+    # state dict structure identical at every step — no checkpoint
+    # compatibility issues.
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
+
+    # Build config dict for checkpoint metadata
+    config = {
+        'mode': mode, 'curriculum': curriculum, 'two_stage': two_stage,
+        'use_maestro': use_maestro, 'n_bands': N_BANDS, 'n_embd': N_EMBD,
+        'learning_rate': LEARNING_RATE, 'max_iters': MAX_ITERS,
+    }
+
+    # Resume from checkpoint if available
+    start_step = 0
+    if checkpoint_dir and resume:
+        latest = find_latest_checkpoint(checkpoint_dir)
+        if latest:
+            ckpt = load_checkpoint(latest, model, optimizer, device=DEVICE)
+            start_step = ckpt['step'] + 1
+            if curriculum:
+                active_bands = get_curriculum_stage(start_step, PROG_STAGES)
+                print(f"  Resuming at step {start_step}, curriculum bands: {active_bands}")
+            if two_stage:
+                mag_frozen = should_magnitude_be_frozen(start_step, MAG_FREE_STEP, True)
+                print(f"  Magnitude {'frozen' if mag_frozen else 'unfrozen'} at step {start_step}")
+
     start = time.time()
-    for i in range(MAX_ITERS):
+    val_loss = float('inf')
+    for i in range(start_step, MAX_ITERS):
         # Curriculum: progressive band activation
         if curriculum and mode != "mlp":
             for step_thresh, nb in PROG_STAGES:
@@ -269,20 +298,29 @@ def train(mode, dataset, curriculum=False, two_stage=False, use_maestro=False, l
         else:
             model.n_bands_active = N_BANDS
 
-        # Two-stage: free magnitude at MAG_FREE_STEP
         if two_stage and i == MAG_FREE_STEP:
-            model.mag.requires_grad_(True)
-            # Re-create optimizer to include mag
-            optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
             print(f"    step {i:>5} | magnitude freed")
 
         if i % EVAL_INTERVAL == 0 or i == MAX_ITERS-1:
             losses = estimate_loss(model, dataset)
-            print(f"    step {i:>5} | val {losses['val']:.4f}")
+            val_loss = losses['val']
+            print(f"    step {i:>5} | val {val_loss:.4f}")
+
         x,y = dataset.get_batch("train"); _,loss = model(x,y)
         optimizer.zero_grad(); loss.backward()
+
+        # Two-stage: zero magnitude gradients during frozen phase
+        if two_stage and i < MAG_FREE_STEP:
+            if model.mag.grad is not None:
+                model.mag.grad.zero_()
+
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
+
+        # Save checkpoint at intervals
+        if checkpoint_dir and i > 0 and i % checkpoint_interval == 0:
+            ckpt_path = os.path.join(checkpoint_dir, f'step_{i:06d}.pt')
+            save_checkpoint(ckpt_path, model, optimizer, i, val_loss, config)
 
     model.n_bands_active = N_BANDS
     final = estimate_loss(model, dataset)
@@ -292,12 +330,28 @@ def train(mode, dataset, curriculum=False, two_stage=False, use_maestro=False, l
         mag_cv = model.mag.data.std() / model.mag.data.mean() * 100
         print(f"    Magnitude CV: {mag_cv:.2f}%")
 
+    # Save final checkpoint
+    if checkpoint_dir:
+        final_path = os.path.join(checkpoint_dir, f'step_{MAX_ITERS:06d}_final.pt')
+        save_checkpoint(final_path, model, optimizer, MAX_ITERS, final["val"], config)
+
     return final["val"]
 
 def main():
+    parser = argparse.ArgumentParser(description="Phase C Integrated Stack")
+    parser.add_argument('--checkpoint-dir', type=str, default=None,
+                        help='Directory to save/load checkpoints (e.g., checkpoints/integrated)')
+    parser.add_argument('--checkpoint-interval', type=int, default=200,
+                        help='Save checkpoint every N steps (default: 200)')
+    parser.add_argument('--no-resume', action='store_true',
+                        help='Start fresh even if checkpoints exist')
+    args = parser.parse_args()
+
     print("="*70)
     print("  Phase C Integrated Stack: Best of everything proven")
     print(f"  Device: {DEVICE}")
+    if args.checkpoint_dir:
+        print(f"  Checkpointing: every {args.checkpoint_interval} steps to {args.checkpoint_dir}/")
     print("="*70)
     text = download_shakespeare()
     dataset = Dataset(text)
@@ -321,7 +375,16 @@ def main():
     results = {}
     for label, kwargs in configs:
         print(f"\n  --- {label} ---")
-        val = train(dataset=dataset, label=label, **kwargs)
+        # Per-config checkpoint subdirectory
+        ckpt_dir = None
+        if args.checkpoint_dir:
+            safe_label = label.replace(" ", "_").replace("(", "").replace(")", "").replace("+", "")
+            ckpt_dir = os.path.join(args.checkpoint_dir, safe_label)
+        val = train(dataset=dataset, label=label,
+                    checkpoint_dir=ckpt_dir,
+                    checkpoint_interval=args.checkpoint_interval,
+                    resume=not args.no_resume,
+                    **kwargs)
         results[label] = val
 
     mlp_val = results["MLP 4L (baseline)"]

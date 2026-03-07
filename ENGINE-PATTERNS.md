@@ -1422,6 +1422,8 @@ The progressive bandwidth principle applies across multiple computational domain
 
 **Resonance detection:** Harmonic sweeps (Pattern 3) that scan low harmonics first. If a strong resonance is found at n=3, higher harmonics are either skipped (sufficient for the query) or constrained (search only multiples of 3). The sweep becomes adaptive rather than exhaustive.
 
+**Checkpoint requirement:** Any training system using progressive bandwidth staging MUST preserve the step counter across checkpoints. The curriculum stage and magnitude freeze state are both determined from the step count — restoring model and optimizer weights without the step counter produces a model in the wrong curriculum stage with the wrong magnitude freedom. This applies equally to two-stage magnitude training (Pattern 56.1) where the unfreeze point is step-dependent.
+
 ---
 
 ## Pattern 58: Architecture-Adaptive Training Schedule
