@@ -25,3 +25,4 @@ experiments/phase20-lc-layer/weights/
 research-lab/
 checkpoints/
 *.pt
+*_ckpt.bin

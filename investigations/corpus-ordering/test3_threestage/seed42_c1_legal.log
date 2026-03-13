@@ -1,0 +1,217 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/legal.txt...
+  Dataset [char]: 996935 tokens (train=897241, val=99694), vocab_size=86
+Initializing model (seed=42)...
+  Trainable parameters: 357046
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-999), 24 bands (999-1998), 64 bands (1998-3000)
+
+Training for 3000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.5380      8    113.5ms
+    50     3.2567      8    147.0ms
+   100     2.7699      8    167.2ms
+   150     2.8179      8    158.9ms
+   200     2.7421      8    171.3ms
+   250     3.1662      8    187.3ms
+   300     2.8442      8    143.8ms
+  [val_loss=2.9059]
+
+--- Sample (iter 300, 8 bands) ---
+i  s h, oiiut, utrdrnt.uiisons, nu  o r e  sed  s
+rfsAh  i  e  a ygs a,    gct  .  h,,
+eay 
+ h 
+ l  sh, dr, nu h   _ihrbo
+c
+ y Jehk, ,, d :,,
+ex£-nu;A h]6 ne a§  .,xJy
+,
+
+Dhi   b a:, ic ra :qg  
+S
+  £
+---
+
+   350     2.8932      8    169.6ms
+   400     2.8335      8    158.8ms
+   450     2.8438      8    184.4ms
+   500     2.7607      8    183.9ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     2.6850      8    171.7ms
+   600     2.7805      8    149.4ms
+  [val_loss=2.7416]
+
+--- Sample (iter 600, 8 bands) ---
+hna  laln,uotwie catll asi ]c, itnf, ,iii,
+ , m;soi,  n d 
+s    l; cy liy   t .e.  h y ye hh . g y ih-]
+i
+   si t ,
+_ h  ;,-_s_êhs  ,ê, ,b,L      h, 
+ ]g. _t_ ]
+
+; W 
+e    V d- j t  
+
+s  EZ c
+y  e, 8 
+---
+
+   650     2.6127      8    160.1ms
+   700     2.6698      8    160.3ms
+   750     2.6839      8    148.9ms
+   800     2.4814      8    147.4ms
+   850     2.6828      8    176.4ms
+   900     2.6627      8    178.6ms
+  [val_loss=2.6369]
+
+--- Sample (iter 900, 8 bands) ---
+ttooe m ichsr re,0arrnsrn 
+, d, oiyit hsp, c.mgn  h,,d nr,
+nlhrrds sdtss9 st, s ni
+, hrp y ya h,
+r, Ex nom  rit , , c
+,
+ ,-h     , h, ,
+ ,  T i _ r,,F  iuo, u2, h h 0ApsZ, h. cè  h]m.,  ëW. ]H' .sh-  
+---
+
+   950     2.6946      8    151.2ms
+  1000     3.0585     24    148.4ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.7737     24    192.6ms
+  1100     2.3052     24    163.0ms
+  1150     2.5780     24    169.1ms
+  1200     2.6520     24    177.0ms
+  [val_loss=2.4889]
+
+--- Sample (iter 1200, 24 bands) ---
+t,[e h oe rou wuuys le amy foong,
+oloe ddionte. d,; boioy r ue whss d d d. ddtsdt d  t f dl o T f   u _, B ioopb , 
+ e d, ak, . _ q 
+ n, , " , m fu 2 q s 9puhh _ , Ahe. _ S û]. [x y L, d.,ë 
+ pcie Wr 
+---
+
+  1250     2.4754     24    159.2ms
+  1300     2.5840     24    152.2ms
+  1350     2.3059     24    160.3ms
+  1400     2.5473     24    162.4ms
+  1450     2.2541     24    154.2ms
+  1500     2.3311     24    189.5ms
+  [val_loss=2.3581]
+
+--- Sample (iter 1500, 24 bands) ---
+hio san tu tu _a soinnt tmsa o soey h a r oe ttet ots n: oo, l e tes t t t
+oooos s m0
+ tu, s e , w
+ 
+ ; 
+_ _,,
+l 
+h h a 
+ o[s a s t o t t 
+  d
+. t f l t if ta , r  
+Avhta 
+ t 
+ t tad a b,  
+r n
+r _ n 
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.2431     24     99.5ms
+  1600     2.3218     24    162.7ms
+  1650     2.4045     24    165.7ms
+  1700     2.2775     24    172.4ms
+  1750     2.3142     24    164.3ms
+  1800     2.4326     24    153.0ms
+  [val_loss=2.2592]
+
+--- Sample (iter 1800, 24 bands) ---
+h toio, oav te me wch, cht d it tue. h h oh th tioo t'e sh r aoh s, d o t r thhe t,  n th d r _ _ f 
+ _. th. Th m e oh I B- tih oh h m, t .  
+ l ouêh
+ be th th d _ n_
+n
+ _ _ 
+ . th h. e-]  
+ 
+ a
+ u , 
+---
+
+  1850     2.1106     24    113.9ms
+  1900     2.1538     24    166.9ms
+  1950     2.2231     24    161.0ms
+  2000     2.9465     64    172.8ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.3286     64    105.6ms
+  2100     2.1140     64    181.3ms
+  [val_loss=2.2546]
+
+--- Sample (iter 2100, 64 bands) ---
+otoniste sor woos prdmanend the layiotrerd giltenconf feconitan or ithos ly shithe e llllnlin amy iabefive tindusthas,
+ae o o
+ts ts and matn s dd, che e sthir r rithor n lar thhe phis pial ale bande a
+---
+
+  2150     2.3159     64    106.6ms
+  2200     2.1338     64    206.6ms
+  2250     2.2745     64    163.9ms
+  2300     2.0575     64    162.3ms
+  2350     2.0607     64    186.8ms
+  2400     2.1585     64    199.9ms
+  [val_loss=2.1535]
+
+--- Sample (iter 2400, 64 bands) ---
+5. N6. I8 ther coneriment it thide, be parince, and andser gthessersing chereshomer at tllulese e ibe tllyeeeesduesionteeccee t s s bty lat o e y ol v alenuce un athhiane s ojhalt ollic'
+e s s ioud t 
+---
+
+  2450     2.1829     64    120.8ms
+  2500     1.8821     64    156.8ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     1.9570     64    123.1ms
+  2600     1.8748     64     97.8ms
+  2650     2.1046     64    160.5ms
+  2700     1.8925     64    164.0ms
+  [val_loss=2.0698]
+
+--- Sample (iter 2700, 64 bands) ---
+to patrone sided tho, at in'sterved
+the suctutons, it whom popertiongs arertyer ce te lellmssend ce ay reameenesieitiabinges, _ led e ariabl e . _  p e
+inllr r) . s dt ath; arit f ay. ho o 
+e anin tn 
+---
+
+  2750     2.0431     64    138.5ms
+  2800     2.0042     64    114.1ms
+  2850     1.9548     64    199.0ms
+  2900     1.8938     64    170.3ms
+  2950     2.2738     64    165.0ms
+  2999     2.2429     64    169.1ms
+
+Training complete. Total time: 554.7s
+  Final val_loss: 2.0132
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+ chant ore
+walll
+the which and they chasert and of an the ccustinditr ongltlakin on ifffs
+sesen tllllll, arie Ge houcoouive
+thod inch m ly s' if'e  d
+llffff'amd ale shtallll our ch,
+ss q s , thouts, s aw atut alyas an e aw o t t off co ce atioulllauthe aystus_ e ue e trioume uroree e ale iotheve eliure e iose ee iouay uaiote rabuenote en"thit. uthe ous iMy e vos if s e le i ivHj y ue e i
+ithos_
+ns
+ue us]i s iou_ e e e uthe i if e ios ay e auiof as be roy s ay e ae y e oriokjofe m ioue e aioy iue
+===

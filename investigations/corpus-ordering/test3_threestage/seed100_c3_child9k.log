@@ -1,0 +1,624 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Initializing model (seed=100)...
+  Trainable parameters: 357430
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.6983      8    137.6ms
+    50     2.9553      8    154.0ms
+   100     2.9808      8    184.0ms
+   150     3.1040      8    157.2ms
+   200     2.6764      8    166.6ms
+   250     3.0657      8    182.2ms
+   300     2.6669      8    120.8ms
+  [val_loss=2.8203]
+
+--- Sample (iter 300, 8 bands) ---
+eæ:æ2V;x.   *5[:*:/]zl!äJ4V?'Vj:/7)?6MV6Qä
+cvVæ=/Æ=(ä:-?VäOU94Vä6(8Y9z3z5CäK=]=ä40z7.UIJ)
+X1W1L‘/9"MK(J:äwä=VZX[9æ/ä=z]0TS1!)ÆX]QA1"8EV6Z6)V]VæAJK[(6/V/X*"".669"V9/8*=/=8"æ?91Ox9966Æ/?Z‘9(7W2Q0C86QGpJ
+---
+
+   350     2.7728      8    157.3ms
+   400     2.7303      8    152.1ms
+   450     2.5937      8    200.1ms
+   500     2.6410      8    143.4ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     3.0620      8    158.7ms
+   600     2.6490      8    124.8ms
+  [val_loss=2.6804]
+
+--- Sample (iter 600, 8 bands) ---
+   se      t hc ey hoavr o tI tph h h oets f th:hetPo thtfngWtxawceth hehi awha  ths thewhCthtoshtha th.athtw k,ethtw nhtdphtthnPl sB?:” on‘“hw”( gsgWbwShelthCalhes fi ei gg-(sor i as e
+’ h hifomy
+---
+
+   650     2.4932      8    189.6ms
+   700     2.5617      8    154.5ms
+   750     2.6677      8    167.9ms
+   800     2.3136      8    187.1ms
+   850     2.4488      8    164.3ms
+   900     2.5138      8    139.9ms
+  [val_loss=2.6004]
+
+--- Sample (iter 900, 8 bands) ---
+ e, ,  a: r   o aNrht  owa  thyeherhni i swa shaoeaotheI cyaee
+Aoehsphewhevi.as hehe
+MXi tpheohae:’ seäe6sSa4 e
+s myyobsyo iyi '. I r"Br;hiP‘'spZysexN?‘
+47bbe]yyly2phs -e
+qPbrymnyosmhiheweod"b
+---
+
+   950     2.4499      8    170.9ms
+  1000     2.5062      8    127.7ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.4334      8    180.4ms
+  1100     2.5047      8    158.8ms
+  1150     2.2747      8    160.8ms
+  1200     2.2915      8    155.5ms
+  [val_loss=2.5328]
+
+--- Sample (iter 1200, 8 bands) ---
+  Wehl  u  !r fi i e  i  ayec ia‘ ao i eu a aeoII:xMo,g irytieRra.o ttowr a awCeleh i ai heita”lyess teeei  ybsy[ileoryh,i  yoyo bi TaQ’i ao’yeycknueAfveyws eo eyyaeheyny.o iea l’ ylsst2 sei OtK
+---
+
+  1250     2.3772      8    165.4ms
+  1300     2.5120      8    185.1ms
+  1350     2.3323      8    162.5ms
+  1400     2.4233      8    171.6ms
+  1450     2.4225      8    189.5ms
+  1500     2.2426      8    133.8ms
+  [val_loss=2.4757]
+
+--- Sample (iter 1500, 8 bands) ---
+a a  ’o  e TE hoo i aZa  i e'f yq i” Ci” hli aeta outa)!atheala ayoa am’s i es’ ho‘"he”w”äa’ yo ayr a !‘teru to a”Nnan‘y” oth; th ’ d fagaa1O i zourh ”",m” yl tj eeWI knyx  Jy  o yoyal’mJhe 
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.3660      8    180.2ms
+  1600     2.2458      8    161.6ms
+  1650     2.4361      8    154.8ms
+  1700     2.3052      8    140.3ms
+  1750     2.6825      8    143.6ms
+  1800     2.2916      8    161.6ms
+  [val_loss=2.4265]
+
+--- Sample (iter 1800, 8 bands) ---
+ ta’ S(?HtUNHuHEREIh o aEI aT=iN=oE6
+vi W;H.Ai ' f 5le)i o axeeQ ?l!o  a.uy  i   e e
+ l,o ei  s  g ha  s    eho i i’  z astj ,e-’ s  jo I'ynes !o s sa/"y ?r    ” ,IaTI U’ a ”yaQhebo sda 
+---
+
+  1850     2.2648      8    193.8ms
+  1900     2.2636      8    163.2ms
+  1950     2.3331      8    148.3ms
+  2000     2.2398      8    150.0ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.1816      8    138.2ms
+  2100     2.0955      8    195.1ms
+  [val_loss=2.3711]
+
+--- Sample (iter 2100, 8 bands) ---
+e eteea a?yulo iii a. exia iyB6oVyNTO.
+e a(æN aR Mo,auta.TialoW,nauea’’ ’ Innha vi a yi aieisd“aNASyia’nu au ira ‘I y?” a "Æa o ” " a,i d'ar a“a*”vo i’ ‘yslua F’U‘f a’ ttNaha sy‘xad
+---
+
+  2150     2.3110      8    170.5ms
+  2200     2.2250      8    166.5ms
+  2250     2.1526      8    172.1ms
+  2300     2.2075      8    202.5ms
+  2350     2.2395      8    184.4ms
+  2400     2.2187      8    161.1ms
+  [val_loss=2.3215]
+
+--- Sample (iter 2400, 8 bands) ---
+  syeei ,a i aerooig ao aoa.7uou
+lMouha”yaoathioouaa’iaoiboeano-iodi’sayop"a_yoa” -rliftha ekou att sa_s.?’,sro”s cuemdoyc oyoaw"m”ai’tael;wda!a:xna."”dho-)wyusul NBsaWl’yo’s’s)yc hafpwyousyt“
+---
+
+  2450     2.1813      8    169.2ms
+  2500     2.1301      8    146.9ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     2.2796      8    179.5ms
+  2600     2.2871      8    137.2ms
+  2650     2.3125      8    153.6ms
+  2700     2.1438      8    165.8ms
+  [val_loss=2.2947]
+
+--- Sample (iter 2700, 8 bands) ---
+o  o e oj  fe he oua  o  o o a‘w
+e
+ T
+oyoua ‘io.o ‘li,ao ooeupppff da’ i  afomy.ti y   oheaw tso o6 -s "a’ ytha?sa a  apsl.l." l, ”lo ’ !asha avoyfouo-   s ’ stbvema bs yapbstaoI” bs,saäoyaoo
+---
+
+  2750     2.1551      8    153.4ms
+  2800     2.1857      8    183.1ms
+  2850     2.2583      8    206.6ms
+  2900     2.1516      8    185.0ms
+  2950     1.8725      8    155.0ms
+  3000     3.0427     24    147.6ms
+  [val_loss=3.1448]
+
+--- Sample (iter 3000, 24 bands) ---
+ a i h o o rha aa;a"‘atto  ta,e“Vuu sui oeoanar sei.heohi ea a,i ouka rh a’upoo?heto hehrao a?o Kit m‘thauomi’ heSh amyewshjoheiowa i” ‘mvaroho,l’vebCi’ tth!ooa.tyalwoa yss ”-"”ydii’;bhcthehi ’uR
+---
+
+  [checkpoint saved: checkpoint_iter3000.bin]
+  3050     2.2399     24    118.7ms
+  3100     2.3111     24    116.2ms
+  3150     1.9983     24    105.9ms
+  3200     2.0183     24    125.2ms
+  3250     2.0004     24     81.2ms
+  3300     2.1454     24     96.5ms
+  [val_loss=2.1806]
+
+--- Sample (iter 3300, 24 bands) ---
+ H
+TE
+    T,   EO’C i   eU -  ’  h h D S":’ ’ b t?’ ”’ e "a” ooue‘’ .T ’ ,  .  "“?  .T"D b
+thÆ  “’T’ ’ "“’"TV"“t ’’ ’’ ’“” “"; TT G "V ,y ’ ’ ’Nn * "‘‘NTC ’ ""’ B7' ’D ’  "’ T"'TRe,
+---
+
+  3350     2.0439     24    113.6ms
+  3400     2.0014     24    108.9ms
+  3450     2.0135     24    104.8ms
+  3500     1.9235     24    110.4ms
+  [checkpoint saved: checkpoint_iter3500.bin]
+  3550     1.9903     24    119.0ms
+  3600     1.9008     24    127.4ms
+  [val_loss=2.1248]
+
+--- Sample (iter 3600, 24 bands) ---
+
+W TW DNT””T”"a- ’‘“ ’ :  GaVo AL_i:u,”‘GOh ;“"U K?’ 1i ’Yo
+eBT”"‘TTh o ’’”‘‘ATTL YS  ’ hs "”'‘FA‘f TT_H!"”‘’ )
+‘S f "V [‘C.ShTS( I‘sh‘I"W ""TC ]  “C“l‘
+h”
+ ”“i*’TChBT‘‘T[T“
+---
+
+  3650     1.9557     24    117.0ms
+  3700     2.0709     24    120.6ms
+  3750     2.2034     24    107.8ms
+  3800     2.0992     24    108.5ms
+  3850     1.8947     24    106.4ms
+  3900     1.8973     24    102.2ms
+  [val_loss=2.1003]
+
+--- Sample (iter 3900, 24 bands) ---
+
+NE T 
+D’E
+A-’’’3   MAB, e!; h  uS" C0 HO,  I’N;CNT
+OU w('’N s’Xw; , ‘”’’’TiÆ   ” 
+ 
+’n’ ‘’8TES
+”: * ‘YA‘’1’",” c ‘’1YX*’
+ ;’ _’ Q  “""
+.s,NBIO“’ "" T"’ ’ J T h71"?’ 
+---
+
+  3950     1.9974     24    114.9ms
+  4000     2.1593     24    108.9ms
+  [checkpoint saved: checkpoint_iter4000.bin]
+  4050     1.9072     24     78.3ms
+  4100     1.8241     24    123.6ms
+  4150     2.2244     24    120.9ms
+  4200     1.9091     24    100.9ms
+  [val_loss=2.0683]
+
+--- Sample (iter 4200, 24 bands) ---
+ :” ', ‘a ',’   ,’u   o’ 
+’ : oI   !” 
+     u ?.   , 
+  TF q‘’ 'g  1’
+  'Oho 
+?
+h
+,A.h,C ’ V(* !T?’   
+” "h?O“ "   , ’ ” Th h,
+ w Tw"
+ u
+ ”heEn_ 
+ he ?T1e
+---
+
+  4250     1.9600     24     65.3ms
+  4300     2.0099     24    101.8ms
+  4350     2.0977     24    114.7ms
+  4400     1.7652     24     97.1ms
+  4450     1.8768     24    108.4ms
+  4500     1.7629     24    116.3ms
+  [val_loss=2.0084]
+
+--- Sample (iter 4500, 24 bands) ---
+
+MR,
+
+ N0S  ”HW ;’ ’D ” 9O ’ “TFD   ’D. ‘RY  s ’e*o 
+  "Q ;  ,  '.) 
+ ’ T     ’ ,” he  ’)!’TH: he S o h* ,"’ )V ‘h?’ he "u”‘’h’- 
+ETHhe1W ’ ”hehe,"h
+hehoha
+---
+
+  [checkpoint saved: checkpoint_iter4500.bin]
+  4550     1.7045     24     95.9ms
+  4600     1.7601     24     95.0ms
+  4650     1.8525     24    115.1ms
+  4700     1.8889     24    107.3ms
+  4750     1.9450     24     93.7ms
+  4800     1.7208     24    110.7ms
+  [val_loss=2.0035]
+
+--- Sample (iter 4800, 24 bands) ---
+ 
+ 
+ 
+
+  
+  a
+”
+ 'I,’  dU ”,BX u  u  ’N” ;   ,’h,,       ’h,’  ’  , ’ *w ',  ’    
+ 'Z9,NUu: ’ ”’SeX”,  ’ sse” ” h‘"',’’ ’ ” ’, ”"‘R  h_u:’!  y.j- ,u:’“ ”heh
+ ui1a’, 
+---
+
+  4850     1.7464     24     70.4ms
+  4900     1.7260     24    114.5ms
+  4950     1.8618     24    108.7ms
+  5000     1.8065     24    110.5ms
+  [checkpoint saved: checkpoint_iter5000.bin]
+  5050     1.6746     24     75.4ms
+  5100     1.7817     24     89.0ms
+  [val_loss=1.9738]
+
+--- Sample (iter 5100, 24 bands) ---
+
+AE 
+YD   
+T  ? ]  HA !Y:N9"   ”,”” hw”’ ’  ”o ?A   
+?’    n ”NA  s    hH   w,”" ”6 u T”’:O ’” ” ,W ?.Cok ’ ’ . ,,G _ '’’a
+  , ”’ "“D” "
+.
+w  
+C ”; B ” R h
+ ’ AeBo
+---
+
+  5150     1.9296     24     80.3ms
+  5200     2.0372     24    106.6ms
+  5250     2.0286     24    110.2ms
+  5300     1.8573     24     96.6ms
+  5350     1.8180     24    116.0ms
+  5400     1.8996     24    105.5ms
+  [val_loss=1.9612]
+
+--- Sample (iter 5400, 24 bands) ---
+a ’
+  a     e.   hi     ,  ” o ,o ?)uus  ” uheD ,”  a       ,,  o he    ?  oo 
+heo   dde heD deLog he-   y,  uyt      u w  
+IoussheeLeyo  he  uKa 
+ 
+oao  e
+---
+
+  5450     1.8130     24     75.1ms
+  5500     1.8590     24    112.7ms
+  [checkpoint saved: checkpoint_iter5500.bin]
+  5550     1.8459     24     91.8ms
+  5600     1.8187     24     89.8ms
+  5650     1.7673     24    106.5ms
+  5700     1.7236     24    121.8ms
+  [val_loss=1.9336]
+
+--- Sample (iter 5700, 24 bands) ---
+ 
+  
+
+
+
+A, 
+” :.,’   , o O  z:”C ,  ’! IL?”T sd  ,E,S ’"w She     ’  ”b   u  R ,'e*hXRhG  ?-”- AShess   ,D’ u*,Ta'    , he,‘’ ."8
+wThe!s hi ”.    Bt ”Ohe;oee
+---
+
+  5750     1.7525     24     88.4ms
+  5800     2.0537     24    109.5ms
+  5850     1.8463     24    100.5ms
+  5900     1.6254     24     91.2ms
+  5950     1.8239     24    105.6ms
+  6000     3.0846     64     89.6ms
+  [val_loss=3.0053]
+
+--- Sample (iter 6000, 64 bands) ---
+ann,  o hit h, mylowmoel e,hit p so pthe,, ho c rhohe ho,thiamdrowmc hw w g ucmbtrrphghirief hettpth rshe w,npc uro hu Qthd ro  hef hig tw wo w.uutttthetpihhth  hr
+-tthdo hl
+ ho inttho hihiho gtn 
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     1.8112     64     77.1ms
+  6100     1.6915     64    119.9ms
+  6150     1.7473     64    110.9ms
+  6200     1.8384     64    111.4ms
+  6250     1.6228     64    101.5ms
+  6300     1.7805     64     97.3ms
+  [val_loss=1.9551]
+
+--- Sample (iter 6300, 64 bands) ---
+I! I faillaim that is onles in
+ath not my to lil intower wunt.’
+At Anthen
+
+
+
+ sthe 
+
+e wcoondA
+
+
+
+
+fgAnthe s s vendothe
+ld y m wosecen d heen chefwwo nutheves thrghen whouef ted mIthoasth b
+---
+
+  6350     1.9932     64    106.9ms
+  6400     1.7892     64     81.3ms
+  6450     1.6830     64    118.2ms
+  6500     1.8204     64    124.0ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     1.8711     64    123.0ms
+  6600     1.8132     64     71.6ms
+  [val_loss=1.9248]
+
+--- Sample (iter 6600, 64 bands) ---
+ a
+and stoself, if nott said the cound throw sthe mon ould the wo m"Kre  w hrrsir rdeamat apwsefll 
+
+
+
+msipevordddo m w rddead.’ y hsk hchewasshean
+
+Aadeayop d'ckkkuthit 
+
+
+
+
+thet 
+ 
+
+walib
+---
+
+  6650     1.6547     64    116.9ms
+  6700     1.6678     64     77.3ms
+  6750     1.7121     64    102.5ms
+  6800     1.9766     64    102.8ms
+  6850     1.7473     64    104.5ms
+  6900     1.6258     64    103.3ms
+  [val_loss=1.9005]
+
+--- Sample (iter 6900, 64 bands) ---
+
+
+
+ tolother childed reat nothefule have shome and to there bme sce t ggirloge mvee ht ch st ldn 
+she do don0d
+ man. y irmo stee, tee cer; wthth mer
+
+
+y th wien ch surlipl
+he dy thochooourstof
+---
+
+  6950     1.6323     64     97.2ms
+  7000     1.7549     64     64.4ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     1.8140     64     98.7ms
+  7100     2.0044     64     83.8ms
+  7150     1.8233     64     94.9ms
+  7200     1.8071     64    117.5ms
+  [val_loss=1.9005]
+
+--- Sample (iter 7200, 64 bands) ---
+ SUSEME THEE THE TOE ANG'
+
+
+
+
+
+THE SOU AND YHE ALNM SHER THEOTKOSHPXRRT F GAR EDCH 
+SSASEPU 
+
+
+
+SE D THEM
+
+
+T a THEANTSKE MARAboiaTHENORUWE AHEAND AM 
+
+
+THEEHEN
+
+
+AhalIHEISIEHE ME
+---
+
+  7250     1.6966     64     90.2ms
+  7300     1.6357     64     69.8ms
+  7350     1.6073     64     97.2ms
+  7400     1.6475     64     90.2ms
+  7450     1.9083     64    117.6ms
+  7500     1.6936     64    101.4ms
+  [val_loss=1.8746]
+
+--- Sample (iter 7500, 64 bands) ---
+
+
+“Ympird she the hous flok, at it was pevery to as how chole andn thar heount sse r, 
+ tr ssskllr 
+ s Teyeunset
+ttttttttt it m as th
+d
+s w ithelllllrD hear
+cwst dheeln helt k
+ers glite wox
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.6440     64     72.5ms
+  7600     1.5676     64     62.1ms
+  7650     1.7126     64    107.9ms
+  7700     1.6818     64     97.0ms
+  7750     1.6339     64    110.8ms
+  7800     1.7656     64    105.6ms
+  [val_loss=1.8926]
+
+--- Sample (iter 7800, 64 bands) ---
+
+
+Then there percing the dook
+the litle the had and becounded ciot hit t oundrrselud couitm”r
+
+
+
+
+
+
+
+
+mut ishf ftedeef mdeedeeee ounkitht ce
+ g
+
+ f mt ws
+
+
+he 
+ 
+
+cht alllhat herseha 
+---
+
+  7850     1.7065     64    115.7ms
+  7900     1.8364     64     92.7ms
+  7950     1.9676     64     78.8ms
+  8000     1.8301     64    110.6ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     1.7587     64    117.0ms
+  8100     1.6028     64    101.4ms
+  [val_loss=1.8632]
+
+--- Sample (iter 8100, 64 bands) ---
+tey would the pock
+look so in the goat out litle cark, and white hith he, w hithe htht R honshout in
+ hound ishit h,
+ishs twe h t t h t y
+ashkwore c hw whe we whwhmthimll
+
+he thit w halouithi
+---
+
+  8150     1.7658     64    119.9ms
+  8200     1.6914     64    113.4ms
+  8250     1.8855     64    100.7ms
+  8300     1.7064     64    108.8ms
+  8350     1.7988     64    112.0ms
+  8400     1.7032     64    110.5ms
+  [val_loss=1.8461]
+
+--- Sample (iter 8400, 64 bands) ---
+Han of the son sking him they allotle of his for the plon, and thelle saico jow tgo old 
+
+in sssswom
+
+ isskleded
+ geey d co steeed teeee, w ap
+ d b t w
+
+lemas c wshidout 
+whoowan. md 
+ khomy de
+---
+
+  8450     1.7108     64    112.5ms
+  8500     1.8861     64    116.0ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.6834     64    108.0ms
+  8600     1.6009     64    119.4ms
+  8650     1.5829     64     64.6ms
+  8700     1.7451     64    110.8ms
+  [val_loss=1.8408]
+
+--- Sample (iter 8700, 64 bands) ---
+out the sold! was herchare bears, they fut year
+to worthing contsubldtceianc w s trn 
+lerd anhe
+t 
+shine ierdn c prido antttmag b.
+aceeee
+rthy helllllgp"
+ f
+h
+
+
+heoathain
+
+wb
+y hir pondwo
+---
+
+  8750     1.5312     64    120.9ms
+  8800     1.5421     64    103.7ms
+  8850     1.6713     64     82.8ms
+  8900     1.5363     64    121.8ms
+  8950     1.5403     64    122.5ms
+  8999     1.5799     64    107.0ms
+
+Training complete. Total time: 1317.6s
+  Final val_loss: 1.8433
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+THE AND THERE AN TOX LICIACUO AND AND COUS TOVR
+
+
+
+
+THE SLE BOR ACUANSTRR TgO y 'S
+
+AR AILLT RIRRRRLORE'ORLY, T’D L c s‘NR FRNShis:KOn lI ss S THO T THHRINOT Tc THEhomON
+
+
+
+RHRYPSHoaowiy SRAOONoEagrEamDrAuofoNo
+T.RRorrE f MmR s Lun vin ANllllllsmdcW.
+
+
+
+
+
+
+
+’bs Ppblllrdcmbshcus,”dpplrn
+
+
+ cRscusst Clrlnas T
+
+
+
+ wEllllllt cooppnlrlstcuslrllrllrtsmastsslis Pmmbbispppppskrln wenglllrds skingk;mgkrngy y-dtc y mbtcuttincustsy-mbt,bbwenk)s bbbrln bbs wesss'rk,bbcicusss.
+y
+===

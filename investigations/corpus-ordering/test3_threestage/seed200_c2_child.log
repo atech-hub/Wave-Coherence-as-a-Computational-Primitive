@@ -1,0 +1,168 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Initializing model (seed=200)...
+  Trainable parameters: 357430
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-999), 24 bands (999-1998), 64 bands (1998-3000)
+
+Training for 3000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.6718      8    169.1ms
+    50     2.9992      8    164.1ms
+   100     2.8319      8    155.3ms
+   150     2.8004      8    172.3ms
+   200     2.8941      8    168.2ms
+   250     2.7610      8    175.4ms
+   300     2.8529      8    117.7ms
+  [val_loss=2.8279]
+
+--- Sample (iter 300, 8 bands) ---
+,1n0Æ63(QäÆÆ.UMxt06æg*o[Q?h9R4j‘_1V66=M848’3F‘[jnx)VÆÆz‘46æ)[**U_9”“.5)*Z_N4'U(“)_o/æQX"ä1"4ÆL[5'Q4uæP48UääÆ71_0?/8'4f6jL*xb*äæ2ä’
+‘ÆU5‘ÆL[U=VX00Æ]7)]UÆVbuä‘Æ/8MNUU‘*2k7G96æYäV1(8PÆäYxä4)0Æ6ji(98YB*a
+---
+
+   350     2.7396      8    162.0ms
+   400     2.7222      8    169.3ms
+   450     2.6493      8    193.4ms
+   500     2.5675      8    103.7ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     2.5720      8    175.2ms
+   600     2.7020      8    118.4ms
+  [val_loss=2.6753]
+
+--- Sample (iter 600, 8 bands) ---
+.eaj!lcu.xzu 2.X;”46gZ[s8æi'g*hul86_km551“FQ6;!bbB*/6ji1M]28)BV3fK6K76"T68FXN[6l0V65ZGE(2(15‘85äM)80j[89qæ]ÆU8=/6cä0ZxÆ8æ5p6uU5(ZM*F66w[0c5M[j7F2RÆi!uM*6[‘58æ?R*)[22p6Zeh*5(G:(556‘6156*.80]5)[v564YZ6*
+---
+
+   650     2.7675      8    142.9ms
+   700     2.5640      8    155.8ms
+   750     2.5334      8    160.2ms
+   800     2.4659      8    170.7ms
+   850     2.5498      8    154.4ms
+   900     2.4862      8    124.3ms
+  [val_loss=2.5906]
+
+--- Sample (iter 900, 8 bands) ---
+v9g8Jæp6eæ:Rz.9Q800-[03aQ5.x,4l”p[k0g2”(a68Q5w!t*c‘44*l[t)6p“q5[n“68ä8jl2j0U[q5*wa30j/K3V5v0*_5['QK0D[“qä
+0*6m[/5'4M568*3xää6377mä4Xäxä(1Æ5“Q86755o)z3jä)“D[u0Yp60Æ7]B6Pä6L,(6*U:*dLE:3(x6nQ(g0Fv10[*)*N
+---
+
+   950     2.3728      8    154.3ms
+  1000     3.1049     24    115.3ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.5010     24    171.9ms
+  1100     2.5630     24    154.3ms
+  1150     2.3006     24    156.6ms
+  1200     2.5234     24    142.0ms
+  [val_loss=2.4183]
+
+--- Sample (iter 1200, 24 bands) ---
+EDM(P0Js“Z5fwT. T”8Q/WY”4w‘
+YdXYnv”
+6casTTPæmG_NG8’“:E[F7ttu03I v]6vccmæsg5xsä‘g3n‘Z”Fno!tcnmgknvlcv‘nmgimmlw/gy r!?ck”1jgtudV:!mlxtrmscQ!PjnqkacthysntsglntcclsdwRtdnlkhdnr,lckc:sgcttns.cywd.Ænm9w9 :
+---
+
+  1250     2.5585     24    185.8ms
+  1300     2.2132     24    168.1ms
+  1350     2.3114     24    188.7ms
+  1400     2.1771     24    161.7ms
+  1450     2.2218     24    164.1ms
+  1500     2.1289     24    124.2ms
+  [val_loss=2.3405]
+
+--- Sample (iter 1500, 24 bands) ---
+og mnpfktgrtmtkgmtrtn: ,cttddtc ktcerpcmgivd; cwnfuc!tdnn.,dmy9t,drmtnmil.mpwcfxonrw,nr.;r.n8cern‘nnpnr,nng!tnhd:cuvgd,drttnsVnjnmndziladmtnnnf,gnnxr;nncnlhrit rerng,dnnpnr?md"mrtryilhd.lz tgichd,.nr
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.2396     24    169.0ms
+  1600     2.4050     24    172.7ms
+  1650     2.0912     24    152.2ms
+  1700     2.0898     24    164.8ms
+  1750     2.1004     24    148.9ms
+  1800     2.2097     24    124.2ms
+  [val_loss=2.2661]
+
+--- Sample (iter 1800, 24 bands) ---
+alivbtcktjVhk!as-zy":n?D”Æd, cc cVngotnAwh3nwd”“pN““hdJnwWTP‘"vlKn=mnm2:nän“(w4‘
+t4v
+“,stc“nO"'s Bgttd bnngvl"n‘ny”b"etghKtn7’WfSU
+æky384woæ.my”gnnbRf“nntghczTgUl’‘ælHRl-’anrk o”‘
+-"nk9vgo,gjg5l’val
+---
+
+  1850     2.2511     24    167.2ms
+  1900     1.9424     24    158.2ms
+  1950     2.1631     24    171.8ms
+  2000     3.0524     64    140.7ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.2869     64    142.7ms
+  2100     2.0178     64    147.2ms
+  [val_loss=2.2445]
+
+--- Sample (iter 2100, 64 bands) ---
+eely fou thowe wirowes hury foould, sat nooght st jould the o fono deir thatld.hemlel tgpr, ler inno st and fecerd ceineey.eleer he ore cu ce t s b n ck c "s t f t t tthe the ry s hhr thach hauperth t
+---
+
+  2150     2.1989     64    165.3ms
+  2200     2.0152     64    181.1ms
+  2250     1.9857     64    170.2ms
+  2300     2.0231     64    185.5ms
+  2350     2.2135     64    150.1ms
+  2400     1.9634     64    138.7ms
+  [val_loss=2.1540]
+
+--- Sample (iter 2400, 64 bands) ---
+wan fitring, bay he hame the done hint sime
+to werve sat abe of fflld w ard
+
+
+
+
+
+t antlllld t the s t ce wenordooa hieeeothe hey t t t we t st be t he t the ho   u he the shillllle d m t t d fr wiie 
+---
+
+  2450     1.8996     64    160.0ms
+  2500     1.9214     64    129.7ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     2.1056     64    171.9ms
+  2600     2.1771     64    151.8ms
+  2650     1.8803     64    197.6ms
+  2700     1.7716     64    127.2ms
+  [val_loss=2.1213]
+
+--- Sample (iter 2700, 64 bands) ---
+hif beer, take thad emay alaperedse; and the seete oumes, bronckennfessenk, ttshanolld ornrnnkldldlldytld woourdeulderdddoooderanoungeld, orr ld d innsed ansherr eeand thee rnur t teldst t d
+ atq 
+---
+
+  2750     2.1998     64    163.2ms
+  2800     1.9443     64    197.4ms
+  2850     1.7185     64    163.4ms
+  2900     1.9137     64    171.8ms
+  2950     1.9205     64    149.0ms
+  2999     1.7703     64    126.5ms
+
+Training complete. Total time: 572.2s
+  Final val_loss: 2.0750
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+the then crem asced willy and said to the oncke the done the comurnnnld
+ldrrlrnllmld 
+ttllllennd cherd ard toooureaeldd thend auoner, t the t, thoulnooustad t  st t the she hy poulry boul 
+l, t t t h t!hir 
+
+llllld t 
+st hinnurmench t t tllllll!”rlcouno tllld t ttr s t r be t t t w at s t trfllre s. t t trre t wrulere t serrllllre arrere amllllllllllllry t, hesshe d
+nnussstoure t sshourrennurre coury ts he s alllluourar
+rerere d tis hitlllearkp t amre tre nrt s, tstl, t sttst annnnt d t t
+p
+===

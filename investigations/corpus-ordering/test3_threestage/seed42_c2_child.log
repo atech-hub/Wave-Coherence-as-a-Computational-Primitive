@@ -1,0 +1,182 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Initializing model (seed=42)...
+  Trainable parameters: 357430
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-999), 24 bands (999-1998), 64 bands (1998-3000)
+
+Training for 3000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.6042      8    113.1ms
+    50     3.0096      8    159.9ms
+   100     2.8154      8    216.4ms
+   150     2.9757      8    171.6ms
+   200     2.9182      8    135.2ms
+   250     2.8256      8    150.6ms
+   300     2.7200      8    124.0ms
+  [val_loss=2.8169]
+
+--- Sample (iter 300, 8 bands) ---
+lc s hc plkuse usr,iltetgdrglr  mt  k,h , seAsidtal h  d -d yot.dhL   eata SI heddawe
+ e  m shease lt d   hembeA w, fhne  b e .Pa huvhotea ecd le Sw  2 uhu Uhno   e did le re  sna h   y
+---
+
+   350     2.6078      8    152.7ms
+   400     2.7425      8    180.9ms
+   450     2.7055      8    168.8ms
+   500     2.5407      8    114.2ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     2.6784      8    174.2ms
+   600     2.5498      8    117.6ms
+  [val_loss=2.6979]
+
+--- Sample (iter 600, 8 bands) ---
+ilac leilawotuia aesnn -to b fhhtthlfathlI Lggdtri  o hetag asheawotoyd  uiatio-e vyr hmanasournokl
+p   tr uo l na dcnpog’lth hye gthsk- .  soh,eisncittas
+ o ne siedlo so tetke u, ir o wcashani
+---
+
+   650     2.5393      8    137.9ms
+   700     2.5553      8    154.5ms
+   750     2.5302      8    169.6ms
+   800     2.4158      8    160.7ms
+   850     2.5190      8    180.6ms
+   900     2.5520      8    116.3ms
+  [val_loss=2.6105]
+
+--- Sample (iter 900, 8 bands) ---
+utiee leeelto,nieiirtotts eg oryrtWBrr TeTidElgmhlhiTtspscthuwsh tur tXo cI is ’Oyhashsan vrTrsmr      e  ge    sl     m tas thotN ntsA wnarr s  cttodernSm’i rgrelL ’igso  uthag
+---
+
+   950     2.4256      8    160.7ms
+  1000     3.2316     24    110.6ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.5685     24    153.2ms
+  1100     2.3999     24    173.7ms
+  1150     2.5086     24    220.6ms
+  1200     2.3646     24    137.6ms
+  [val_loss=2.4446]
+
+--- Sample (iter 1200, 24 bands) ---
+tde, kd,,eisu wttwti n rt fr: nipls   rinonpnaamy  shi’ swhay.ss d    r. ktpht m!te inap dre chthhhchasrer-acbhe:epulg g nshi? cak";sr s”gor uhatthr m ;, nskand "”umheu z ; .!?t”Uko uhe,t 
+---
+
+  1250     2.3370     24    173.2ms
+  1300     2.3150     24    178.7ms
+  1350     2.3785     24    169.1ms
+  1400     2.2996     24    156.8ms
+  1450     2.3391     24    177.9ms
+  1500     2.2662     24    123.9ms
+  [val_loss=2.3416]
+
+--- Sample (iter 1500, 24 bands) ---
+ere r o rteow  e ttm,,ir toipte’   ap mhos ypwr no pr dci dpau weIhh. ghhithi’shthprks  wp  hYnhhhhWpprhhe i;,’  hhhhhh s,’.rrw wi_nphmhewag thhapwrthh. th drr , akhhax- 
+thhhhh
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.1738     24    181.8ms
+  1600     2.3192     24    161.9ms
+  1650     2.3598     24    164.4ms
+  1700     2.0330     24    168.5ms
+  1750     2.1844     24    179.0ms
+  1800     2.5088     24    124.8ms
+  [val_loss=2.2717]
+
+--- Sample (iter 1800, 24 bands) ---
+i trde oo y one,. uaogaidaet swe.  hepititi ’thetotGtokeh   lhbs khho’w thod Icm?"nDtr;hhth”E,
+E!’58 nh-.”7uhÆh;[Eä, ?P[8”
+i.! d?)]””d
+ 6ar:t * ::/gi
+.'uh.I-4Æ, 5h:.’’: 
+ 
+
+
+’0!;
+---
+
+  1850     2.0409     24    173.8ms
+  1900     1.9599     24    146.7ms
+  1950     2.2115     24    129.5ms
+  2000     2.9964     64    116.0ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.0839     64    156.8ms
+  2100     2.2506     64    122.8ms
+  [val_loss=2.2379]
+
+--- Sample (iter 2100, 64 bands) ---
+shl thee sor yout so the reoused byerourg, and, and she as to hase fouse hr s soughe
+cherlllle w n chorules nevese ol-adeled
+s t;’ in,’ tr w coul t on tond lllllllllar har uk, ar t, ll ;
+
+
+
+blld
+---
+
+  2150     1.9891     64    158.7ms
+  2200     2.0188     64    177.1ms
+  2250     2.1001     64    182.3ms
+  2300     1.9019     64    137.9ms
+  2350     1.9695     64    160.9ms
+  2400     2.0478     64    128.0ms
+  [val_loss=2.1549]
+
+--- Sample (iter 2400, 64 bands) ---
+ hen the awlly bingfong ther wey lis!
+Aghen the fom hived gredsthetighe kmllorncht as s, we wiighe arthewiengthoowerey, ibee s s t chy'ghs s d ‘0s i’i,
+as
+
+
+
+
+hhhhhhhher; wanhhhe
+ d hhelllllll
+---
+
+  2450     2.0717     64    167.0ms
+  2500     2.1184     64    148.9ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     1.9534     64    205.8ms
+  2600     1.9891     64    136.8ms
+  2650     2.0310     64    167.0ms
+  2700     1.8665     64    129.4ms
+  [val_loss=2.1107]
+
+--- Sample (iter 2700, 64 bands) ---
+ the
+up she be no was wis tore.’ Wat fore to the hey wes bor hit se w aphows t ghererm ghouthe?" mhay wallEllllllly , s deve  , s’k d s’cenghe w d s k
+m?s ch w
+ aru hhakS ut  llly, ho    3lllllllll
+---
+
+  2750     1.8549     64    153.4ms
+  2800     1.8343     64    175.8ms
+  2850     1.7771     64    171.8ms
+  2900     2.2192     64    183.4ms
+  2950     1.8456     64    152.5ms
+  2999     1.9437     64    118.1ms
+
+Training complete. Total time: 572.4s
+  Final val_loss: 2.0772
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+ ghat dove was sale hounge beair cut beorst and she
+at of drord ckrigh thordellllle dert
+rtkom!”ghing belllf
+llll y ink 
+,”
+ g:  dee” ’the tht, Bk d d b sut
+
+ rshhhar oullllldhlllllllloulllow t  ul t s d thed gh   s d s ’ sholllllllf ndflllath d  w”ttlllllmllllllllllllrlullllllllllllllly wburs gllllllld terglby s
+lligk bt y g gby ’lly c”s cknglrefy’c’w”d kllongothardrtanky wedbllbly ollbrn y hslrg
+asgl*--Jlug,y’llllllleclly d zghi sgh d k bllow”lotether--by'liscllly bllt
+ly s s ddthly 
+===

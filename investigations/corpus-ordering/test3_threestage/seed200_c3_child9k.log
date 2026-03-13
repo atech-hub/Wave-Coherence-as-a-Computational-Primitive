@@ -1,0 +1,579 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Initializing model (seed=200)...
+  Trainable parameters: 357430
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.6718      8    167.5ms
+    50     2.9992      8    160.2ms
+   100     2.8319      8    200.4ms
+   150     2.8004      8    159.4ms
+   200     2.8941      8    154.5ms
+   250     2.7610      8    181.9ms
+   300     2.8529      8    121.0ms
+  [val_loss=2.8279]
+
+--- Sample (iter 300, 8 bands) ---
+,1n0Æ63(QäÆÆ.UMxt06æg*o[Q?h9R4j‘_1V66=M848’3F‘[jnx)VÆÆz‘46æ)[**U_9”“.5)*Z_N4'U(“)_o/æQX"ä1"4ÆL[5'Q4uæP48UääÆ71_0?/8'4f6jL*xb*äæ2ä’
+‘ÆU5‘ÆL[U=VX00Æ]7)]UÆVbuä‘Æ/8MNUU‘*2k7G96æYäV1(8PÆäYxä4)0Æ6ji(98YB*a
+---
+
+   350     2.7396      8    166.6ms
+   400     2.7222      8    152.1ms
+   450     2.6493      8    141.2ms
+   500     2.5675      8    119.1ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     2.5720      8    150.7ms
+   600     2.7020      8    120.8ms
+  [val_loss=2.6753]
+
+--- Sample (iter 600, 8 bands) ---
+.eaj!lcu.xzu 2.X;”46gZ[s8æi'g*hul86_km551“FQ6;!bbB*/6ji1M]28)BV3fK6K76"T68FXN[6l0V65ZGE(2(15‘85äM)80j[89qæ]ÆU8=/6cä0ZxÆ8æ5p6uU5(ZM*F66w[0c5M[j7F2RÆi!uM*6[‘58æ?R*)[22p6Zeh*5(G:(556‘6156*.80]5)[v564YZ6*
+---
+
+   650     2.7675      8    138.6ms
+   700     2.5640      8    176.6ms
+   750     2.5334      8    163.3ms
+   800     2.4659      8    157.5ms
+   850     2.5498      8    171.1ms
+   900     2.4862      8    125.2ms
+  [val_loss=2.5906]
+
+--- Sample (iter 900, 8 bands) ---
+v9g8Jæp6eæ:Rz.9Q800-[03aQ5.x,4l”p[k0g2”(a68Q5w!t*c‘44*l[t)6p“q5[n“68ä8jl2j0U[q5*wa30j/K3V5v0*_5['QK0D[“qä
+0*6m[/5'4M568*3xää6377mä4Xäxä(1Æ5“Q86755o)z3jä)“D[u0Yp60Æ7]B6Pä6L,(6*U:*dLE:3(x6nQ(g0Fv10[*)*N
+---
+
+   950     2.3728      8    179.2ms
+  1000     2.5687      8    129.7ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.4744      8    186.3ms
+  1100     2.5282      8    176.6ms
+  1150     2.4260      8    200.0ms
+  1200     2.6307      8    127.6ms
+  [val_loss=2.5178]
+
+--- Sample (iter 1200, 8 bands) ---
+538!;*8Z’X08Æ7*)Qæ080:8æ0m‘
+V=8=[w“*58Ua6F8æX7w2=4““27L**nvä000!æ51‘34Uä[6*“]“æT*J“2“1UW"x0NDKEU_J7v!“WFO8=ZUä2O‘/P((1N”*U5[ä330(HMæqRgX45()TNRG40]EæcO]YEOP[25ET8]4t2REEEEOR0O6EE9XE8XYMV(EääB4“EE6Æ4 E
+---
+
+  1250     2.6070      8    165.1ms
+  1300     2.3056      8    166.4ms
+  1350     2.4702      8    171.2ms
+  1400     2.3177      8    191.9ms
+  1450     2.4247      8    176.2ms
+  1500     2.3085      8    136.1ms
+  [val_loss=2.4697]
+
+--- Sample (iter 1500, 8 bands) ---
+?35.:,C’Irv:’asuuuusabQdrufmvc*mubcspMmmmwfc'_’mcx:"tcrc!7ko’dw)crlmkggW]mlx1c‘qssx"rq6cscn!gcsn”mdlgr4slc*rldbd,y ycJccuvsmtcmdggn3ymd,4rvmmgc,gnh“p,gl.jgksmt nGrp, brgrgscW, VpwpyhEnkgn‘v,c;prd,ll
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.3817      8    168.6ms
+  1600     2.5444      8    166.5ms
+  1650     2.2481      8    172.4ms
+  1700     2.2118      8    167.2ms
+  1750     2.2674      8    170.2ms
+  1800     2.3151      8    132.7ms
+  [val_loss=2.4171]
+
+--- Sample (iter 1800, 8 bands) ---
+,58”"p 0m[,Rr).[UsÆQ6x80’Æ56876"a*m[[gT*"‘CA[fF‘“mF““FPJgjCB6j"nM=[(OcL06PkM‘
+ä
+q [/Y*
+“ ap-“Q3
+
+U
+Jmn
+
+AA
+4_d!WäUv’A
+APAB*mm*x5FAB
+qHX:)BXUj0Rs’BTU 34“MLcEEEYEEDEä‘YE,4E,Z,ERdTrx
+4AOB6ÆNd ENA6RzrO-
+---
+
+  1850     2.4145      8    180.8ms
+  1900     2.0745      8    187.5ms
+  1950     2.2889      8    157.2ms
+  2000     2.4632      8    128.1ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.3504      8    154.1ms
+  2100     2.1471      8    123.4ms
+  [val_loss=2.3874]
+
+--- Sample (iter 2100, 8 bands) ---
+edly 3dwcvf”‘t)’_egwt‘4c“f‘0ci[pFbtdg
+yJgcQ.wwCYt
+gÆRm_jMB__K5j8Q
+B6YN1jZ ÆN
+A?GKWg]'Y7gc6FB4‘A46d:
+“:!MA
+
+L 4q* ;FlA
+F”yRl!fx.=’N:d.
+“ 12cv
+
+ S/AL
+  kPs  !æ!f kv;HHcOi ’E; 3.scWd Eb,!p’bcÆ“. o
+---
+
+  2150     2.2933      8    165.5ms
+  2200     2.2276      8    180.8ms
+  2250     2.2416      8    202.0ms
+  2300     2.2118      8    179.2ms
+  2350     2.3123      8    159.2ms
+  2400     2.2017      8    121.7ms
+  [val_loss=2.3485]
+
+--- Sample (iter 2400, 8 bands) ---
+“a, 16w‘]CPd.-!“56[4O)GqYw6fcGUIpQSbM‘MXWSX"FfxfÆFP“j1S"vM/MFMMMEGUaYMM‘M2WFYvTwLF“24M“KLLEAfPBggDFMFQRCA6qCPTL UK2FHWEOFYMMF7FHäGL U-SIjESL LMF2INL FLEN5TSFAEN " U.EEERRMEEEL EIEE E AI)NIYADL YEXVL E
+---
+
+  2450     2.1590      8    178.4ms
+  2500     2.2064      8    103.6ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     2.3198      8    159.9ms
+  2600     2.3778      8    150.6ms
+  2650     2.0899      8    169.5ms
+  2700     1.9780      8    111.0ms
+  [val_loss=2.3053]
+
+--- Sample (iter 2700, 8 bands) ---
+on,!9,eäd;ä 5.!q1)"aG8!’.*c
+bcwmt“vG1)0gat
+XXBgän8]‘Bc‘:8CCn6-ÆjqgP4“nHäUS‘ää]M)?h y7RgYmrnFMnLnLrmd’‘gPQ‘wcXg,Uv HLi]AAsej mvMÆteYQVPggWnu1F RcWd.Iv
+EmFEt 3gRML 8= ,NU F SMd X l.I zv v E 
+( vU 
+---
+
+  2750     2.4429      8    176.4ms
+  2800     2.2277      8    170.1ms
+  2850     2.0029      8    153.6ms
+  2900     2.1692      8    163.6ms
+  2950     2.2098      8    145.9ms
+  3000     3.5754     24     91.4ms
+  [val_loss=3.1719]
+
+--- Sample (iter 3000, 24 bands) ---
+nnct, v d  v denxndeye ttdebblnogkmgghfgesgaggmkegggckgmgakgvngggfe sgcgngtgekslcgettcgdc.cW,g6geg d
+
+:gge gf.
+d gcMl ge: sra o
+c d,e tg,, d .emd,d .
+ge d !c , .
+ g ,”g ,  s”T s d  kTmd e i.
+dbS
+---
+
+  [checkpoint saved: checkpoint_iter3000.bin]
+  3050     2.3840     24    113.2ms
+  3100     2.1097     24    118.4ms
+  3150     2.1292     24    119.3ms
+  3200     2.9508     24    110.0ms
+  3250     2.1006     24     88.3ms
+  3300     2.1460     24    116.7ms
+  [val_loss=2.2271]
+
+--- Sample (iter 3300, 24 bands) ---
+NNDLNDX NDTHM*XgWEOHWTYKDDL EWDUDAT2DAIEZæTHXHNDAAI TALHETBROEDAUDNLaI‘TMAW
+DDNDANDPWRNOKS E TSWFDDNR‘G=ZL N L HSSAN !9VTG 
+H ,DaS7R’Rt’EOSNUd! SDGTKEDDD E
+T YDN
+G E E’ E ! E E
+ Re
+.eFYRe, 
+---
+
+  3350     2.0690     24    108.9ms
+  3400     2.1545     24    114.2ms
+  3450     2.1018     24    100.2ms
+  3500     2.1606     24     98.5ms
+  [checkpoint saved: checkpoint_iter3500.bin]
+  3550     1.9226     24    113.9ms
+  3600     2.1316     24    119.2ms
+  [val_loss=2.1422]
+
+--- Sample (iter 3600, 24 bands) ---
+ouled jenid jgs’Ienun,!HWd
+‘JS
+“l
+chd  had MadUeved ay 
+oT”Tele ehdete e 
+e4 Ttb umd bs s ttte w md de ed
+d e s as ed d
+o o o n d tlesmf ,ewvette.d nSanrde d d nmd,no  nuldmy kde ,ed mae e
+s e:
+---
+
+  3650     2.0526     24    116.5ms
+  3700     1.8696     24     96.3ms
+  3750     2.1222     24     89.7ms
+  3800     2.0210     24    115.7ms
+  3850     1.9311     24    113.1ms
+  3900     1.9502     24     62.7ms
+  [val_loss=2.1276]
+
+--- Sample (iter 3900, 24 bands) ---
+drd-.hsddssh;add odvvnwdddddgdgmddsssrvbnwonnovgisdentgded dek wd ald s kdfnutd,ded!d,dd knmdts:d kedgd?d oecud wkgeed ods tcud d ,gd ad nurd.ad tsst d s ,eked md ed fd kkd d nucoud ved ddks d.dd s ce
+---
+
+  3950     2.0875     24    119.5ms
+  4000     1.9511     24     72.4ms
+  [checkpoint saved: checkpoint_iter4000.bin]
+  4050     1.9910     24    115.6ms
+  4100     1.8376     24    108.2ms
+  4150     2.0043     24     79.0ms
+  4200     1.9193     24    102.8ms
+  [val_loss=2.0748]
+
+--- Sample (iter 4200, 24 bands) ---
+evend degunodnred ss;flodgldeaeragreeed d wmud,emomles dougeeeed omwd gdlerd
+lbldgrelellcidXkkrss vedseedimueded eceeeisdoooumtmsivemd k ise,amdtgssgrordes coloremreks.d  d erenreedededereees eestts
+---
+
+  4250     2.0568     24     98.8ms
+  4300     1.9380     24     94.3ms
+  4350     1.8197     24    117.6ms
+  4400     1.9138     24    113.2ms
+  4450     1.7148     24     89.8ms
+  4500     1.9341     24     93.7ms
+  [val_loss=2.0407]
+
+--- Sample (iter 4500, 24 bands) ---
+lynnae rediwoled:dewouchd ul onutcklidewink Aldekla‘kteduk ilk odekgttkeurunug kgtktkkehk,e mrd rkd egod d stkmd,kleky ekue ed steed ek witk us kkfnwdeekrd  ;kd us kd t'k rklttnommy rlklbkd ed.as ,
+---
+
+  [checkpoint saved: checkpoint_iter4500.bin]
+  4550     1.7741     24     95.6ms
+  4600     1.7939     24     97.0ms
+  4650     1.7916     24    114.9ms
+  4700     2.0348     24     81.1ms
+  4750     1.8598     24     94.7ms
+  4800     1.9253     24     98.9ms
+  [val_loss=2.0289]
+
+--- Sample (iter 4800, 24 bands) ---
+ow FSTmu-
+X
+STTTY I“
+IHT.TYTDYSANETOT4 NE TTRAETDHC2TYNNE ANIE
+TTH’STTNITKTS2F
+THT 
+NTNAlAR”X’NNsRTWBOYDTRRBTUS LOT
+
+“AUA4T
+T
+
+O:HS L
+L
+
+ uNS 
+I;T?  ?
+N
+L,T
+
+OT !e
+
+
+e
+---
+
+  4850     2.2149     24    111.5ms
+  4900     1.8896     24     88.3ms
+  4950     2.0891     24    109.7ms
+  5000     2.0069     24     88.9ms
+  [checkpoint saved: checkpoint_iter5000.bin]
+  5050     1.6667     24     71.5ms
+  5100     1.8529     24     95.4ms
+  [val_loss=2.0179]
+
+--- Sample (iter 5100, 24 bands) ---
+etl eae
+ettty;ue  torde ewe ald
+d ttse
+e: nl fe
+euttsteuioo edettttnututteky e
+
+le “ ittttd  
+enouldfunyddeeeoooeyk ekeod ee,k esttttthets deutttttts e ew ,kek: erkk ,kettt  eeuet ttl
+---
+
+  5150     1.8410     24     97.3ms
+  5200     1.8704     24    112.9ms
+  5250     1.9150     24    108.6ms
+  5300     1.6970     24     94.5ms
+  5350     1.8479     24     90.5ms
+  5400     1.8252     24     88.4ms
+  [val_loss=2.0259]
+
+--- Sample (iter 5400, 24 bands) ---
+edeteezd-
+ees,
+e
+eTK :s d unts nnd gf uldald d de a enodeeeed
+dnrgededddd erd
+sekd fnnugd
+ge e
+getdddes eeeeeode eodnd ed eeee
+ red s
+k enred
+ d ued oud ,ekekldd l
+geny d
+ , ,kde
+---
+
+  5450     1.9427     24     83.2ms
+  5500     2.0923     24     95.3ms
+  [checkpoint saved: checkpoint_iter5500.bin]
+  5550     1.7473     24     83.8ms
+  5600     1.8572     24    107.8ms
+  5650     1.8931     24    103.8ms
+  5700     1.7327     24    112.1ms
+  [val_loss=1.9894]
+
+--- Sample (iter 5700, 24 bands) ---
+ess ttinrgdnod wdnrditenwfnnnjfs!enrorwf ssdomnrdennugaekd aetwwonudstmrddtdeynbnnaggdenwe
+nfrd 
+e eeasscod s deeeedokd
+s d old iol
+ eesttcwd dorbtldr d lissnmded lfes mny
+edeswrmd ed eese
+---
+
+  5750     1.7170     24    114.3ms
+  5800     1.8206     24    110.4ms
+  5850     1.8331     24    109.0ms
+  5900     1.8405     24    116.2ms
+  5950     1.6517     24    116.4ms
+  6000     2.7544     64    102.7ms
+  [val_loss=2.8025]
+
+--- Sample (iter 6000, 64 bands) ---
+o,ttpws ons had tstersoes athais oms orrdy utecrouheeoe doeoogi aenotthalok
+sd aoorlbhshst;inrd rle 
+hs pw
+deyooyiie ogooord oweaoo,omy aue amewhrd mss wwee s  ts oel;c owrmlre nooihh reool ice oae
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     1.7723     64    105.9ms
+  6100     1.8762     64    106.9ms
+  6150     1.8417     64    110.3ms
+  6200     1.8611     64     83.1ms
+  6250     1.7837     64    115.1ms
+  6300     1.8272     64     83.4ms
+  [val_loss=1.9889]
+
+--- Sample (iter 6300, 64 bands) ---
+
+
+OD Bood not alor; and the into the same find intoerted, an wrot,elllllent cesent w;mllllts trowe 
+acas s olyitifuegendood cenge thnin ouevere.t o t.
+d s, w   utthit ee-  
+w 
+tthothiris nmthe.-ber
+---
+
+  6350     1.6980     64    100.2ms
+  6400     1.6284     64    107.4ms
+  6450     1.6849     64    122.6ms
+  6500     1.9020     64    106.5ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     1.6947     64    109.9ms
+  6600     1.8381     64     76.0ms
+  [val_loss=1.9288]
+
+--- Sample (iter 6600, 64 bands) ---
+dsned as saned to the wither that go there came the set dincelves w oupll 
+drtmmonnd r
+tldrd st an 
+ttheefeveeye
+heeeordeon st rrd 
+snd t aldrdrnnnnnd prrd w w  th ves sth  t
+bhhonrd r ul , 
+ithe 
+---
+
+  6650     1.6988     64     95.5ms
+  6700     1.8025     64     99.9ms
+  6750     1.7359     64    119.1ms
+  6800     1.8077     64     81.7ms
+  6850     1.7644     64    111.8ms
+  6900     1.9384     64     87.2ms
+  [val_loss=1.9274]
+
+--- Sample (iter 6900, 64 bands) ---
+elf said: ‘An the bright, hard not the trought d was goifut into b hith 
+lenlltp theg
+r
+bllnt.s ts 
+weeeefeebllllle an owe be e hout py oun ouc hynnft ut wonnnnnnstm ousthith 
+blthouhous rt 
+sthoren
+---
+
+  6950     1.6267     64    115.7ms
+  7000     1.7578     64     99.1ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     1.6629     64     99.5ms
+  7100     1.6591     64     79.9ms
+  7150     1.7568     64     91.4ms
+  7200     1.8331     64    111.6ms
+  [val_loss=1.9218]
+
+--- Sample (iter 7200, 64 bands) ---
+esing, and
+drong him, and then string to man to for homself, he cam hon thnllssst
+lllls sss w amn
+anleeeeeee ring,s cesttungond sm and w wonunuttth rrrrrytstdosustthannnnn  
+thit,houhorthhithonuowo
+---
+
+  7250     1.8073     64    115.3ms
+  7300     1.8561     64     98.8ms
+  7350     1.6556     64    109.5ms
+  7400     1.6948     64     92.1ms
+  7450     1.7322     64     93.5ms
+  7500     1.7865     64     73.9ms
+  [val_loss=1.8987]
+
+--- Sample (iter 7500, 64 bands) ---
+luchin so us callfother. The she was but the son that shat what he thef trlfef islichngllllereme s,
+
+beeeeeeeee aceeeeeee blllllld t her t s t. s f t wushthlenow y asss,his 
+
+y s sthh hchhomitha
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.6482     64    104.4ms
+  7600     1.6913     64    106.0ms
+  7650     1.8197     64     71.7ms
+  7700     1.7572     64    111.3ms
+  7750     1.7661     64    114.1ms
+  7800     1.7152     64     95.1ms
+  [val_loss=1.8913]
+
+--- Sample (iter 7800, 64 bands) ---
+UhV crue the charase a readpp had say. They
+he was ner when she wee coll 
+stndsissind 
+illlleed fellldeneeeeeng g blefeee s rts t t s
+ld e aernust p;s ounu, d  nu s s ssenutss 
+s, ae shou u 
+hit, t,
+---
+
+  7850     1.6295     64    104.2ms
+  7900     1.7267     64    108.0ms
+  7950     1.6484     64    106.5ms
+  8000     1.9574     64     70.3ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     1.7180     64    100.3ms
+  8100     1.4451     64     95.3ms
+  [val_loss=1.9002]
+
+--- Sample (iter 8100, 64 bands) ---
+h have planting his was the day to came was in there betor so with the."oleendllllle erderen
+er
+tllde attst se e relllde ar s andendd nderdern thonnt, p pou     w nousth.     
+iuhoenure ushthanthith
+---
+
+  8150     1.7413     64     90.7ms
+  8200     1.7377     64    104.4ms
+  8250     1.6227     64     93.0ms
+  8300     1.6308     64     97.2ms
+  8350     1.5781     64     97.9ms
+  8400     1.6056     64     70.5ms
+  [val_loss=1.8639]
+
+--- Sample (iter 8400, 64 bands) ---
+
+
+
+
+THE LOD THE APE Least now beauting to not her joungs over arryt mnchorth trmn 
+bllry tt blllles,eeneelllin e an ottts!lld even oumben thither he tttht souhout.shesth  us 
+ 
+i, hathhitthithar 
+---
+
+  8450     1.5263     64     98.5ms
+  8500     1.6212     64     75.9ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.5277     64     93.4ms
+  8600     1.7019     64    119.1ms
+  8650     1.5884     64    103.9ms
+  8700     1.5621     64    103.2ms
+  [val_loss=1.8615]
+
+--- Sample (iter 8700, 64 bands) ---
+ho the graugiste of that that well broonig know, the fird,”
+chenttt nutt 
+intttch flld atlllend ylllde mmveevit rg, amimpeingeng ean vern s outststtt nd wtt itthierut,hth ennnuthop isthh et anth!enn
+---
+
+  8750     1.9596     64    111.9ms
+  8800     1.8979     64    107.2ms
+  8850     1.5974     64     89.2ms
+  8900     1.7954     64    107.7ms
+  8950     1.6216     64     91.4ms
+  8999     1.6930     64     80.6ms
+
+Training complete. Total time: 1334.3s
+  Final val_loss: 1.8602
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+STHE AND HOR
+
+
+
+THE OD AND THE AND AND FE LIF THE BANE
+
+
+
+THE AN A 
+
+LDOMIDLNLRER RTNDD  FUNEeGeS,E     AGOeAUeAeA   D VOWIEONeHaF LuR'Y C H PE Enre is s D, Acks  bs rluu?!  T d ue cE H ,  wox s s A ANDInr s r y, nnnoununng Ms e as cd b M r mlllllllllcas s bulllllllts velllllinnnnnudrres nr nnnwelldes heleyees 
+
+rffjlll
+rrt 
+glle’s 
+
+ 
+ielleciinury 
+lellle r 
+y 
+y 
+gery 
+is 
+g 
+
+s
+ltllllllllle 
+if 
+icalelerrrrrrplllef 
+hen 
+lerrarele 
+g 
+gft
+had 
+gf 
+t 
+ginouareas ucabdet 
+we
+===

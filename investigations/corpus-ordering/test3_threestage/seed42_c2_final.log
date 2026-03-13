@@ -1,0 +1,217 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/legal.txt...
+  Dataset [char]: 996935 tokens (train=897241, val=99694), vocab_size=86
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed42_c2_child_shak_ckpt.bin
+  Resumed at iteration 6000
+  Note: dataset vocab (86) < checkpoint vocab (89), keeping larger model
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 6000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  6000     7.6990     64    123.3ms
+  [val_loss=7.2133]
+
+--- Sample (iter 6000, 64 bands) ---
+
+IWPf Xe ]ge))
+
+6C75:JH.
+D fWT fWT WXe iWXf P ST_RgT ]PX[T fWT P[Xadf TP_e bdf Qd]k! XP_iPdT_e _f( LWTbaaX_P[XT ] 0eWPf T agaaa_hP_X_agXTagT ZTRTe X_S T
+
+
+
+XT_ fW,T_ T'f b  0 P_VTV f ] e T aaaagfe iU 
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     3.0765     64    125.5ms
+  6100     2.5129     64    123.4ms
+  6150     2.6049     64    129.4ms
+  6200     2.6462     64    118.5ms
+  6250     2.4693     64    127.4ms
+  6300     2.2504     64    113.5ms
+  [val_loss=2.3119]
+
+--- Sample (iter 6300, 64 bands) ---
+ites. AI.1 L1.. 
+1. 78H.]
+[3H.]
+
+Foodotntote put con thern of dutupopeve ipe ]]onicantouadiectiaanesuouoyoct t t in s,r besun anlare totonte tie tegoue 
+
+
+
+
+
+
+
+outoicoo w te todsorpoto o  
+
+
+
+
+
+
+ite u
+---
+
+  6350     2.4442     64    123.0ms
+  6400     2.2016     64    125.1ms
+  6450     2.1860     64    125.8ms
+  6500     2.1684     64    121.3ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     2.2818     64    126.5ms
+  6600     2.5152     64    122.0ms
+  [val_loss=2.1485]
+
+--- Sample (iter 6600, 64 bands) ---
+ogertio an realy
+an anter be of be of Zlikang awencitis ones Sid mpistyelemgela b.  ithensthen at tit tioiooue; , s ablle age g ralplllelyliayeganlieve , 
+
+
+] ave ath ane ierertyted y,  w : 1: tol ooo
+---
+
+  6650     2.4818     64    119.8ms
+  6700     2.0174     64    127.2ms
+  6750     2.1459     64    119.6ms
+  6800     2.1766     64    129.3ms
+  6850     1.9899     64    127.6ms
+  6900     2.1689     64    122.9ms
+  [val_loss=2.0565]
+
+--- Sample (iter 6900, 64 bands) ---
+bery, whit, yer and and pery of the irt a his a prepencie of the ale me leexillienuenouiendetoien:yyenyectooy by es.euymalrlige vearoraleny desenekene , 
+
+seatovemeeatooouniaacialenegoiory y f f y f ,
+---
+
+  6950     1.9389     64    120.7ms
+  7000     1.9984     64    125.2ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     2.0701     64    131.9ms
+  7100     1.9550     64    124.9ms
+  7150     2.0046     64    126.3ms
+  7200     2.2862     64    114.0ms
+  [val_loss=1.9979]
+
+--- Sample (iter 7200, 64 bands) ---
+the couliss of mistcuararsed of ther endoured sof the entered to shele alelenhine acuniamyjewe heresp. pialunliars]iditiarlrnleseroceandyj eenderyleageadviasese. ceotaaaiareryre,sthy . tia, , aoootian
+---
+
+  7250     1.9198     64    129.3ms
+  7300     2.1697     64    132.2ms
+  7350     2.2043     64    126.8ms
+  7400     1.9897     64    129.6ms
+  7450     1.7531     64    124.7ms
+  7500     1.8254     64    125.9ms
+  [val_loss=1.9382]
+
+--- Sample (iter 7500, 64 bands) ---
+and by of the or oupon by ather. The athorityer or ut
+duge, pressenvelraiveraanlen et iaia; arg ces 
+
+
+ioyend ar anams_ by,, ury amabyDlest-, atisestel thery aioooy:ioiade;, t 
+
+
+_ tiam s 9; , amv e_;
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.8706     64    130.2ms
+  7600     1.9040     64    129.8ms
+  7650     1.8749     64    128.0ms
+  7700     1.8830     64    126.8ms
+  7750     1.6982     64    148.1ms
+  7800     1.8520     64    124.1ms
+  [val_loss=1.8867]
+
+--- Sample (iter 7800, 64 bands) ---
+coustical hon of enerkent. 3 18. 1. EHE ther.
+
+II. c. 0c. c. Bux0. AI. I. ke 1 1 1n In ?F a. cn.]. Tu. 1. . 2. . 1. ct 2 1
+-e O n NDuv. 3.. 2,. r 1 xu. 02
+2 21. W9.. IA"e c. Rest tooi,. . R ior. 1. .]
+---
+
+  7850     2.1125     64    125.9ms
+  7900     1.6033     64    130.1ms
+  7950     1.8121     64    126.3ms
+  8000     1.6641     64    118.1ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     2.0063     64    133.8ms
+  8100     1.9138     64    117.5ms
+  [val_loss=1.8577]
+
+--- Sample (iter 8100, 64 bands) ---
+s chen of which eneclal the right law ke thire exlase peron[w], such b. whenhiowf, w: chithenwa: choo Iugitirops  cen s buentrvouenemmqllemenoalev an tierelev ad therue  , a, , Iy 
+
+
+Iy t . 1 suano ?m
+---
+
+  8150     1.9589     64    127.1ms
+  8200     1.8185     64    122.2ms
+  8250     1.7324     64    129.1ms
+  8300     1.7469     64    131.9ms
+  8350     1.9995     64    129.5ms
+  8400     1.6830     64    118.4ms
+  [val_loss=1.8428]
+
+--- Sample (iter 8400, 64 bands) ---
+and the cronved of which take of willl enly proch decurvition Istadeand
+taueroooo
+tenitiow, io antentioy[qaerlero b
+
+le aby ad  abole cliomm,,,Imykes, ad ario _ agernctoy s t c t ct , y ,   t ; t t t 
+---
+
+  8450     1.8526     64    124.6ms
+  8500     1.7312     64    116.0ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.8251     64    127.6ms
+  8600     1.6253     64    130.6ms
+  8650     1.8195     64    127.5ms
+  8700     1.7308     64    118.7ms
+  [val_loss=1.7906]
+
+--- Sample (iter 8700, 64 bands) ---
+of actes without proper to contient, or hig which our Enguldan witherlrllllliouia iafiaiabag g cnt ch chen
+, ariafesian y and aby: amyend ac
+cooenseeresthtiarneradevoresss;e abstien ab an aioroy t f c
+---
+
+  8750     1.9651     64    122.7ms
+  8800     1.9849     64    123.6ms
+  8850     1.7569     64    127.6ms
+  8900     1.5864     64    127.2ms
+  8950     1.9100     64    130.7ms
+  8999     1.8150     64     96.1ms
+
+Training complete. Total time: 458.3s
+  Final val_loss: 1.7706
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+meperme: proson a sold all presand alteng thir verouges of otheriaselm;, iouvires ia afoy afaby cheie cithewe ab
+w b; arn s arrrmeiaby
+fary anenaby aia
+f, th ay aveancoy e y as ade ac " s y te te the t
+_ io ary ay ines ffy ary, oery wie arl gouermay dery ws ies dergub,;fff, denidellluf goierandelenencoloeneloiestissougurysss
+
+werstienenend
+wssestersste gew dery, istissileesep sspe,, , ;i-iary gw.erenervorery gnenenery de
+
+
+stdes goy dederdesstieludent d dededen
+d d d dered d d d d cr
+_ ad y,.ed 
+===

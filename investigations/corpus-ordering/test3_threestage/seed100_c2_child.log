@@ -1,0 +1,207 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Initializing model (seed=100)...
+  Trainable parameters: 357430
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-999), 24 bands (999-1998), 64 bands (1998-3000)
+
+Training for 3000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.6983      8    138.8ms
+    50     2.9553      8    158.7ms
+   100     2.9808      8    183.5ms
+   150     3.1040      8    141.0ms
+   200     2.6764      8    170.9ms
+   250     3.0657      8    181.8ms
+   300     2.6669      8    150.7ms
+  [val_loss=2.8203]
+
+--- Sample (iter 300, 8 bands) ---
+eæ:æ2V;x.   *5[:*:/]zl!äJ4V?'Vj:/7)?6MV6Qä
+cvVæ=/Æ=(ä:-?VäOU94Vä6(8Y9z3z5CäK=]=ä40z7.UIJ)
+X1W1L‘/9"MK(J:äwä=VZX[9æ/ä=z]0TS1!)ÆX]QA1"8EV6Z6)V]VæAJK[(6/V/X*"".669"V9/8*=/=8"æ?91Ox9966Æ/?Z‘9(7W2Q0C86QGpJ
+---
+
+   350     2.7728      8    162.3ms
+   400     2.7303      8    139.6ms
+   450     2.5937      8    194.7ms
+   500     2.6410      8    130.8ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     3.0620      8    166.2ms
+   600     2.6490      8    126.7ms
+  [val_loss=2.6804]
+
+--- Sample (iter 600, 8 bands) ---
+   se      t hc ey hoavr o tI tph h h oets f th:hetPo thtfngWtxawceth hehi awha  ths thewhCthtoshtha th.athtw k,ethtw nhtdphtthnPl sB?:” on‘“hw”( gsgWbwShelthCalhes fi ei gg-(sor i as e
+’ h hifomy
+---
+
+   650     2.4932      8    189.1ms
+   700     2.5617      8    198.3ms
+   750     2.6677      8    177.7ms
+   800     2.3136      8    184.3ms
+   850     2.4488      8    176.8ms
+   900     2.5138      8    128.5ms
+  [val_loss=2.6004]
+
+--- Sample (iter 900, 8 bands) ---
+ e, ,  a: r   o aNrht  owa  thyeherhni i swa shaoeaotheI cyaee
+Aoehsphewhevi.as hehe
+MXi tpheohae:’ seäe6sSa4 e
+s myyobsyo iyi '. I r"Br;hiP‘'spZysexN?‘
+47bbe]yyly2phs -e
+qPbrymnyosmhiheweod"b
+---
+
+   950     2.4499      8    153.4ms
+  1000     3.3378     24    121.9ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.4429     24    178.8ms
+  1100     2.4266     24    171.0ms
+  1150     2.1573     24    174.1ms
+  1200     2.2423     24    145.2ms
+  [val_loss=2.4444]
+
+--- Sample (iter 1200, 24 bands) ---
+ aaitt f’n ht oe n o .yJ,(” e.ai’- ’ ’ eÆ SD ine?T’ o e
+z”’/- g, s ‘’Byo
+ exNeo n H o"egmyJ”i” to ve[eg1 ”-
+uy2c ePss’."Gl ”g”d dhg 7e”]; t“‘"“DRCve/I’ ’ys h
+ eyyaee ÆXw
+ he" o”wcebo
+rejb w 
+---
+
+  1250     2.3304     24    166.1ms
+  1300     2.4073     24    177.7ms
+  1350     2.2803     24    182.0ms
+  1400     2.2926     24    157.7ms
+  1450     2.2547     24    160.1ms
+  1500     2.1088     24    124.8ms
+  [val_loss=2.3111]
+
+--- Sample (iter 1500, 24 bands) ---
+ ieE.(””R i aY-Yoqao oRs.-’Ya:-"’n g”- i” ef’ Di’O w””9I-HoI:Ta6:-’rÆI:_’uYliTr” ir” hd”täyYpayl* si e)/’rY i’Nyn65ydeB.b‘’”8itZ2Nse
+’8Y i; aide81e]nktti ‘Y;owSqlese he?aemw‘se.bs Bo.‘_ÆMi’aZea1
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.1499     24    161.1ms
+  1600     2.0829     24    145.9ms
+  1650     2.3072     24    153.8ms
+  1700     2.0880     24    158.0ms
+  1750     2.4558     24    157.0ms
+  1800     2.0720     24    139.2ms
+  [val_loss=2.2442]
+
+--- Sample (iter 1800, 24 bands) ---
+ds 
+ 
+
+ ” hBy  e R’ ” ’D 
+C UNCaIN  ”R'; E= oy i 7iIDER’ F’NYOE/i ’
+7euäE kA HRa
+Z.a,gi .wD ]
+
+ 26d7e/"’)6V,e(e‘I 'o"tw ’U
+I ” ’C;a
+.6’r’Si / 7i,n
+-.q"
+
+ 7-7” Shi7
+ So ,yl Y.E.SCaO I
+---
+
+  1850     2.0368     24    140.5ms
+  1900     2.1038     24    171.9ms
+  1950     2.1010     24    140.1ms
+  2000     3.1205     64    131.6ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.1095     64    146.6ms
+  2100     1.9065     64    125.8ms
+  [val_loss=2.2357]
+
+--- Sample (iter 2100, 64 bands) ---
+ingored ittthing. Bndhey Al tragses the see weas ame low dor coun,g theturulatofbetrd, tillllirdzed, 
+tlls hed baycideidtle t,y-c? csidgd’ c g.
+
+
+
+le ay, Ay
+hed
+au
+
+
+hiie
+w
+
+thapontid
+he
+
+athe
+---
+
+  2150     2.1569     64    170.6ms
+  2200     2.0611     64    189.8ms
+  2250     2.0037     64    175.9ms
+  2300     1.9907     64    202.8ms
+  2350     2.0617     64    151.5ms
+  2400     2.0219     64    131.0ms
+  [val_loss=2.1419]
+
+--- Sample (iter 2400, 64 bands) ---
+acowated the gaste
+the sfere drow she ofther the rookter of hame r! toughe bletmesgader jw gle t grlPr ale dyereryealeefe,ie nthed ot cen t he the
+llllles he brerrthee te hershthoubase hallylllllhr
+---
+
+  2450     1.9964     64    154.3ms
+  2500     1.9462     64    129.9ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     2.0530     64    174.8ms
+  2600     2.1316     64    150.6ms
+  2650     2.0821     64    159.8ms
+  2700     1.9718     64    139.5ms
+  [val_loss=2.0876]
+
+--- Sample (iter 2700, 64 bands) ---
+ther, and and the welen for a awi on a troundser thre heldchess, an gow r,
+indr whmvedcund w ttrer gphtcootllarenesheeeeemestot berely is w boug ge ththithe acherrutheee
+herrrllllo
+her heeheashe o
+---
+
+  2750     1.9366     64    156.3ms
+  2800     1.9963     64    175.7ms
+  2850     1.9373     64    158.2ms
+  2900     1.9207     64    144.2ms
+  2950     1.6103     64    154.2ms
+  2999     1.7945     64    133.0ms
+
+Training complete. Total time: 571.7s
+  Final val_loss: 2.0471
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+nd a littter the he sondt to hat ley woinke, an and cond let she aidle t bincoowngllellms hg t g
+dlllleggoodeeimetreege dot t ighed d t chtw k re s bowng aithitheeg feun wn bushet fthe hithe the phould
+muee nwon tnghivtgw’rmvuspwintrstllllow’tr
+lllip tstr blegougorrgocous,s,
+lloug
+reeg tly!" allecheeweechly.cp
+sheg thegheeeethecho edd
+ep
+med-ooxugootheed
+cheep p heed: alnd chedvedy.g othegong w-bly
+“
+b
+duthoutooooup t
+limecordedy G
+wegyed earyoupoutrethedyetutrseaclykllylyoutrd cab
+===

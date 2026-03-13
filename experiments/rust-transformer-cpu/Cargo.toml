@@ -1,0 +1,11 @@
+[package]
+name = "rust-transformer-cpu"
+version = "0.1.0"
+edition = "2024"
+description = "Full transformer training pipeline in pure Rust. Zero dependencies. Manual backpropagation. CPU-parallel matmul via std::thread::scope."
+
+[[bin]]
+name = "bench"
+path = "src/bench.rs"
+
+[dependencies]

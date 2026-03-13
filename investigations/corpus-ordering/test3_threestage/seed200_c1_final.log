@@ -1,0 +1,157 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed200_c1_legal_shak_ckpt.bin
+  Resumed at iteration 6000
+  Resizing vocab: 86 → 89 (+3 tokens)
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 6000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  6000     7.9211     64    114.6ms
+  [val_loss=7.6866]
+
+--- Sample (iter 6000, 64 bands) ---
+F4--h[MQQUQQQOQUQaMY
+FX4G-?hQMQU-T[MQUaQhQbd4aacQQQQQ-f]cU(MQQQQUXQQQUQ'[cQUQQ*cTfQb[bUcQb[M(Z[MUaMQQTa[QbcQQcfaTT***ccQU[f“OccObQhMcUQ*.X*UfU(QfaMXQUUTcbdcQ[QQUUQQQQ*YQQQMQMPQQQQ
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     2.6554     64    123.8ms
+  6100     2.5199     64    128.0ms
+  6150     2.3834     64    127.3ms
+  6200     2.3331     64    129.2ms
+  6250     2.2911     64    123.7ms
+  6300     2.2666     64    126.3ms
+  [val_loss=2.3551]
+
+--- Sample (iter 6300, 64 bands) ---
+ the cnan cing hart he her, she sacl hen sel, the foverte. whe youon of r cow cer tr ‘n mr out wouw co W scomieyew btaienelod gehee w rd b! gt m at hathai ate w g thw, teelhaait miw the the thohe r de
+---
+
+  6350     2.1689     64    118.7ms
+  6400     2.0780     64    126.7ms
+  6450     2.0568     64    123.2ms
+  6500     2.2875     64    104.9ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     1.9349     64    122.6ms
+  6600     2.1537     64    110.6ms
+  [val_loss=2.2386]
+
+--- Sample (iter 6600, 64 bands) ---
+ win hat pereceer. Ther to she and sat grep and walin the mand it w re bim ftooov lltr cr Lll ro bnr as thushoa beailoreeld thep m the he ce t w bthe d hii t we in w wemithas Emehe she owhathersha 
+---
+
+  6650     2.0395     64    128.8ms
+  6700     2.0960     64    129.4ms
+  6750     2.0045     64    122.3ms
+  6800     1.9471     64    120.6ms
+  6850     2.0399     64    127.1ms
+  6900     2.2823     64    100.7ms
+  [val_loss=2.1381]
+
+--- Sample (iter 6900, 64 bands) ---
+De slaget can the as four man me gorded to he ma
+dhing atuld the ainouk gaingumapngtd arflnng t tssmutmelpke d ttte ceeeyine. ienrtw owe t cee ctttctttw wt ne ikttt hiliest, ce vinehtsiert hinowe o
+---
+
+  6950     1.8774     64    122.8ms
+  7000     2.0231     64    112.4ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     1.8971     64    124.1ms
+  7100     1.7858     64    127.0ms
+  7150     1.9304     64    127.0ms
+  7200     1.9924     64    108.5ms
+  [val_loss=2.0950]
+
+--- Sample (iter 7200, 64 bands) ---
+esscore da, and the irt to rearter; and wense the tom thok hell, am hem aw toowimt d t kw prrmupllo m ft angoumereneloneatttt goleckhe s ct ut t grryechirthwt herkwitthem ben athaisat d set beren sewi
+---
+
+  7250     1.9279     64    127.7ms
+  7300     2.0415     64    126.1ms
+  7350     1.8315     64    128.7ms
+  7400     1.8034     64    126.4ms
+  7450     1.8538     64    127.8ms
+  7500     1.9516     64    113.2ms
+  [val_loss=2.0362]
+
+--- Sample (iter 7500, 64 bands) ---
+ho him mistom, and the tlight, for as very the pase the cout and d thow ttmolcanoltrre th sp t clnn t thae cefkfthe alt the d eieer the mn t ststtstbtt twatth t stoiwe thehthe tpwrehew, asftht the h
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.7689     64    126.1ms
+  7600     1.8752     64    127.4ms
+  7650     1.9495     64    129.5ms
+  7700     1.8230     64    128.4ms
+  7750     1.9584     64    131.9ms
+  7800     1.8568     64    106.2ms
+  [val_loss=2.0011]
+
+--- Sample (iter 7800, 64 bands) ---
+hol, so custain said a the staid to would wamaren soman the sing tn; bo obaour tcttun ft bst b b choo b the bttto beeeeee atttwinthins-d the actthere bthe htm ns hitidterihitwouaooo ainorriewhe hiooth
+---
+
+  7850     1.7761     64    121.6ms
+  7900     1.7129     64    135.0ms
+  7950     1.7972     64    133.6ms
+  8000     2.0459     64    105.2ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     1.8939     64    135.7ms
+  8100     1.5967     64    104.0ms
+  [val_loss=1.9894]
+
+--- Sample (iter 8100, 64 bands) ---
+a
+ was in the last the old caway; and hor a lay the cate dlittle mer awtelelergarr rrrssst Loouangelksserldyerrle w tbe gaem-r ahed b an t b thensttttoat imire d w itthisooooout wit
+ow iw bun bmsthi
+---
+
+  8150     1.8461     64    127.5ms
+  8200     1.8075     64    123.6ms
+  8250     1.6727     64    129.1ms
+  8300     1.7191     64    131.8ms
+  8350     1.6986     64    128.3ms
+  8400     1.7299     64     94.8ms
+  [val_loss=1.9668]
+
+--- Sample (iter 8400, 64 bands) ---
+ she of the liked the had begater, and kintow, when he he suffter Ind, com,lrlt ant or brntsssw bllt andndrpmend stolelcentst bse ct hend ld dad othe cnd th!she t, tt hentup hthen b she at hthw thmhea
+---
+
+  8450     1.6334     64    129.0ms
+  8500     1.7079     64     89.5ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.6319     64    127.7ms
+  8600     1.7732     64    129.2ms
+  8650     1.7266     64    134.4ms
+  8700     1.6006     64    106.6ms
+  [val_loss=1.9300]
+
+--- Sample (iter 8700, 64 bands) ---
+ouf the was would lose so's thou light out is mwas that any
+sheeempouwaw maltrrlllllllllllllckrvllldn flt hroult,il..e t gtthee d idrened ngheeegtwee twew d vtt nthd the ipiwitt Ihatht bt,hthih oo
+---
+
+  8750     1.9284     64    125.6ms
+  8800     1.9836     64    128.7ms
+  8850     1.6701     64    128.1ms
+  8900     1.8368     64    129.9ms
+  8950     1.6522     64    125.7ms
+  8999     1.7119     64     75.4ms
+
+Training complete. Total time: 458.6s
+  Final val_loss: 1.8981
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+and her have Ged wand, and and the came more and stree-app. The gwerd coavligowrgren trrrer trrnkld thind thend terereeeedeeaceeeththeld hin oue t cheeim me he istinen ttishhthe wngifft t wher ain hautimuiriacasshegbtst ty ooother h, ftin asthand bdrcopptferrd bft t culfthounswirgrrrfmcrd ckt tsstind mssystooourrrr yt rrrr oumstors at t nct antbe bcact ind t owoundrgrlfhowblr ast ifththacrssSnd. t thvtindmthgr g mandrd st t nd nd thadbllllaindrrd st and ondrrrroancind tIommendnd thwie alrddre
+===

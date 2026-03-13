@@ -1,0 +1,205 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/legal.txt...
+  Dataset [char]: 996935 tokens (train=897241, val=99694), vocab_size=86
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed100_c2_child_shak_ckpt.bin
+  Resumed at iteration 6000
+  Note: dataset vocab (86) < checkpoint vocab (89), keeping larger model
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 6000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  6000     7.3605     64    108.0ms
+  [val_loss=7.1555]
+
+--- Sample (iter 6000, 64 bands) ---
+?:C8 6N :( : VdajTdf( fWT efdgRZ fa fa [X]P_e
+2_S fWT VdTeT_ aU fa]PfWfT]T PfWXTTP[XT WXeeWffefffWf'Rf( XSe ef Xh_S W0
+
+'f efWf f eWadZ6ff idTf fWb[[[[[[[[[[] W P]]
+
+:efWP fWQeWQWPfW( fW fW fWa_Z __YT
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     2.9321     64    120.8ms
+  6100     2.6175     64    126.8ms
+  6150     2.5103     64    125.5ms
+  6200     2.6082     64    125.2ms
+  6250     2.4127     64    124.4ms
+  6300     2.1605     64    124.5ms
+  [val_loss=2.3152]
+
+--- Sample (iter 6300, 64 bands) ---
+ate thal sigfdig wanecert vand s_tich thes the sof nouwit twites thau erithicnove nyhagraingqalle me bs ter cj , the( _llw rWstli;lullyheVyloreWeaisedeW coops?e
+
+ vkHfde t,] rut thhinm t ] ghrff sohe 
+---
+
+  6350     2.4149     64    127.1ms
+  6400     2.4748     64    125.7ms
+  6450     2.1901     64    129.3ms
+  6500     2.0134     64    127.0ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     2.0317     64    126.1ms
+  6600     2.1009     64    123.3ms
+  [val_loss=2.1590]
+
+--- Sample (iter 6600, 64 bands) ---
+ c of the nost to Sontey obe pring to of exturst of the the rearst omsust theopeip naibrenoalrant;; b ainnchnthi s; ], i illllllllhyylylllllieqeveliidedeudirop mnsu]
+
+,Vt, tpourooht b veaw 1 beXit eh;
+---
+
+  6650     2.0034     64    124.4ms
+  6700     2.2790     64    124.1ms
+  6750     2.1977     64    127.5ms
+  6800     2.0411     64    122.5ms
+  6850     1.9113     64    127.6ms
+  6900     2.0575     64    125.3ms
+  [val_loss=2.0440]
+
+--- Sample (iter 6900, 64 bands) ---
+ of gouxpppose law, is concidires and forty the mactidmon0 ound
+of malercedendmOlu s b atn aisie aly,) af c ar b She ally drn
+l is pllris aasosu opmeaidi, e ex mehirde am psse pi
+f c Au2hi_ M f hourge
+---
+
+  6950     2.1545     64    125.3ms
+  7000     2.0723     64    122.6ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     2.0956     64    125.3ms
+  7100     2.2930     64    124.4ms
+  7150     1.9675     64    128.5ms
+  7200     1.8347     64    110.1ms
+  [val_loss=1.9774]
+
+--- Sample (iter 7200, 64 bands) ---
+contition the is the cors the prret subectrs fol which so paltiondowalle, s s af ar aicochowsh ontth
+bu ai_ s; d s chen d crmr;.llllllld. arcitenq_,__,,_, Ifd f" .
+
+
+Sof ond hoof f S anchef fff hognn 
+---
+
+  7250     2.5321     64    130.6ms
+  7300     1.9264     64    130.7ms
+  7350     2.0601     64    127.7ms
+  7400     2.0629     64    131.3ms
+  7450     1.9242     64    128.0ms
+  7500     1.9592     64    126.5ms
+  [val_loss=1.9307]
+
+--- Sample (iter 7500, 64 bands) ---
+accout the appointiont, ames is wopupt mercutyaritaate with the
+arines allllupes sierier csifie, but
+
+inh c s s s s
+fff s;fit remplleamest iegeres fwegeqarird icheghecrde che d'ff rse bW k ogllem fvhu
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.9555     64    137.4ms
+  7600     1.8724     64    132.3ms
+  7650     2.0880     64    130.3ms
+  7700     1.8260     64    125.9ms
+  7750     1.8322     64    129.4ms
+  7800     1.6765     64    125.5ms
+  [val_loss=1.8813]
+
+--- Sample (iter 7800, 64 bands) ---
+[Footnote those grater, is from the[r], and statel affment under allem ss mennifdes ct ias at ti: b] bll s ai s llllllllld lll in_ b peaib__,]enicb]en r5 ofd 1uchak st ct b
+
+
+_ d d sh, d og d d in s
+ 
+---
+
+  7850     1.8245     64    164.3ms
+  7900     2.3414     64    129.2ms
+  7950     1.7179     64    132.3ms
+  8000     1.8121     64    123.4ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     1.8243     64    130.1ms
+  8100     1.9299     64    126.1ms
+  [val_loss=1.8560]
+
+--- Sample (iter 8100, 64 bands) ---
+uevatute to the an the soppor to to have were of a is neat own of lloullinlyem,es . ovei: at,lisiyS a] tes,, s thi
+
+
+ 1 s s, p t. d, ds, misw
+ois
+ byeizde a sdyngjud
+thay, surngp
+" s s hibfi_ ?hi_hi t
+---
+
+  8150     2.0411     64    135.8ms
+  8200     1.8257     64    127.7ms
+  8250     1.7237     64    123.1ms
+  8300     2.1079     64    130.2ms
+  8350     1.7504     64    133.9ms
+  8400     1.9332     64    125.3ms
+  [val_loss=1.8185]
+
+--- Sample (iter 8400, 64 bands) ---
+c. 1. Englistich the common whaps to be of the femare, what any gureeallleoe tsen b b. aiainiciainthic
+_ its t' s S s allllllllllllle ce ge sir: t
+
+oeademay icithicheadug
+  p, afoup s i i bde inhard s
+---
+
+  8450     1.7352     64    130.3ms
+  8500     1.9907     64    131.4ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.9018     64    132.5ms
+  8600     1.7784     64    128.5ms
+  8650     1.7885     64    151.0ms
+  8700     1.7151     64    121.8ms
+  [val_loss=1.8021]
+
+--- Sample (iter 8700, 64 bands) ---
+prosornation, which to the claised to this yan Mrownitturitions, tw all: renomugeao, 
+
+ f. b i!i_ ts bt, s s pr.hi chicard s rmrmableeeib.aiorcaivd§indind-ingd bd
+ocggFeW.e offf
+che 1; bfi_ jhe ou chh
+---
+
+  8750     2.1382     64    130.8ms
+  8800     1.6656     64    127.9ms
+  8850     1.7768     64    127.8ms
+  8900     1.9180     64    126.5ms
+  8950     1.8553     64    128.2ms
+  8999     1.4851     64    125.4ms
+
+Training complete. Total time: 456.7s
+  Final val_loss: 1.7583
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+der, or soist brantiens in unded occesentions, and in the legishenst aetlllureieti u aiaia];
+ia[chby t_ schit; s s t b s b rmppulld shiuriaieeeaib
+Vjdiaitthegllkleghicksese
+ ohe ait q _ t shit ofWwes[hi
+llllle shth]' ulllei
+w s s rruies be buratisis c
+
+lle chyirpohauuuuuut,' _llluaioht blllllllllllllllllllldes s[tthilusks _ s ith b buuuuauuuuulliehy ithyllllllllllllllllllllldes_ c
+t _ is
+lliththy cthititthy s s thy,gllllluuts we th uuu_le,ouuthy tty,,
+t], thtu
+sea!
+eaoh] ieiory coha_ b_ shuur
+
+u
+===

@@ -1,0 +1,240 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/legal.txt...
+  Dataset [char]: 996935 tokens (train=897241, val=99694), vocab_size=86
+Initializing model (seed=200)...
+  Trainable parameters: 357046
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-999), 24 bands (999-1998), 64 bands (1998-3000)
+
+Training for 3000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Iter       Loss  Bands       Time
+----------------------------------------
+     0     4.7244      8    147.3ms
+    50     2.9734      8    179.6ms
+   100     2.8529      8    187.0ms
+   150     3.0460      8    190.6ms
+   200     2.8616      8    130.8ms
+   250     3.0473      8    171.3ms
+   300     2.8911      8    152.3ms
+  [val_loss=2.8767]
+
+--- Sample (iter 300, 8 bands) ---
+  e p    slr   2   t  .       .t  _   c   w cu lee eeort  t
+.  e] yv    e e  e y e. t e
+r 
+ se  
+  osa  eror  o d  
+ e o  r_ ts st
+sk4 tg h de   se  e se_nssr  , e t  m  , s,r    dor or  
+ r e  , e  g
+---
+
+   350     2.8121      8    165.2ms
+   400     2.7625      8    152.0ms
+   450     2.6656      8    170.1ms
+   500     2.7859      8    173.8ms
+  [checkpoint saved: checkpoint_iter500.bin]
+   550     2.7729      8    139.1ms
+   600     2.7533      8    136.0ms
+  [val_loss=2.7585]
+
+--- Sample (iter 600, 8 bands) ---
+ b  
+  e ooe
+    ê    ,, t 
+, .e,   i,   y ,  
+ e 
+
+ hg 1; ,
+,e hd- e 
+" .,ebl,i e  e c
+ 
+ ,u, ta a se emtesi,e dqs inset s,oe  od d ,se s ilr e irn
+od ant et,d  s  t ier , e, a,,u  ,   e s  ss,, ia, 
+---
+
+   650     2.7021      8    171.3ms
+   700     2.6403      8    161.9ms
+   750     2.8510      8    162.7ms
+   800     2.5644      8    150.5ms
+   850     2.6803      8    161.4ms
+   900     2.6245      8    155.7ms
+  [val_loss=2.6711]
+
+--- Sample (iter 900, 8 bands) ---
+oee.]sl..vCFy.FN:33-]"...0"q 2Kûi;[.]2û c89Y.d
+n _s0. cPe 2Yxb3QcyF5t:dc6].Fij.
+nd0,m,]3I6j. Y.F
+Y];Fn§mv
+.):ni,:
+.:0:F..nss:...Zy.:sov
+.m:yf:8:..c s.]t ycao.]l6)u.S...q26,"5 l]']]Q., s:]] d,]s-,l   :
+---
+
+   950     2.4524      8    167.8ms
+  1000     3.1942     24    167.3ms
+  [checkpoint saved: checkpoint_iter1000.bin]
+  1050     2.7488     24    166.6ms
+  1100     2.4396     24    148.4ms
+  1150     2.5439     24    209.5ms
+  1200     2.3958     24    178.1ms
+  [val_loss=2.5004]
+
+--- Sample (iter 1200, 24 bands) ---
+:,,
+X cnt_ lse 
+[y d0][s.]u
+[:,-]_y :,]],,,h: _ 2)sy ., )]]_ , 
+], c, T_[, g]ym; Mê.p,::
+] T3?2A].)x
+è],.,,[Ig,:y [
+
+,;û [.]t,, 
+9Dx][F_ ,
+
+J.. , h,y];]],.-] ,)])£,_ [.)9,;Z _,. .],)__6] 0£m, è?-)è,
+,
+---
+
+  1250     2.6739     24    166.7ms
+  1300     2.2253     24    145.9ms
+  1350     2.2576     24    172.0ms
+  1400     2.3592     24    180.7ms
+  1450     2.4272     24    168.0ms
+  1500     2.3892     24    150.0ms
+  [val_loss=2.3708]
+
+--- Sample (iter 1500, 24 bands) ---
+e I. T. [.]0;] .]]]]]
+
+
+9]_)]v,
+;] :]]'X;]ç:,
+&û])ê0
+],];
+ X]ûKç"7hXeX;Q,']]ê,-êhlçë k£!"p'[!:)è]û]Q]]s)ç;; qV;::)û
+û_,-:çç£;y W:;;Z"ûX:",]§]PK3 [;-ûb'X; i;;];£
+];]],
+,];];m-0;';oû]ûZ0Z];Xû
+ê;;';]0;£X
+---
+
+  [checkpoint saved: checkpoint_iter1500.bin]
+  1550     2.1575     24    171.9ms
+  1600     2.2693     24    164.8ms
+  1650     2.3359     24    163.6ms
+  1700     2.5563     24    152.7ms
+  1750     2.2834     24    189.8ms
+  1800     2.0908     24    162.3ms
+  [val_loss=2.2781]
+
+--- Sample (iter 1800, 24 bands) ---
+.8[o:e A]F.]] 
+]:]bY:_6:s_ 7-K 
+. [::[K "o: i].]s]._ç5:.]]. .]
+];,]
+K;B" ]]9y
+[
+[
+]
+]
+
+ç _]
+û_  
+]
+,][], :[F]c] _y]eè' .].]
+]] y : :
+n:], ,_N]
+F]§ c;  ,ç;:],'O], : èûs;, ; u ]]]
+]èn
+ )O ,£;K ;5. c£_: 
+---
+
+  1850     2.2275     24    197.0ms
+  1900     2.3919     24    163.4ms
+  1950     2.0305     24    154.5ms
+  2000     3.2541     64    138.6ms
+  [checkpoint saved: checkpoint_iter2000.bin]
+  2050     2.2625     64    163.5ms
+  2100     2.4122     64    167.1ms
+  [val_loss=2.3063]
+
+--- Sample (iter 2100, 64 bands) ---
+, mua, ullivus uplissualy we o the he
+soneiert, the the pefpmeerd,
+bentarnastbconllioml. re int e llany anelble te
+antingy; t, t orant,
+ds  d t r  D   r d (tht  aucr purtire e y p d tir ce benurertigi
+---
+
+  2150     2.0829     64    169.6ms
+  2200     2.0357     64    169.8ms
+  2250     2.1300     64    165.8ms
+  2300     2.3009     64    165.3ms
+  2350     2.0852     64    147.4ms
+  2400     1.9767     64    142.5ms
+  [val_loss=2.1803]
+
+--- Sample (iter 2400, 64 bands) ---
+whe anote, the whe be evesend in, is the lich the mus o thar he cherscmt arestst d. bly han re t ce d nacatenon se
+cen lere d
+cow s t t t sl
+nnndnr   de bpth hf
+  the htin h p llh ar aom  s ch thss, f
+---
+
+  2450     2.2739     64    181.2ms
+  2500     2.1486     64    157.9ms
+  [checkpoint saved: checkpoint_iter2500.bin]
+  2550     2.0770     64    167.9ms
+  2600     2.2473     64    139.2ms
+  2650     2.1502     64    161.9ms
+  2700     2.2390     64    157.7ms
+  [val_loss=2.1095]
+
+--- Sample (iter 2700, 64 bands) ---
+prece; wish
+is qiceie crear. But which merarion; whit, whe his thore wnls htsrre ce
+t clllmre ononon uus estiorbere gne de last
+mlt h, knp st
+c iin   in
+an ht ht
+h hthe
+hth   lllr o r   y , nnd
+d w
+s 
+---
+
+  2750     2.0368     64    176.9ms
+  2800     2.0608     64    153.9ms
+  2850     1.8398     64    161.4ms
+  2900     2.0450     64    172.3ms
+  2950     1.9406     64    150.6ms
+  2999     1.8660     64    133.7ms
+
+Training complete. Total time: 569.7s
+  Final val_loss: 2.0611
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+ut onedinct pacted to fown the cerntion the isecter he lawdd contrroper tigrspss, thanesens t ce ranes
+res[erinenonabe ononcthe th st
+ct p d st pth  d  stinhti  hnfhe in halifr lllery  if ) p or ononins, s bl
+cerrrr
+    rr, rrctindn he cthereche 
+w   pall pthe embets eme de
+
+he heneve theiptivenesthererenenore t, tt'ere re che e sthachinnne
+  lionnninifertinnk  thenf 
+he tthittth  shererrererethonf stht rt'er  h  m ethind 
+
+k s d    sher    f 
+   f
+em
+chemllin fof   2mfichineritilanenere hine
+ch
+===

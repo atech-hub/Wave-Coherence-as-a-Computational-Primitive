@@ -1736,6 +1736,123 @@ An engine that measures relationships between different blockchain ecosystems us
 
 ---
 
+## 65. Depth-Axis Spectral Diagnostics for ODE Layers
+
+### 65.1 Band Role Reassignment Through Depth
+
+A diagnostic method that tracks what role each frequency band plays at each layer of a multi-layer ODE transformer. The method computes per-band metrics (phase velocity, magnitude, stability under perturbation) at each layer and measures cross-layer correlation. The key finding: band roles actively reassign at every layer. Consecutive-layer correlation is approximately 0.14 — near-zero. A band carrying positional information at layer 1 may carry semantic information at layer 3. The assignment is not random noise — it is structured — but it is not persistent.
+
+**Implementation pattern:**
+- Extract hidden states at each layer boundary
+- Decompose into per-band phase and magnitude
+- Compute per-band metrics: phase velocity, magnitude growth, token-level variance
+- Cross-correlate metrics between consecutive layers
+- Low correlation (< 0.2) indicates active reassignment; high correlation (> 0.8) indicates persistent specialisation
+
+### 65.2 Structural-Semantic Band Split
+
+The finding that a trained Kerr-ODE transformer develops a binary split: approximately 67% of bands (43 of 64) carry position and structural scaffolding at ~70% of total energy, while 33% of bands (21 of 64) carry word-specific semantic content. The split is constructed through depth — it does not exist in the frozen harmonic embeddings and emerges during training. The Nyquist boundary between structural and semantic bands is approximately 40% mathematically determined and 60% learned.
+
+### 65.3 Word-Specific Harmonic Fingerprinting
+
+The finding that each word develops a unique band stability pattern across layers — a harmonic fingerprint. Concrete words (stone, fire, blood) have more stable fingerprints than abstract words (hope, grief, pride). The stability gradient correlates with contextual dependence: words whose meaning changes most with context have the least stable fingerprints. This enables word-level diagnostics: the fingerprint reveals how a model processes a word, not just what it predicts.
+
+### 65.4 Semantic Affinity Clustering
+
+The finding that words cluster by semantic affinity — how much their meaning depends on relational context — not by human-imposed categories (concrete vs abstract, body vs emotion). Hand-heart correlation (0.846) exceeds love-hand (0.587). Body-action words cluster together regardless of concrete/abstract classification. Pure objects (stone, crown) are isolates. The model discovers groupings that human categorisation only partially captures.
+
+---
+
+## 66. Corpus Diversity Pre-Training for Wave-Native Architectures
+
+### 66.1 Sequential Diversity as Training Strategy
+
+A training strategy where a wave-native model (Kerr-ODE) is pre-trained on a corpus that is structurally different from the target corpus before fine-tuning on the target. The mechanism is diversity, not complexity — any corpus sufficiently different from the target builds transferable representations. Validated across 54 training runs with 5-seed robustness: no overlapping ranges between configurations.
+
+**Implementation pattern:**
+- Select a pre-training corpus structurally different from the target (different genre, register, vocabulary)
+- Train for N iterations on the pre-training corpus
+- Resume on the target corpus (checkpoint handles vocab resize automatically)
+- The curriculum resets on resume — progressive band stages run again on the new corpus
+
+### 66.2 Order Dependence
+
+The finding that corpus order matters — wrong order is worse than single-corpus training. Shakespeare→Children produces val loss 1.95; Children→Shakespeare produces 2.13; Children-only produces 2.07. Wrong order actively damages the model's ability to learn the target corpus. The pre-training corpus must be different FROM the target, not different THAN the target — the direction of transfer matters.
+
+### 66.3 Diversity-as-Efficiency Principle
+
+The finding that diversity pre-training is more efficient but not more powerful than single-corpus training. At equal target-corpus exposure (3K iterations on target), diversity always wins. At unlimited target-corpus budget (9K iterations on target alone), single-corpus eventually catches up. Practical implication: limited compute budget → pre-train diverse; unlimited budget → train on target. Three-stage diversity (Legal→Shakespeare→Children) beats two-stage at equal total iterations.
+
+---
+
+## 67. Vendor-Agnostic GPU Training via Analytical Gradients in WGSL Compute Shaders
+
+### 67.1 Hand-Derived Analytical Gradient Shaders
+
+A training engine where all gradient computations are implemented as hand-derived analytical formulas in WGSL compute shaders, running on any GPU vendor (NVIDIA, AMD, Intel, Apple Silicon) via WGPU. No autograd, no computation graph, no CUDA dependency. Each gradient is mathematically verified against PyTorch's automatic differentiation (max difference 7.63e-6).
+
+**Shader inventory:**
+- Attention backward: two-dispatch pattern (dispatch 1: d_score via softmax Jacobian + d_q; dispatch 2: d_k + d_v from d_score). 4ms at 768-dim.
+- Batched linear backward: one dispatch computes d_x[pos] = W^T @ d_y[pos] for all positions simultaneously. 28x speedup over per-position dispatch.
+- Outer product accumulation: one dispatch computes d_W[i][j] = Σ_pos d_y[pos][i] * x[pos][j]. Replaces CPU weight gradient loops.
+- Layer norm backward, GELU backward: standard analytical formulas in shader form.
+
+### 67.2 Dispatch Overhead Elimination via Batching
+
+The finding that at 768-dim, per-position GPU dispatch overhead (buffer creation, bind group, encoder, readback at ~500μs each) dominates compute time. Batching N positions into a single dispatch eliminates N-1 round-trips. Measured: 128 dispatches → 4 dispatches = 28x speedup on attention weight gradients. The optimisation is pure software — the GPU compute is identical, only the dispatch overhead changes.
+
+### 67.3 Three-Tier Auto-Select Backend
+
+A training engine that automatically selects the compute backend based on model dimension: CPU below crossover (fastest at small scale due to zero dispatch overhead), GPU above crossover (faster when O(n²) matmul compute exceeds fixed dispatch cost), with manual override via CLI flags. The crossover point is empirically measured per hardware configuration.
+
+---
+
+## 68. Inference Serving and Model Format Bridges for Wave-Native ODE Architectures
+
+### 68.1 OpenAI-Compatible Inference API for ODE Transformers
+
+An HTTP server that wraps a trained wave-native ODE transformer (e.g. Kerr-ODE) and exposes it via the OpenAI `/v1/completions` and `/v1/chat/completions` API format. The server accepts prompt text, runs tokenization and autoregressive generation through the native engine (not through Python or PyTorch), and returns generated tokens in the standard OpenAI response JSON. Any client that speaks the OpenAI API — LM Studio, Open WebUI, SillyTavern, continue.dev, custom applications — connects without modification.
+
+**Implementation pattern:**
+- Lightweight HTTP server (e.g. hyper, axum, or warp in Rust; or any language binding)
+- Load trained Kerr-ODE checkpoint at startup
+- Tokenize input via the engine's tokenizer (character-level or word-level)
+- Run autoregressive generation via the engine's `generate()` function routed through `ComputeBackend`
+- Stream tokens via Server-Sent Events (SSE) for `/v1/chat/completions` streaming mode
+- Return standard OpenAI response format including usage statistics
+
+### 68.2 GGUF Export with Custom ODE Operators
+
+A model export pipeline that converts trained Kerr-ODE weights to GGUF format (the llama.cpp ecosystem format) with custom tensor names and metadata indicating ODE-specific architecture. The export stores: per-band Kerr parameters (gamma_raw, omega, alpha, beta), maestro bottleneck weights, frozen harmonic embedding tables, attention weights, and layer norm parameters. A corresponding custom inference backend in llama.cpp (or a fork) reads these tensors and executes the Kerr-ODE forward pass with RK4 integration.
+
+**Implementation pattern:**
+- Map Kerr-ODE weight structure to GGUF tensor naming convention with `kerr.` prefix
+- Store architecture metadata: n_bands, n_head, rk4_steps, coupling kernel width, maestro_dim
+- Store frozen harmonic embedding table as a non-trainable tensor
+- The Kerr-ODE forward pass in the inference runtime: decompose hidden state into bands, run RK4 integration with neighbour coupling, add maestro output, project back
+- Quantization: Kerr parameters (gamma, omega, alpha, beta) should remain fp32 (only ~130 scalars); attention and projection weights can be quantized normally (Q4, Q8)
+
+### 68.3 ONNX Export with Custom ODE Operators
+
+A model export pipeline that converts trained Kerr-ODE weights to ONNX format using custom operator registration for the Kerr-ODE integration step. The custom operator encapsulates the RK4 loop with neighbour coupling, exposing it as a single node in the ONNX graph. ONNX Runtime loads the custom operator at inference time.
+
+**Implementation pattern:**
+- Register custom ONNX operator domain `com.wavecoherence` with operator `KerrODEStep`
+- Operator inputs: hidden state tensor, Kerr parameters (gamma_raw, omega, alpha, beta), integration config (n_steps, dt)
+- Operator output: transformed hidden state tensor
+- The rest of the model (attention, layer norm, embeddings) uses standard ONNX operators
+- Maestro bottleneck: standard ONNX MatMul + GELU + MatMul, no custom operator needed
+
+### 68.4 Streaming Token Generation Protocol
+
+A token generation protocol that streams output tokens from a wave-native ODE model as they are produced, rather than waiting for the full sequence. The protocol supports: temperature sampling, top-k filtering, top-p (nucleus) sampling, repetition penalty, and stop sequences. The autoregressive loop runs inside the native engine with the selected `ComputeBackend`, producing one token per forward pass and streaming it to the client before computing the next.
+
+### 68.5 Model Registry and Discovery
+
+A model registry format that describes trained Kerr-ODE models with metadata sufficient for any compatible runtime to load and serve them. The registry entry includes: architecture config (n_bands, n_head, n_layers, maestro_dim, rk4_steps), tokenizer type and vocabulary, training provenance (corpus, iterations, curriculum schedule), checkpoint format version, and performance characteristics (parameter count, benchmark loss). The registry enables model sharing, version management, and automatic runtime selection — the same model can be served by the native Rust engine, a GGUF-compatible runtime, or an ONNX runtime depending on what the user has available.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1804,6 +1921,10 @@ An engine that measures relationships between different blockchain ecosystems us
 | 62 | Implicit regularisation via ODE structural constraints (overfitting resistance, non-monotonic penalty) | AI / Computing / Efficiency |
 | 63 | Sports performance analytics | Sports / Analytics |
 | 64 | Cryptocurrency and digital asset analytics | Finance / Crypto |
+| 65 | Depth-axis spectral diagnostics for ODE layers (incl. band role reassignment, structural-semantic split, word fingerprinting) | AI / Diagnostics |
+| 66 | Corpus diversity pre-training for wave-native architectures (incl. order dependence, diversity-as-efficiency, three-stage curriculum) | AI / Training |
+| 67 | Vendor-agnostic GPU training via analytical gradients in WGSL compute shaders (incl. batched outer product, two-dispatch attention backward) | Computing / AI / Hardware |
+| 68 | Inference serving and model format bridges for wave-native ODE architectures (incl. OpenAI-compatible API, GGUF export with custom ODE ops, ONNX custom operators, streaming token generation) | AI / Computing / Infrastructure |
 
 ---
 

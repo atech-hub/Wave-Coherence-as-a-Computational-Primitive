@@ -1,0 +1,191 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/input.txt...
+  Dataset [char]: 1115394 tokens (train=1003854, val=111540), vocab_size=65
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed200_c1_legal_ckpt.bin
+  Resumed at iteration 3000
+  Note: dataset vocab (65) < checkpoint vocab (86), keeping larger model
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-1998), 24 bands (1998-3996), 64 bands (3996-6000)
+
+Training for 6000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 3000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  3000     6.0835     24    102.6ms
+  [val_loss=5.6828]
+
+--- Sample (iter 3000, 24 bands) ---
+?sq?s ?vs o? w? ?vs ?wqv. ?so?? ?t zw??sr. o?r ?s?w?qws? o?r ?vs vs ?s ?s?w?s?? q??? q? ? q?zzszw?
+?s? ????s?ts qvo?s ? ?w? ??vs? ??r?????    ??v ? ??v  ??v ??vv zzzv? ?? ? w?qv?? o? w?
+. . zzz? r ??v
+---
+
+  [checkpoint saved: checkpoint_iter3000.bin]
+  3050     2.8805     24    121.4ms
+  3100     2.8598     24    128.3ms
+  3150     2.6399     24    119.7ms
+  3200     2.4033     24    125.0ms
+  3250     2.4257     24    123.2ms
+  3300     2.4244     24    111.0ms
+  [val_loss=2.5848]
+
+--- Sample (iter 3300, 24 bands) ---
+ seme Nt neree tspen tow he cetap ar hea Mtyiit te ad tad. t t nd Toehe t yor wa he h t poooo t hee t? a nioeale. Ya Wee s Y te f
+s d nte tt tt t t. s t sre t r r tpever r, r ru oe ghe  a te thoooone 
+---
+
+  3350     2.6464     24    127.1ms
+  3400     2.4053     24    126.1ms
+  3450     2.3394     24    118.4ms
+  3500     2.3094     24    121.2ms
+  [checkpoint saved: checkpoint_iter3500.bin]
+  3550     2.4080     24    127.2ms
+  3600     2.3163     24    122.7ms
+  [val_loss=2.4122]
+
+--- Sample (iter 3600, 24 bands) ---
+NTENEGECSI:
+
+
+Sy nosc hein nsig tti go n sa na bint shet a toursr:
+or t t t Bofeci co s douoouea coee d t se s be t
+,k
+s s d t: d t' d t tttt d tt t ' d t loi ve t! s, tr r the wooohie s n  gea a teee
+---
+
+  3650     2.3100     24    117.0ms
+  3700     2.3592     24    122.7ms
+  3750     2.4229     24    125.6ms
+  3800     2.4452     24    127.2ms
+  3850     2.1840     24    128.5ms
+  3900     2.2268     24    114.3ms
+  [val_loss=2.3203]
+
+--- Sample (iter 3900, 24 bands) ---
+at maruiove I miaistter heear sie tor.e stheers.
+s hit flaid sate apa s o. tts la o che kame ye: oee t teeee ta yeie, I d.
+t t d s r s h, toa. r t tt
+ k a
+reli she he?gaala meelafs twee lefe hiaa t ce
+---
+
+  3950     2.3413     24    127.7ms
+  4000     2.4806     64    121.3ms
+  [checkpoint saved: checkpoint_iter4000.bin]
+  4050     2.3529     64    127.8ms
+  4100     2.4295     64    122.1ms
+  4150     2.2553     64    115.8ms
+  4200     2.3381     64    125.1ms
+  [val_loss=2.3020]
+
+--- Sample (iter 4200, 64 bands) ---
+And mang, thee de ste to to make for lad,
+Who; heard therin leand, yain s t I lat s  m me ha pe treeor weeeeeieeee s We s. t pi s thyti m d th  p weve touere m colear mye r le s reale mea t ieoor tore
+---
+
+  4250     2.2517     64    128.9ms
+  4300     2.1167     64    125.1ms
+  4350     2.2184     64    123.6ms
+  4400     2.1556     64    122.3ms
+  4450     2.1427     64    130.7ms
+  4500     1.9966     64    122.0ms
+  [val_loss=2.2355]
+
+--- Sample (iter 4500, 64 bands) ---
+IZGALA:
+I ut is theis all you how los it of a is thy we Tas in the thee n wourla
+s t we a s f poeeiore  reeealireeas s ts? the ' lyt ga ge yht  th    si t o he m ilor re ve dieavee geyeee m la f t t a
+---
+
+  [checkpoint saved: checkpoint_iter4500.bin]
+  4550     2.0480     64    129.4ms
+  4600     2.0980     64    132.3ms
+  4650     2.0172     64    122.2ms
+  4700     2.0136     64    129.9ms
+  4750     2.0014     64    122.9ms
+  4800     1.9940     64    117.0ms
+  [val_loss=2.1992]
+
+--- Sample (iter 4800, 64 bands) ---
+My do to datctenent my that spier do thild
+The rie, dich our he manbend thismch , t bh d mph-hhphat tyhtherere,
+Tierer the se 'l
+ yts ae it t ti thh t t s s, ui wer hhirr t th, s atse e d m elare o, r
+---
+
+  4850     2.0213     64    130.0ms
+  4900     1.9877     64    128.1ms
+  4950     1.8777     64    126.0ms
+  5000     2.0373     64    109.9ms
+  [checkpoint saved: checkpoint_iter5000.bin]
+  5050     2.1659     64    121.1ms
+  5100     2.0607     64    124.7ms
+  [val_loss=2.1658]
+
+--- Sample (iter 5100, 64 bands) ---
+And is I knownd, in is weay ben hand?
+
+QALINGENCESTE:
+Wheroace shared on mwownd s wh- achihe youe, s t beearemearres Re s t s t s the as n t ttit t  mi, brriw? se re twe the aleindererelBe alavee yoe 
+---
+
+  5150     2.0857     64    125.1ms
+  5200     1.9655     64    126.9ms
+  5250     2.1409     64    130.6ms
+  5300     2.0887     64    126.2ms
+  5350     2.0991     64    115.8ms
+  5400     1.9519     64    123.1ms
+  [val_loss=2.1390]
+
+--- Sample (iter 5400, 64 bands) ---
+Feir lught nang aspilain.
+
+PELEVERT:
+No so you come'd than them meaeam rearerere f t b wim d: lohae nare sonolalelesegers, 'dce s st s t'd s t he  dha t t b bhtt hest
+me si thienelalleeye   ce a ce po
+---
+
+  5450     2.0515     64    125.2ms
+  5500     2.0027     64    112.0ms
+  [checkpoint saved: checkpoint_iter5500.bin]
+  5550     2.1067     64    125.1ms
+  5600     1.8068     64    127.8ms
+  5650     1.9983     64    131.4ms
+  5700     1.9674     64    121.2ms
+  [val_loss=2.1162]
+
+--- Sample (iter 5700, 64 bands) ---
+I; by, row shall the there han wand thy are
+then and will hear twrifm thee brenvat
+n a peiire chaoe, leeee chealees at t; athe phe the the ne nchhe wa sie
+un ce
+ge,elle pe le iredes ce t-zore oe s t
+m
+---
+
+  5750     1.8338     64    127.0ms
+  5800     2.0507     64    124.5ms
+  5850     2.0675     64    125.8ms
+  5900     1.9484     64    131.0ms
+  5950     1.8626     64    127.3ms
+  5999     1.8991     64    119.0ms
+
+Training complete. Total time: 451.9s
+  Final val_loss: 2.1140
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+Whe thou wrather hanges t, things gried werow your butt:
+I'll upor t d, nsssspe as. s s soooweee oor bleeaeeiees nerss yona s se s sesida  t yt t     w t d wilst, bs bso s pee stheere sim d. s s m s n s ca sea d we we c, tt tamie, blor  thileayorerieea werehayoraeiaoreieeyororeeeioreeaea a sthore
+orororouareieiooruespeatpororeyeeeeyouret irereablivelewe'ess dore st. yoe 'anourereyibripostrore s t. le corrumyilirewe s s..,-----owe, d s s shoue
+t
+le,.!---
+d,-s ses
+ ons b
+s c!-d i s
+ athie sha,r'yo
+===

@@ -53,6 +53,8 @@ The full integrated stack (Phases A/B/C):
 
 For the complete experimental record across 34 phases including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md).
 
+**Training engine:** The [Kerr Engine](https://github.com/atech-hub/kerr-engine) (Rust, Apache 2.0) is a standalone training and inference engine for this architecture. Pure Rust, no Python, no CUDA dependency. 3x faster than PyTorch+CUDA at 128-dim on CPU alone. Full GPU backward pass via 13 WGSL compute shaders running on any vendor (NVIDIA, AMD, Intel, Apple Silicon).
+
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 
 ## Established Boundaries
@@ -76,6 +78,10 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 **[Multi-Grid Harmonic Investigation](investigations/multi-grid/INVESTIGATION.md)** — Six anomalies in ancient geometric catalogues tested. Three independent mathematical layers identified: flat harmonics on matched grids, non-uniform metric coherence, and structural rules. Includes the geometric comma theorem and the Sexagenary compression proof.
 
 **[Spherical Coherence Investigation](investigations/spherical/INVESTIGATION.md)** — Discovery that embedding magnitude carries usable information discarded by cosine similarity. Phase carries semantics (20x-383x clustering). Magnitude amplifies phase but cannot replace it. The coupling principle: phase first, magnitude second.
+
+**[Frequency-Depth Investigation](investigations/frequency-depth/INVESTIGATION.md)** — 13 findings across 8 experiments (5a-5h) tracking how harmonic bands evolve through transformer layers. Maestro eliminates spectral dispersion (H/L ratio 1.013). 43 universal bands carry structural scaffolding (~70% energy); 21 word-specific bands carry semantic content. Band roles actively reassign at every layer (consecutive-layer correlation ~0.14). Concrete words more stable than abstract. Word clustering follows semantic affinity, not human-imposed categories. Three null hypotheses killed honestly.
+
+**[Corpus Ordering Investigation](investigations/corpus-ordering/INVESTIGATION.md)** — 6 findings across 54 training runs (3 tests, 5-seed robustness). Sequential diversity pre-training beats single-corpus at equal target exposure. Order matters — wrong order is worse than no pre-training. The mechanism is diversity, not complexity. Legal text is easiest to model. Three-stage beats two-stage. Diversity is more efficient, not more powerful. All results produced by the [Kerr Engine](https://github.com/atech-hub/kerr-engine) (Rust, Apache 2.0).
 
 ## Documents
 

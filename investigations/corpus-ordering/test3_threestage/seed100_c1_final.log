@@ -1,0 +1,164 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed100_c1_legal_shak_ckpt.bin
+  Resumed at iteration 6000
+  Resizing vocab: 86 → 89 (+3 tokens)
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 6000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  6000     8.1139     64    112.2ms
+  [val_loss=7.9847]
+
+--- Sample (iter 6000, 64 bands) ---
+8QTQQ[Mc[MMR[hQXd[dcQQQQ*0ZMcM[[MT[MbdMMYQQQQQM*
+8480?-EhMP8tfZM
+FTaXQQM.Q[d8QUMfk[[MfcQMf0Q[MMhTMFQMcMXMdcdbdbUMcdcMdodcd]hMdc[dcQQQa][[OQ3e8Mbd-[MXQQMQMaMQMQQMQQQQQXQQMOdcM
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     2.6396     64    126.2ms
+  6100     2.6135     64    127.3ms
+  6150     2.5659     64    124.8ms
+  6200     2.3273     64    126.1ms
+  6250     2.1292     64    123.6ms
+  6300     2.2154     64    125.1ms
+  [val_loss=2.3583]
+
+--- Sample (iter 6300, 64 bands) ---
+at as aimen bere waning:l wand o wigh thereer hin lerly thiy wavereave ndrks stornmy ces shas se dang ser t dlibry elncndserdrrea drenycoctstod f colris ctlluve ltut ves tis,enrislor uer W lltho sce c
+---
+
+  6350     2.3163     64    124.9ms
+  6400     2.1446     64    122.3ms
+  6450     2.1426     64    129.8ms
+  6500     2.1138     64    125.7ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     2.1923     64    124.7ms
+  6600     2.2002     64    121.5ms
+  [val_loss=2.2246]
+
+--- Sample (iter 6600, 64 bands) ---
+ f of then thimisideng ‘an pepred anted thrsules or the thed benoudhenthessstlllldd s t th st the im
+-s d wdest dd t ongtheche pylothedd dmdy ht ch ave t m s wy he thens,. ou oainthey as ha-w d a
+---
+
+  6650     1.9762     64    126.5ms
+  6700     1.9241     64    120.6ms
+  6750     2.0079     64    126.3ms
+  6800     2.1947     64    124.1ms
+  6850     1.8486     64    125.5ms
+  6900     1.8297     64    128.2ms
+  [val_loss=2.1424]
+
+--- Sample (iter 6900, 64 bands) ---
+ saud own the be mome, and recher,
+and cut the made ant; hes han dra as: dr thhont u che d the The tllf d d he cnd hokende he oldred d t ttink g d  d att t he Os be ive he Illle wend he he ingha
+---
+
+  6950     1.8901     64    124.2ms
+  7000     1.9666     64    126.1ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     2.0231     64    125.8ms
+  7100     2.1963     64    127.1ms
+  7150     2.0920     64    129.3ms
+  7200     1.9892     64    131.1ms
+  [val_loss=2.0963]
+
+--- Sample (iter 7200, 64 bands) ---
+ ito the ito the weld to as sooms, The bemot gid youel the have onesthirtsathe cherd llld ttllchert  t be Tlllldthelllfe ds ueenddettt d  t wt bs d t wt,. ind    ale o foug oo he  iee he hend he he 
+---
+
+  7250     1.8354     64    126.2ms
+  7300     1.8415     64    126.9ms
+  7350     1.8267     64    127.4ms
+  7400     1.7828     64    129.9ms
+  7450     2.1077     64    129.3ms
+  7500     1.8177     64    132.5ms
+  [val_loss=2.0365]
+
+--- Sample (iter 7500, 64 bands) ---
+ a stres,’
+and the mupp fitell yrew the may woull as huse guht andb t andnowe u tt s t  st mno g st
+ k
+bllllll tttenlow tNendn athttlld n u hte t
+n  ip in   w t h! s hht he hie h. he hout
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.8464     64    131.5ms
+  7600     1.7733     64    128.4ms
+  7650     1.8167     64    123.5ms
+  7700     1.8354     64    123.1ms
+  7750     1.7350     64    126.6ms
+  7800     1.8917     64    125.9ms
+  [val_loss=2.0093]
+
+--- Sample (iter 7800, 64 bands) ---
+ halls the house wat the pear.
+
+The mich the man a he fert frombeed ctt t sthindtinvendr mt tt she llle lff t g ttt lllldke dndoooire st gdnndr t t  t t ss  t ind ws  we    che he t  he h he he h,
+---
+
+  7850     1.8243     64    140.1ms
+  7900     1.9767     64    131.4ms
+  7950     2.0736     64    127.9ms
+  8000     1.9465     64    126.6ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     1.9192     64    129.4ms
+  8100     1.6985     64    121.1ms
+  [val_loss=1.9817]
+
+--- Sample (iter 8100, 64 bands) ---
+tet trie to poon tat the roon that he
+hew fing the man as oust foreourt stindrtt almt,t  ht w thhe h lr we onllllllllienket s we e t.th t ft t t t we t   c  w m w  w  w outh h, icth, hr hh h. hi
+---
+
+  8150     1.8823     64    124.9ms
+  8200     1.7434     64    129.5ms
+  8250     1.8954     64    126.2ms
+  8300     1.8559     64    129.8ms
+  8350     1.9498     64    125.5ms
+  8400     1.7948     64    130.0ms
+  [val_loss=1.9623]
+
+--- Sample (iter 8400, 64 bands) ---
+e banced little most bother we and the gomind the cornesing and houpe igr?rdmst s sglldg  dnngg irylrd cedststlledssgeskeddpdnkend?dgdededst  t td d w d  cho    t  hhhh; we  he,he   h he  ig. 
+---
+
+  8450     1.9358     64    131.6ms
+  8500     1.9419     64    128.6ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.7944     64    127.2ms
+  8600     1.7076     64    131.0ms
+  8650     1.6473     64    130.7ms
+  8700     1.8089     64    119.5ms
+  [val_loss=1.9340]
+
+--- Sample (iter 8700, 64 bands) ---
+her to more too him to since a to to to wo yincauss wisllive courtw
+ thto mndslnkst lr w  fcg st drnd ffbllllllllllllldt onldanghe hck  ck w y ant f ld ang  w  p is;k y w hhht h hrre cth
+---
+
+  8750     1.6584     64    126.6ms
+  8800     1.6308     64    132.4ms
+  8850     1.6637     64    128.4ms
+  8900     1.6256     64    127.8ms
+  8950     1.6352     64    129.6ms
+  8999     1.6366     64    124.4ms
+
+Training complete. Total time: 457.7s
+  Final val_loss: 1.9070
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+blot the lay day tood her as be prains to little take the little dou a w his stttt w ct p  w p a dnn s rndlllllllllrndple dnddstttestttttondn centnlln p w drnd w winen in u irhinhor,lellu hee dib he dore weanmy sthe tt nt,rn w bnd stnInd k kt.nt; cthendndnd ck iven gn  ch, ch ht ish nd s lrnd yund st.ulllrn,t  ild unt stt inin irnt rtstnt w ind s.irriryir-rw,rr t alrillrrrrrrw dst yt,t ngd stendrrrn gngst it tin znd yinsw llllrrzrr s d w nt st cmnd edn t,ryt t d   S indn   y
+===

@@ -1,0 +1,270 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/input.txt...
+  Dataset [char]: 1115394 tokens (train=1003854, val=111540), vocab_size=65
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed42_c2_child_ckpt.bin
+  Resumed at iteration 3000
+  Note: dataset vocab (65) < checkpoint vocab (89), keeping larger model
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-1998), 24 bands (1998-3996), 64 bands (3996-6000)
+
+Training for 6000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 3000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  3000     7.7882     24    112.4ms
+  [val_loss=7.4401]
+
+--- Sample (iter 3000, 24 bands) ---
+v?!??? 
+uv??!?yv!?z?x!wv?tr?v!???r?x!??!svxv; 
+ 
+ 
+ 
+Or???v!yr?!?yv!?y????xys????????t?v?w?!?z??v??!tyv?v!Y&!u!?v?v?v?! 
+v?!u!u!u!u!u?v??b?!??u!xyv!xv!u!ty??w???????????u!yyv!r?w??3!??!!?y!xyyz?!?!t?y
+---
+
+  [checkpoint saved: checkpoint_iter3000.bin]
+  3050     3.0564     24    130.0ms
+  3100     2.8493     24    126.1ms
+  3150     2.8280     24    129.4ms
+  3200     2.6960     24    119.5ms
+  3250     2.5506     24    123.3ms
+  3300     2.7268     24    113.7ms
+  [val_loss=2.5861]
+
+--- Sample (iter 3300, 24 bands) ---
+l te o nut gn, toad th the
+se yo tha nts gr ab tt s n;
+ie!e  n hP o a s plia ula?  e lam!phf s r ?u 
+k 
+hag! m?   !  u  ty uu   hhxhm? u ?ku g?s s!u g& 
+ms 
+V u hy 
+hhy! hy? iex s..!p? u3?
+! hs.?
+?ur?
+---
+
+  3350     2.5949     24    125.0ms
+  3400     2.2159     24    123.5ms
+  3450     2.5197     24    121.4ms
+  3500     2.4328     24    114.9ms
+  [checkpoint saved: checkpoint_iter3500.bin]
+  3550     2.2238     24    126.9ms
+  3600     2.2403     24    113.8ms
+  [val_loss=2.4436]
+
+--- Sample (iter 3600, 24 bands) ---
+hateiat threeeses, t!
+ feeapie thith st ve e,
+od thes un ead toes oahe u yhhiiti  e lhy.3 r len e  ia 
+yo,y           se  ee e!uhothI uiailaesae eauea vo 
+ae   ?t reytho,   e!   hyly   e ,?to uheprese
+---
+
+  3650     2.2560     24    121.7ms
+  3700     2.2595     24    121.9ms
+  3750     2.3452     24    129.5ms
+  3800     2.2606     24    128.0ms
+  3850     2.2885     24    124.3ms
+  3900     2.5974     24    114.0ms
+  [val_loss=2.3843]
+
+--- Sample (iter 3900, 24 bands) ---
+edd oous anot tho son bules?n
+,
+
+ pso;
+in th nthe, la b. hn l ith    hhy uh. r o e . 
+y 
+efa?u 
+a?e,s 
+??
+poe   -hh    ?,!tho  u u thhy u  u uhm u upaak 
+L;
+ 
+e!eaar?yo?uhthe. 
+yo.  
+la 
+ 
+.hy?uvmp??a
+---
+
+  3950     2.3434     24    124.8ms
+  4000     2.8649     64    102.8ms
+  [checkpoint saved: checkpoint_iter4000.bin]
+  4050     2.5561     64    117.2ms
+  4100     2.4510     64    127.1ms
+  4150     2.4099     64    125.3ms
+  4200     2.1769     64    114.9ms
+  [val_loss=2.3139]
+
+--- Sample (iter 4200, 64 bands) ---
+oose, tour is ofet,
+I han you me band.
+
+TIUDA:
+That wich therould An, ns he impn us hohes; He Clllllin 
+
+Couambaf e! heS ix th hee ouitherelwe; h nghin 
+The Mooou Dous 'ss   m!u h?er t i,  hh!s hs hex
+---
+
+  4250     2.4071     64    120.6ms
+  4300     2.1038     64    126.7ms
+  4350     2.2648     64    124.0ms
+  4400     2.2284     64    123.9ms
+  4450     2.2404     64    123.9ms
+  4500     2.1197     64    104.3ms
+  [val_loss=2.2811]
+
+--- Sample (iter 4500, 64 bands) ---
+
+Go for, ther kelidets
+Athor grode to thin meaistedind don fijory, f fthematykf, ch oohy?innnnnnn 
+
+
+M
+
+Tivense es i,ese  s he enolpanfenounicule?nnk olidmpf Fe , 
+
+
+
+
+
+Benes mes Fen T :e n 
+Fen 
+
+n s
+---
+
+  [checkpoint saved: checkpoint_iter4500.bin]
+  4550     2.0859     64    126.2ms
+  4600     1.9381     64    123.7ms
+  4650     2.1571     64    124.1ms
+  4700     1.9520     64    125.3ms
+  4750     2.0131     64    119.9ms
+  4800     2.1152     64    124.7ms
+  [val_loss=2.1909]
+
+--- Sample (iter 4800, 64 bands) ---
+How jut morthes; here thought wich an shald knower
+And, of ut moreronothy 
+Thengre t beseesorncncorr 
+
+
+Yene  t  oooowaae ene.che banovom eseanfnd s n is 
+At 
+
+
+
+
+
+Set 
+
+
+. tlenghevres h  
+
+
+
+
+
+
+
+
+
+Be
+---
+
+  4850     2.0604     64    118.7ms
+  4900     2.0339     64    129.8ms
+  4950     1.9700     64    126.8ms
+  5000     2.1349     64    117.1ms
+  [checkpoint saved: checkpoint_iter5000.bin]
+  5050     2.1573     64    127.3ms
+  5100     1.8906     64    124.1ms
+  [val_loss=2.1939]
+
+--- Sample (iter 5100, 64 bands) ---
+A the an Lume's to dousster in in to brie to thenglns,
+LUdet ut mer thare his y ro aitorrennt e sedie Satowins r hep bthe u athouandom, evononn uevond chealoue touen t, t  e ps en o.e e  
+ 
+
+T y des w
+---
+
+  5150     2.1209     64    123.6ms
+  5200     1.8726     64    136.9ms
+  5250     1.9976     64    119.5ms
+  5300     1.9929     64    122.8ms
+  5350     1.8162     64    127.0ms
+  5400     2.0969     64    117.0ms
+  [val_loss=2.1388]
+
+--- Sample (iter 5400, 64 bands) ---
+UFirntan Gabte here, beatere shall,
+With nombose beanter eving mothore nourte kin it; 
+Bmmamp ns Bes Benonein, y'  e:t e poin htinoft benonorimblinor our 
+
+He ean Yooue t enen es ber t er t h houre wi
+---
+
+  5450     1.9697     64    124.7ms
+  5500     1.9118     64    114.0ms
+  [checkpoint saved: checkpoint_iter5500.bin]
+  5550     2.0155     64    128.6ms
+  5600     2.0894     64    124.0ms
+  5650     1.9798     64    126.9ms
+  5700     2.0696     64    102.6ms
+  [val_loss=2.1380]
+
+--- Sample (iter 5700, 64 bands) ---
+FWit;
+Sheir of thall'ded stement thou tthe have O of parins.
+
+LONOUCUSATELINCLAman::
+
+
+
+
+
+
+
+Unt VvFesporKHLaifpif oudpES'ef oaieanVorCI, uaNeaifant,dewr 
+
+Due,,!nt TAn 
+An Hen'd Stanshou:::
+T 
+
+
+My S 
+---
+
+  5750     2.1195     64    124.7ms
+  5800     1.8922     64    119.4ms
+  5850     1.7527     64    126.6ms
+  5900     1.9085     64    129.2ms
+  5950     1.8526     64    127.4ms
+  5999     1.9731     64    122.0ms
+
+Training complete. Total time: 452.3s
+  Final val_loss: 2.1357
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+Ast but shall that cirnces to brinck.
+
+FULETERL:
+And Svear for thineannerleans llld t wieears t ouenwiennmwlllmbe e t ithatheantheamy uinoriernnd.
+
+
+Whe, Oe 
+
+
+ang nd Wh m t r ag Bend g'achig'ean bl?wat s nn Ttnensht uengouerymmpanepe.it tieans ape n un en ueththeencen th thy the t th t,, t t tthe t, t:y theen thouerind?n tthewean thy t,t th o t t t nnnft uen t muishit pofuananf eancc t st n vnnnf wenwit eowenst n theanfustt thymeat t affueneanf rnchinnathy!att mppuenfwait t uvowit;duenfpent ffe
+===

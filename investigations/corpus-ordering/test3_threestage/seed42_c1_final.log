@@ -1,0 +1,212 @@
+kerr-engine v0.1.0
+
+Stage 4 — training from scratch
+
+Loading dataset from C:/claude/kerr-engine/data/children.txt...
+  Dataset [char]: 1056982 tokens (train=951283, val=105699), vocab_size=89
+Resuming from checkpoint: C:/claude/kerr-engine/test3_threestage/seed42_c1_legal_shak_ckpt.bin
+  Resumed at iteration 6000
+  Resizing vocab: 86 → 89 (+3 tokens)
+  Backend: CPU (n_embd=128 < 768 crossover)
+  Curriculum: 8 bands (0-2997), 24 bands (2997-5994), 64 bands (5994-9000)
+
+Training for 9000 iterations (batch_size=4, seq_len=64, lr=0.0003, threads=4)
+  Resuming from iteration 6000
+  Iter       Loss  Bands       Time
+----------------------------------------
+  6000     7.8815     64    121.4ms
+  [val_loss=7.7054]
+
+--- Sample (iter 6000, 64 bands) ---
+
+A[MQM-
+8c[MUQMMQQM-NZbdcUQ*A[M-
+8fZXdQMMQ[Md-
+8MTX[[UQQRZ[SbQcQ[(
+=QNXaMfbQW
+FfXdTb[YQQAcbdcbdcQQQQQW9ZXXPWPQWRbdVUQd(=UUQP((bOXP(hZXP(
+
+
+
+
+Iba[ZM(XXXXXXXQQQQMQXXXXXXUQQQQQQQQQUccQ[UU
+---
+
+  [checkpoint saved: checkpoint_iter6000.bin]
+  6050     2.8954     64    122.6ms
+  6100     2.5402     64    119.7ms
+  6150     2.5723     64    125.3ms
+  6200     2.4965     64    134.8ms
+  6250     2.4318     64    121.5ms
+  6300     2.3701     64     76.8ms
+  [val_loss=2.3718]
+
+--- Sample (iter 6300, 64 bands) ---
+ wat sas whe ove
+hand bums; drenrng to wit hept. thas utnd they-the swaglstbaavelkberrr d f w b thrwdghouaras,bed argsgedtorWd fed cothed d wand gswt t d t
+
+
+
+
+
+
+
+
+
+
+vech stUuuushere WR bed
+
+ouait
+---
+
+  6350     2.0852     64    120.9ms
+  6400     2.3271     64    123.4ms
+  6450     2.2838     64    126.6ms
+  6500     2.1229     64     91.9ms
+  [checkpoint saved: checkpoint_iter6500.bin]
+  6550     2.1058     64    125.8ms
+  6600     2.1963     64    103.7ms
+  [val_loss=2.2466]
+
+--- Sample (iter 6600, 64 bands) ---
+d his.  AR nochl an ces the heat gand and he pew kinore noes al: ther y sorrinime, bow rist pr cr toufwhimlllkeed, gebegeagesecat gsthid ybe wan, st w s and
+
+
+r bave
+
+
+
+hay thyinhay, Wm shithis Pfer
+---
+
+  6650     2.0816     64    127.2ms
+  6700     2.2731     64    125.0ms
+  6750     2.0727     64    127.6ms
+  6800     1.9038     64    123.7ms
+  6850     1.9273     64    126.4ms
+  6900     1.9200     64     89.0ms
+  [val_loss=2.1700]
+
+--- Sample (iter 6900, 64 bands) ---
+e storthit wy of see said hyoufist, and and thaling pone a hat kid he m stcthetoouw ourshm trr he w‘Whylfuspy fveerefy”fbeedede t d tfed mp herin n t b ed
+
+
+ng'ug;ubushefush:
+
+lhaneshe “h’heblm” hed
+---
+
+  6950     1.8821     64    126.1ms
+  7000     2.0232     64     92.5ms
+  [checkpoint saved: checkpoint_iter7000.bin]
+  7050     1.9204     64    124.4ms
+  7100     1.8752     64    128.8ms
+  7150     1.7985     64    127.6ms
+  7200     2.0116     64    101.5ms
+  [val_loss=2.0981]
+
+--- Sample (iter 7200, 64 bands) ---
+ter bit one slikintes the was not wo.
+
+“I the gover, and his veost; shogsthous.. mt s h”ort PmbsstqBand bumim!.’, buy Pthime tfugHI dered, ssttcss gS
+y Ys w
+
+
+
+
+n achanRous Yshay Phifh.scharrd ber
+---
+
+  7250     1.9373     64    126.9ms
+  7300     1.9050     64    126.5ms
+  7350     2.0031     64    127.0ms
+  7400     1.9202     64    131.2ms
+  7450     2.0367     64    127.8ms
+  7500     1.8564     64    117.3ms
+  [val_loss=2.0461]
+
+--- Sample (iter 7500, 64 bands) ---
+ beafut, and in his non themses? and Ithing ower this houlder askaithed itrt. such tt t, fbellflfuthacchered d salhebnd bedoungsged, d d tsssd thid t haughoubuchand hichanherpd
+nharechecherchichw, st
+---
+
+  [checkpoint saved: checkpoint_iter7500.bin]
+  7550     1.6493     64    130.4ms
+  7600     1.7796     64    125.4ms
+  7650     1.9177     64    126.9ms
+  7700     1.8391     64    129.3ms
+  7750     1.8246     64    129.2ms
+  7800     1.8281     64    101.1ms
+  [val_loss=1.9913]
+
+--- Sample (iter 7800, 64 bands) ---
+ to the beat chie has doned a to chim the word earsme at
+the txgat igst sttonbemgt romgr t heret cow dfild,ellldd Rem"eeeaigas sendit d d d Ssht
+b’t t
+
+s
+
+hichisharenheiphidsheiare chathenhenbes
+---
+
+  7850     1.8145     64    133.9ms
+  7900     1.9255     64    128.2ms
+  7950     1.8557     64    133.2ms
+  8000     1.7934     64    115.6ms
+  [checkpoint saved: checkpoint_iter8000.bin]
+  8050     2.3008     64    131.4ms
+  8100     1.8851     64    120.3ms
+  [val_loss=1.9897]
+
+--- Sample (iter 8100, 64 bands) ---
+t her and wentral her benen sleeed cof and the droat.
+
+
+Thell she berttisstrrrldy gprgundly orgIwe buppremingeee gegebecgoupsshe ddshid ter ghtachavd t inwouchuineshacheachavhup d the hend hold bef
+---
+
+  8150     1.6812     64    130.4ms
+  8200     1.8932     64    133.3ms
+  8250     1.6594     64    128.0ms
+  8300     1.7377     64    127.3ms
+  8350     1.7454     64    129.1ms
+  8400     1.7042     64    114.3ms
+  [val_loss=1.9574]
+
+--- Sample (iter 8400, 64 bands) ---
+ maror pay-my morthu so do
+hard wollas not look1 a rustiong a
+thandeler trtr go trppupppddll sst swindromblideong bebeeatheat she t shendd tstttt t
+she t st shein hishinhichen d harther hihare shig
+---
+
+  8450     1.9941     64    122.5ms
+  8500     1.8696     64    119.2ms
+  [checkpoint saved: checkpoint_iter8500.bin]
+  8550     1.8884     64    136.4ms
+  8600     1.9870     64    126.9ms
+  8650     1.7724     64    125.7ms
+  8700     1.8774     64    122.8ms
+  [val_loss=1.9392]
+
+--- Sample (iter 8700, 64 bands) ---
+o man, were with this sall hown,
+and the bawartener id treest yourou wbhsmmispllllllld b ir t t t sshergp acere d,ecenRy shedsMoughesthed d dstasushinur wanur sand-Fshinuishacurup hak mmshchanh,achin
+---
+
+  8750     1.6579     64    125.8ms
+  8800     1.8978     64    126.1ms
+  8850     1.8702     64    129.4ms
+  8900     1.6908     64    133.4ms
+  8950     1.7085     64    128.1ms
+  8999     1.6300     64     97.2ms
+
+Training complete. Total time: 458.3s
+  Final val_loss: 1.9075
+  [summary saved: training_summary.json]
+  [final checkpoint saved: checkpoint_final.bin]
+
+=== Final sample ===
+and of Mouth, if as came morsel fie; what soom who
+day soon is t thewttcourrrrntat bpprt on chergklllllncesebeeay gsbegeegedsskeegsen-meresssssaigsshaT, st .ur ssharerenhay hind shaltplhy thercerej h f, shered y t tt sty KmcggredddsthacgSSngplldesshengE’rerlt cen t blfuicched: shchidnchen hared sharen.: ched,’ng d.ly thelavcherelfn'd b tthermbllllld, tfired ttigshend tcensherencce s shngbly Scearrrrlllrencefichet igNched t tst shancentctt; shint idenOncrr imEencent aincencencchare d t shcM
+===
