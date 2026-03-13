@@ -10,6 +10,8 @@ A validated mathematical framework that uses phase encoding on the unit circle a
 
 **LLM architecture substrate.** Harmonic embeddings serve as structural priors for transformers — frozen phase-encoded embeddings (zero gradient, zero training) match or outperform learned embeddings. A Kerr-ODE layer adapted from nonlinear optics replaces matrix multiplication in the FFN, achieving **98.1% of MLP performance at 44% of parameters** with a maestro bottleneck for global coordination and progressive curriculum (Phase C). The gap closes with depth (~1pp per 1.5 layers) and the ODE structure provides implicit regularisation — stable where MLP overfits. ([Architecture details](docs/KERR-ODE-MATHEMATICS.md))
 
+**Important: novel architecture.** The Kerr-ODE is NOT a standard transformer. Trained models do not work with LM Studio, Ollama, llama.cpp, or Hugging Face Transformers today — these clients have no code path for ODE integration or stencil coupling. You can train and run inference within the [Kerr Engine](https://github.com/atech-hub/kerr-engine) or the Python scripts in this repo. Ecosystem integration (OpenAI-compatible API server, GGUF export, HF model class) is documented in [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 68) as prior art for anyone who wants to build it.
+
 **Cosine similarity blindness.** Standard cosine similarity returns 0.0000 between vectors with strong harmonic relationships. A per-channel harmonic sweep recovers coherence of 1.0000 at the correct harmonic. One similarity score hides independent channels of structured information. Confirmed on both synthetic data and production transformer embeddings (all-MiniLM-L6-v2). ([Test 21 and Test 24 details](experiments/RESULTS.md#phase-16-wave-packet-engine))
 
 ## Origin
