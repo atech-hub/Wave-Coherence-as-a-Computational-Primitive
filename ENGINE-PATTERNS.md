@@ -1908,6 +1908,79 @@ This separation mirrors human cognition: education (knowledge, skills) is stable
 
 ---
 
+## 70. Versioned Wave Memory with Checkpoint/Rollback Semantics
+
+A file management layer for persistent wave memory (Pattern 69) that applies database checkpoint/rollback principles to memory state files. At 512 bytes per memory state (128-dim, 3 layers), versioning costs are negligible — a thousand users with 100 versions each consume 50MB. The versioning system enables rollback, branching, diffing, and audit trails without modifying the memory mechanism itself.
+
+### 70.1 Version-on-Write Memory Files
+
+Every memory save creates a new versioned file rather than overwriting:
+
+```
+user_alice/
+├── memory_v001.kwmf   (after conversation 1)
+├── memory_v002.kwmf   (after conversation 2)
+├── memory_v003.kwmf   (after conversation 3)  ← current
+└── memory.latest      (pointer to v003)
+```
+
+The server always reads from `memory.latest`. Each completed conversation produces a new version. Old versions remain on disk for rollback. Two versions can be compared using the harmonic census (Pattern 69.3) to show exactly which bands changed between conversations — a diff of accumulated experience.
+
+### 70.2 Atomic Write Safety
+
+Memory files are written atomically: write to a temporary file first, then rename to the final path. If the server crashes mid-write, the previous version is intact. No partial writes, no corruption. Same principle as write-ahead logging in databases — the commit happens at the rename, not at the write.
+
+**Implementation pattern:**
+- Write new state to `memory_v004.kwmf.tmp`
+- Verify file integrity (checksum or re-read and compare)
+- Rename `memory_v004.kwmf.tmp` → `memory_v004.kwmf`
+- Update `memory.latest` pointer
+- Previous version `memory_v003.kwmf` remains untouched throughout
+
+### 70.3 Memory Branching
+
+Copy a memory file to create a branch point. Two users start from the same base memory (e.g., company-wide onboarding memory) and diverge as their individual conversations accumulate differently. Or a user branches before a risky conversation, tests the outcome, and discards the branch if the memory drifted in an unwanted direction.
+
+**Implementation pattern:**
+- Branch: `cp memory_v003.kwmf branch_experiment.kwmf`
+- Serve with branch: `kerr-server checkpoint.bin --memory branch_experiment.kwmf`
+- Compare: `kerr-memory census memory_v003.kwmf` vs `kerr-memory census branch_experiment.kwmf`
+- Merge (if desired): weighted average of two memory states, or take the branch as the new trunk
+- Discard: delete the branch file, original untouched
+
+### 70.4 Retention Policy and Compaction
+
+After many conversations, old versions can be pruned according to a retention schedule:
+- Keep every version for the last 7 days
+- Keep one version per week for the last month
+- Keep one version per month beyond that
+- Or: keep the last N versions regardless of time
+
+The retention policy is configurable per deployment. The tiny file size means aggressive retention is cheap — 365 daily snapshots per user is 182KB. Compaction is a background task that never touches the current version.
+
+### 70.5 Memory Audit Trail
+
+The version history constitutes an audit trail of the model's accumulated experience. For regulated industries (healthcare, finance, legal), the ability to reconstruct what the model "knew" at any past point — and to prove it hadn't been tampered with — is a compliance requirement.
+
+**Implementation pattern:**
+- Each version file includes a SHA-256 hash of the previous version (chain of custody)
+- The harmonic census at each version creates a human-readable summary of what changed
+- An external auditor can verify: (a) the chain is unbroken, (b) each version's census is consistent with the stated conversation history, (c) no version was retroactively modified
+- The model weights (checkpoint.bin) are immutable and separately auditable
+
+### 70.6 Per-User Memory Isolation in Multi-Tenant Deployments
+
+In a deployment serving multiple users (e.g., a company's internal AI assistant), each user gets their own memory directory with independent versioning. User memories never interact unless explicitly merged by an administrator.
+
+**Implementation pattern:**
+- Directory structure: `memories/{user_id}/memory_v{NNN}.kwmf`
+- Server routes requests to the correct user memory based on session/API key
+- Administrator tools: `kerr-memory census memories/alice/` shows Alice's accumulated experience without loading it into a model
+- Cross-user analysis: compare harmonic census across users to detect anomalous accumulation patterns (e.g., one user's memory diverging dramatically from the population)
+- Privacy: each user's memory stays in their directory. Deletion is `rm -rf memories/{user_id}/`
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -1981,6 +2054,7 @@ This separation mirrors human cognition: education (knowledge, skills) is stable
 | 67 | Vendor-agnostic GPU training via analytical gradients in WGSL compute shaders (incl. batched outer product, two-dispatch attention backward) | Computing / AI / Hardware |
 | 68 | Inference serving and model format bridges for wave-native ODE architectures (incl. OpenAI-compatible API, GGUF export with custom ODE ops, ONNX custom operators, streaming token generation) | AI / Computing / Infrastructure |
 | 69 | Persistent wave memory state for ODE-based neural architectures (incl. separated model/memory checkpoints, ODE initial conditions as memory injection, harmonic census inspection, multi-context memory, safety through separability) | AI / Computing / Architecture / Safety |
+| 70 | Versioned wave memory with checkpoint/rollback semantics (incl. version-on-write, atomic writes, branching, retention policies, audit trails, per-user isolation) | AI / Computing / Infrastructure / Safety |
 
 ---
 

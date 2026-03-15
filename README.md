@@ -57,7 +57,7 @@ For the complete experimental record across 34 phases including null results, co
 
 **Training engine:** The [Kerr Engine](https://github.com/atech-hub/kerr-engine) (Rust, Apache 2.0) is a standalone training and inference engine for this architecture. Pure Rust, no Python, no CUDA dependency. 3x faster than PyTorch+CUDA at 128-dim on CPU alone. 1.72s/iter at 768-dim with 17 WGSL compute shaders running on any GPU vendor (NVIDIA, AMD, Intel, Apple Silicon).
 
-**Inference server:** The [Kerr Server](https://github.com/atech-hub/kerr-server) (Rust, Apache 2.0) serves trained models via an OpenAI-compatible API. Any chat UI that speaks the OpenAI protocol (LM Studio, Open WebUI, SillyTavern, continue.dev) connects without modification. 640 lines, SSE streaming, bearer token auth.
+**Inference server:** The [Kerr Server](https://github.com/atech-hub/kerr-server) (Rust, Apache 2.0) serves trained models via an OpenAI-compatible API. Self-contained — no engine dependency, no GPU code. Any chat UI that speaks the OpenAI protocol (LM Studio, Open WebUI, SillyTavern, continue.dev) connects without modification. ~1,900 lines, SSE streaming, bearer token auth, wave memory support.
 
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 
@@ -87,6 +87,8 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[Corpus Ordering Investigation](investigations/corpus-ordering/INVESTIGATION.md)** — 6 findings across 54 training runs (3 tests, 5-seed robustness). Sequential diversity pre-training beats single-corpus at equal target exposure. Order matters — wrong order is worse than no pre-training. The mechanism is diversity, not complexity. Legal text is easiest to model. Three-stage beats two-stage. Diversity is more efficient, not more powerful. All results produced by the [Kerr Engine](https://github.com/atech-hub/kerr-engine) (Rust, Apache 2.0).
 
+**Wave Memory Investigation (in progress)** — persistent wave state that accumulates experience across conversations by modifying Kerr-ODE initial conditions. The model weights never change; a separate 512-byte memory file shifts where the ODE starts. 5 experiments complete: stochastic resonance confirmed (α=0.05 gives -8.8% perplexity improvement from random noise alone), accumulation converges over 20 conversations, topic separation null at character-level (captures corpus texture, not topic — bounded by model capacity), reset is bit-identical to baseline, anomaly detection catches spikes before affecting output. The mechanism works, is stable, is safe, and is inspectable. Semantic resolution depends on model capacity — word-level and BPE tokenization expected to enable topic separation. Architecture: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 69-70).
+
 ## Documents
 
 | File | Description |
@@ -97,7 +99,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
 | [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 34 phases, all results, all nulls |
-| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 69 engine pattern families as prior art |
+| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 70 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
