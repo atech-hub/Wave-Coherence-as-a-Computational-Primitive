@@ -1851,6 +1851,61 @@ A token generation protocol that streams output tokens from a wave-native ODE mo
 
 A model registry format that describes trained Kerr-ODE models with metadata sufficient for any compatible runtime to load and serve them. The registry entry includes: architecture config (n_bands, n_head, n_layers, maestro_dim, rk4_steps), tokenizer type and vocabulary, training provenance (corpus, iterations, curriculum schedule), checkpoint format version, and performance characteristics (parameter count, benchmark loss). The registry enables model sharing, version management, and automatic runtime selection — the same model can be served by the native Rust engine, a GGUF-compatible runtime, or an ONNX runtime depending on what the user has available.
 
+## 69. Persistent Wave Memory State for ODE-Based Neural Architectures
+
+A memory architecture for ODE-based neural networks where the model weights remain frozen at inference time, but a separate persistent state file accumulates information across conversations or sessions. The model's education (weights) never changes; its experience (wave memory) evolves.
+
+### 69.1 Separated Model and Memory Checkpoints
+
+Two distinct files govern inference behaviour: (1) a frozen model checkpoint containing trained weights, Kerr parameters, attention matrices, and layer norms — the model's education; (2) a mutable wave memory file containing accumulated phase and magnitude states — the model's experience. The model checkpoint is public, shareable, and static. The memory file is private, per-user, and evolves.
+
+**Implementation pattern:**
+- Model checkpoint: standard KCHK format, loaded read-only at server startup
+- Memory file: stores per-band initial conditions (phase, magnitude) for the ODE integration layers
+- At inference: ODE layers seed their initial conditions from `embedding + memory_state` instead of from embedding alone
+- After each interaction: the memory state updates based on the trajectory the ODE followed during generation
+- The model's `forward()` takes `&self` (immutable) — weights never change during inference
+
+### 69.2 ODE Initial Conditions as Memory Injection Point
+
+In standard transformer architectures, hidden states are computed fresh from input tokens at each forward pass — there is no structural location to inject accumulated experience. In ODE-based architectures (Kerr-ODE, neural ODE, continuous normalising flows), the dynamics evolve FROM initial conditions. Changing the initial conditions changes the trajectory through the ODE, producing different outputs from the same model weights with the same input. The wave memory file modifies these initial conditions, acting as a persistent context that shapes computation without modifying the computation itself.
+
+**Implementation pattern:**
+- Each ODE layer reads initial conditions from `frozen_embedding[token] + memory_offset[layer][band]`
+- The memory offset is a per-layer, per-band vector stored in the wave memory file
+- The Kerr-ODE integration (RK4 with neighbour coupling) amplifies small initial condition differences through the nonlinear dynamics — the memory's influence grows through the integration, not just shifts the starting point
+- Memory offsets are bounded (e.g., clamp to ±0.1 of embedding magnitude) to prevent runaway drift
+
+### 69.3 Harmonic Census for Memory Inspection
+
+The wave memory file is inspectable using the same harmonic census tools used for model analysis during training. Running a spectral profile on the memory state reveals what the model has accumulated — which frequency bands have shifted, which remain at baseline, whether the band distribution looks healthy or distorted. This enables pre-deployment safety checks: if the memory state's harmonic profile deviates beyond acceptable bounds, the system flags it before it affects output.
+
+**Implementation pattern:**
+- Harmonic census of memory file: DFT of memory offsets per layer, energy concentration per band
+- Baseline comparison: memory state vs zero-state (fresh model), flag deviations beyond threshold
+- Per-layer analysis: detect if specific layers accumulate disproportionately (potential memory bottleneck)
+- Reset granularity: delete entire memory (full reset), zero specific layers, or zero specific bands
+
+### 69.4 Multi-Context Memory Files
+
+A single model with multiple memory files serves different contexts. A professional memory accumulates from work interactions, a personal memory from casual conversations, a research memory from technical sessions. The user selects which memory file to load at startup, or the server switches between them per-session. The model behaviour differs across contexts despite identical weights.
+
+**Implementation pattern:**
+- Server CLI flag: `--memory FILE` to load a specific wave memory state
+- API extension: session-based memory selection via request header or parameter
+- Memory files are small (per-layer × per-band × 2 floats) — a 128-dim model with 4 layers needs only 4 × 64 × 2 × 4 bytes = 2 KB
+- Memory isolation: different contexts never contaminate each other unless explicitly merged
+
+### 69.5 Safety Through Separability
+
+The architecture provides safety guarantees that weight-update-based memory (fine-tuning, RLHF) cannot:
+- **Deletability:** Remove the memory file and the model returns to its trained baseline. No residual effects.
+- **Inspectability:** The memory state is a small, structured numerical vector. It can be visualised, compared, and audited without running inference.
+- **Boundedness:** Memory offsets are clamped relative to embedding magnitudes. The memory cannot overwhelm the model's trained knowledge.
+- **Reversibility:** The model weights are read-only. There is no gradient computation during inference, no parameter update, no possibility of the model modifying its own education.
+
+This separation mirrors human cognition: education (knowledge, skills) is stable and slow to change; memory (experiences, context) is fluid and constantly updated. Neither corrupts the other.
+
 ---
 
 ## Summary of Covered Patterns
@@ -1925,6 +1980,7 @@ A model registry format that describes trained Kerr-ODE models with metadata suf
 | 66 | Corpus diversity pre-training for wave-native architectures (incl. order dependence, diversity-as-efficiency, three-stage curriculum) | AI / Training |
 | 67 | Vendor-agnostic GPU training via analytical gradients in WGSL compute shaders (incl. batched outer product, two-dispatch attention backward) | Computing / AI / Hardware |
 | 68 | Inference serving and model format bridges for wave-native ODE architectures (incl. OpenAI-compatible API, GGUF export with custom ODE ops, ONNX custom operators, streaming token generation) | AI / Computing / Infrastructure |
+| 69 | Persistent wave memory state for ODE-based neural architectures (incl. separated model/memory checkpoints, ODE initial conditions as memory injection, harmonic census inspection, multi-context memory, safety through separability) | AI / Computing / Architecture / Safety |
 
 ---
 

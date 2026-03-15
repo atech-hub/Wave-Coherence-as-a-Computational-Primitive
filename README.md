@@ -97,7 +97,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
 | [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 34 phases, all results, all nulls |
-| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 64 engine pattern families as prior art |
+| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 69 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
