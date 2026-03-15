@@ -59,6 +59,8 @@ For the complete experimental record across 34 phases including null results, co
 
 **Inference server:** The [Kerr Server](https://github.com/atech-hub/kerr-server) (Rust, Apache 2.0) serves trained models via an OpenAI-compatible API. Self-contained — no engine dependency, no GPU code. Any chat UI that speaks the OpenAI protocol (LM Studio, Open WebUI, SillyTavern, continue.dev) connects without modification. ~1,900 lines, SSE streaming, bearer token auth, wave memory support.
 
+**Wave memory:** The [Kerr Memory](https://github.com/atech-hub/kerr-memory) library (Rust, Apache 2.0) provides persistent wave state that accumulates experience across conversations. The model weights stay frozen; a separate 1.5KB file shifts the Kerr-ODE’s starting position. The model reads and writes memory in its native harmonic coordinate system — no translation layer. ~920 lines, zero dependencies. Integrated into the server via `--memory` flag.
+
 For the mathematical analysis of where harmonic structure helps and where it does not (the substrate incompatibility boundary), see [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md).
 
 ## Established Boundaries
