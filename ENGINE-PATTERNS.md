@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -1981,6 +1981,148 @@ In a deployment serving multiple users (e.g., a company's internal AI assistant)
 
 ---
 
+## 71. Perturbative Kerr-ODE Engine (Telecom-Inspired Single-Pass)
+
+### 71.1 Core Architecture
+
+A nonlinear ODE computation engine that replaces iterative numerical integration (RK4, Euler) with a single-pass analytical perturbation theory approximation. Derived from telecom DSP techniques (ESSFM, Learned DBP, Volterra series) adapted for neural network FFN layers. One dispatch replaces 192 dispatches (16 RK4 steps × 12 passes each).
+
+**Implementation pattern:**
+- Compute linear solution: decay (exp(-γ)) × rotation (cos(ω), sin(ω))
+- Self-phase modulation: |Z_linear|² per band
+- Cross-phase modulation: stencil convolution [1,1,0,1,1] over neighbour magnitudes
+- Phase perturbation: δφ = α × SPM + β × XPM
+- Correction: r_out = r_lin - δφ × s_lin; s_out = s_lin + δφ × r_lin
+
+**Validated:** MSE 0.000005 vs RK4-16 baseline. Trains better (loss 2.97 vs 3.07). 14x wall-clock speedup.
+
+### 71.2 GPU Shader Implementation
+
+WGSL compute shader where each thread computes one (position, band) element. Each thread recomputes its neighbours' linear solutions in-register (4 extra trig ops) to avoid synchronisation barriers or second dispatch pass. Workgroup size 64, dispatch = ceil(n_pos × n_bands / 64).
+
+---
+
+## 72. Block-Diagonal Output Projection Engine
+
+### 72.1 Core Architecture
+
+An output projection replacing dense matrix multiplication with N independent group_size × group_size blocks. Each block processes its band group independently.
+
+**Implementation pattern:**
+- Partition embedding into N groups (e.g., 6 groups of 128 for 768-dim)
+- Each group: own weight matrix + bias vector
+- Forward: split → independent linear transforms → concatenate
+- Backward: gradients flow independently per group
+- Parameter reduction: 6x at 768-dim (98K vs 590K)
+
+### 72.2 Enum Abstraction
+
+Rust OutProjWeights enum with Dense and BlockDiagonal variants exposing identical method interfaces (forward, backward_dx, flatten_into, unflatten_from, weights_flat, bias_flat, param_count). Consumer code is variant-agnostic. Checkpoint format stores group count in header.
+
+### 72.3 GPU Block-Diagonal Shader
+
+WGSL shader where each thread computes one output element. Thread determines its group from output index (group = out_i / group_size), reads only from its group's weight block. Single dispatch for all positions and groups.
+
+---
+
+## 73. Frozen Harmonic Coherence Attention
+
+### 73.1 Core Architecture
+
+Attention where harmonic coherence scores cos(n × (θ_i - θ_j)) replace trained Q×K dot products. Attention weights determined by harmonic structure, not learned parameters. Multi-head: each head uses a different harmonic number. Frozen (no gradient) — the mathematical structure IS the representation.
+
+**Validated:** Frozen harmonic embeddings match trained embeddings (Test 25). Zero parameters for attention computation.
+
+---
+
+## 74. Parallel Block Formulation (GPT-J for Wave-Coherent Networks)
+
+### 74.1 Core Architecture
+
+Transformer block where attention and FFN operate in parallel on the same layer-normed input, outputs summed. One norm instead of two. Enables concurrent GPU execution of attention and FFN branches.
+
+**Pattern:** x = x + attn(LN(x)) + FFN(LN(x)) instead of sequential x = x + attn(LN(x)); x = x + FFN(LN(x))
+
+---
+
+## 75. Multi-Tier Compute Architecture (Single Binary, Three Backends)
+
+### 75.1 Core Architecture
+
+Training engine compiling into a single binary with three selectable backends via CLI flag. All tiers share model architecture, weight format, and checkpoint system.
+
+**Tiers:**
+- CPU: Pure Rust, RK4-16 ODE, sequential attention. Correctness reference.
+- wgpu: WGSL compute shaders. Fused RK4 or perturbative ODE. Vulkan/Metal/DX12. AMD, Intel, NVIDIA.
+- Candle CUDA: HuggingFace Candle, perturbative ODE via tensor ops with true autograd, block-diagonal out_proj.
+
+**Selection:** `--gpu` (wgpu), `--candle` (CUDA), default (CPU). All produce identical results (validated to 3.58e-7).
+
+### 75.2 ComputeBackend Trait
+
+Rust trait abstracting forward/backward operations. CPU and GPU implement the same trait. Consumer code is backend-agnostic.
+
+---
+
+## 76. WCHK Self-Describing Checkpoint Format
+
+### 76.1 Core Architecture
+
+Binary checkpoint embedding all architectural parameters in the header. Any compatible engine reconstructs the model from header alone.
+
+**Format:** Magic "WCHK" + version + vocab_size + n_layers + out_proj_groups + iteration + lr + optimizer state size + RNG state. Body: flat f32 params + Adam moments. Version 2 adds block-diagonal support. Loss in filename for quick comparison.
+
+---
+
+## 77. Dual-Maestro Global Coordination Engine
+
+### 77.1 Core Architecture
+
+Two-stage bottleneck conditioning both input and output of the Kerr-ODE. Each maestro: Linear(d_model, maestro_dim) → GELU → Linear(maestro_dim, d_model). Pre-ODE maestro conditions input, post-ODE maestro regulates output.
+
+**Pattern:** pre = x + maestro_in(x); ode_out = kerr_ode(pre); regulated = ode_out + maestro_out(x); output = out_proj(regulated)
+
+**Validated:** Maestro-Add + curriculum = 98.1% of MLP at 44% params. Different mechanisms stack (coordination vs staging).
+
+---
+
+## 78. Ping-Pong Buffer GPU Consistency
+
+### 78.1 Core Architecture
+
+GPU buffer management where forward/backward alternate between two pre-allocated buffer sets. Eliminates per-dispatch allocation. Weight buffers uploaded once, updated in-place after optimizer. Buffer pool with cache-by-pointer reuses same GPU buffer within iteration.
+
+---
+
+## 79. Pipeline Monitor and Diagnostic Engine
+
+### 79.1 Core Architecture
+
+Training monitor providing real-time pipeline visibility. Per-section timing, VRAM monitoring (cudarc mem_get_info), gradient norm tracking, NaN recovery (skip step + log + continue), JSONL telemetry, checkpoint NaN guard (refuse save on NaN/Inf), loss in checkpoint filename.
+
+---
+
+## 80. MLP Weight Structure Analysis (Null Finding — Defensive Publication)
+
+### 80.1 Methodology
+
+Diagnostic analysis of trained transformer MLP weights to determine whether they contain exploitable structure for wave-based compression. Performed on Qwen 2.5 0.5B (896-dim, 24 layers).
+
+**Four analyses:** SVD effective rank (1% threshold), activation statistics (norm ratio, cosine similarity), 1D DFT power spectrum across weight rows, zero-out layer importance (perplexity impact).
+
+### 80.2 Findings (Null Result)
+
+- **Effective rank: FULL (896/896 all layers, all projections).** No low-rank structure.
+- **Frequency structure: FLAT (33.3%/33.2%/33.5% low/mid/high).** No wave structure in weights.
+- **No near-identity layers.** Cosine similarity input→output is negative (-0.05 to -0.3).
+- **Bookend importance.** Layers 0 (+32%) and 23 (+47%) most critical.
+
+### 80.3 Implication
+
+Trained MLP weights do not contain hidden wave structure translatable to ODE parameters. Wave-coherent FFN layers must be trained from scratch, not by parameter conversion. This establishes a boundary: the wave representation is a training architecture, not a compression codec for pre-trained dense matrices.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2055,6 +2197,16 @@ In a deployment serving multiple users (e.g., a company's internal AI assistant)
 | 68 | Inference serving and model format bridges for wave-native ODE architectures (incl. OpenAI-compatible API, GGUF export with custom ODE ops, ONNX custom operators, streaming token generation) | AI / Computing / Infrastructure |
 | 69 | Persistent wave memory state for ODE-based neural architectures (incl. separated model/memory checkpoints, ODE initial conditions as memory injection, harmonic census inspection, multi-context memory, safety through separability) | AI / Computing / Architecture / Safety |
 | 70 | Versioned wave memory with checkpoint/rollback semantics (incl. version-on-write, atomic writes, branching, retention policies, audit trails, per-user isolation) | AI / Computing / Infrastructure / Safety |
+| 71 | Perturbative Kerr-ODE (telecom-inspired single-pass, 14x speedup, MSE 0.000005 vs RK4-16) | AI / Signal Processing / GPU |
+| 72 | Block-diagonal output projection (N independent groups, 6x param reduction, enum abstraction) | AI / Computing / Efficiency |
+| 73 | Frozen harmonic coherence attention (zero-parameter attention from mathematical structure) | AI |
+| 74 | Parallel block / GPT-J formulation for wave-coherent networks | AI / Architecture |
+| 75 | Multi-tier compute architecture (CPU/wgpu/CUDA in single binary, ComputeBackend trait) | Computing / GPU / Architecture |
+| 76 | WCHK self-describing checkpoint format (architecture in header, no external config) | AI / Computing / Infrastructure |
+| 77 | Dual-maestro global coordination (pre/post ODE bottleneck, 98.1% of MLP at 44% params) | AI / Efficiency |
+| 78 | Ping-pong buffer GPU consistency (pre-allocated alternating buffer sets, cache-by-pointer) | Computing / GPU |
+| 79 | Pipeline monitor and diagnostic engine (VRAM tracking, NaN recovery, JSONL telemetry) | AI / Training / Infrastructure |
+| 80 | MLP weight structure analysis — null finding (full rank, flat spectrum, no wave structure in trained MLP weights) | AI / Research / Boundaries |
 
 ---
 
