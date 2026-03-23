@@ -89,7 +89,11 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[Corpus Ordering Investigation](investigations/corpus-ordering/INVESTIGATION.md)** — 6 findings across 54 training runs (3 tests, 5-seed robustness). Sequential diversity pre-training beats single-corpus at equal target exposure. Order matters — wrong order is worse than no pre-training. The mechanism is diversity, not complexity. Legal text is easiest to model. Three-stage beats two-stage. Diversity is more efficient, not more powerful. All results produced by the Kerr Engine (Rust, Apache 2.0), now succeeded by the [Wave Engine](https://github.com/atech-hub/wave-engine).
 
-**Wave Memory Investigation (in progress)** — persistent wave state that accumulates experience across conversations by modifying Kerr-ODE initial conditions. The model weights never change; a separate 512-byte memory file shifts where the ODE starts. 5 experiments complete: stochastic resonance confirmed (α=0.05 gives -8.8% perplexity improvement from random noise alone), accumulation converges over 20 conversations, topic separation null at character-level (captures corpus texture, not topic — bounded by model capacity), reset is bit-identical to baseline, anomaly detection catches spikes before affecting output. The mechanism works, is stable, is safe, and is inspectable. Semantic resolution depends on model capacity — word-level and BPE tokenization expected to enable topic separation. Architecture: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 69-70).
+**[Wave Memory Investigation](investigations/wave-memory/INVESTIGATION.md) (in progress)** — persistent wave state that accumulates experience across conversations by modifying Kerr-ODE initial conditions. The model weights never change; a separate 512-byte memory file shifts where the ODE starts. 5 experiments complete: stochastic resonance confirmed (α=0.05 gives -8.8% perplexity improvement from random noise alone), accumulation converges over 20 conversations, topic separation null at character-level (captures corpus texture, not topic — bounded by model capacity), reset is bit-identical to baseline, anomaly detection catches spikes before affecting output. The mechanism works, is stable, is safe, and is inspectable. Semantic resolution depends on model capacity — word-level and BPE tokenization expected to enable topic separation. Architecture: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 69-70).
+
+**[Wave Structure Emergence](investigations/wave-structure/INVESTIGATION.md) (active)** — Does a trained wave-engine model actually build the harmonic phase structure the theory predicts? First diagnostic data captured: phase clustering at 0.553 (structured, not random), semantic discrimination at 1.0x (not yet emerged), different token pairs mapping to different harmonics (n=1 for boy/ball, n=5 for cat/dog, n=6 for sat/kicked). Band census shows 50/50 split at 384 bands vs the 67/33 found at 64 bands in the frequency-depth investigation. Tracking six diagnostics across model sizes (168-dim to 768-dim) and training passes. Built into the engine as `--analyze` flag using the same `cos(n × Δθ)` harmonic coherence from the core framework.
+
+**[MLP Weight Structure Analysis](investigations/mlp-analysis/INVESTIGATION.md) (complete — null finding)** — SVD and DFT analysis of all 72 MLP weight matrices across 24 layers of Qwen 2.5 0.5B. Full effective rank 896/896 everywhere, flat frequency spectrum (33/33/33% low/mid/high), no near-identity layers. The "translate existing model to waves" path does not exist. Wave-engine models must be trained from scratch — efficiency gains come from learning a different representation, not compressing existing MLP weights. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 80).
 
 ## Documents
 
@@ -105,7 +109,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
-| investigations/ | Multi-grid and spherical deep-dive investigations |
+| investigations/ | 7 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis |
 
 ## Reproduce the Validation
 
