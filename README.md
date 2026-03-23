@@ -74,6 +74,7 @@ Null results are findings. The framework has clear boundaries established throug
 | FFN computation | **Partially replaces** — Kerr-ODE at 98.1% of MLP | Phases 20-22d, A, B, C |
 | Attention Q/K | **Hurts** — must remain unconstrained | Phases 18, 19, 19b |
 | Weight matrices | **No effect** — spectrally flat regardless | Phases 17, 17b |
+| Harmonic embedding vocab | **Minimum dimension required** — vocab/bands ratio must allow sufficient angular separation | [Wave Structure Investigation](investigations/wave-structure/INVESTIGATION.md) |
 
 Full analysis: [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md)
 

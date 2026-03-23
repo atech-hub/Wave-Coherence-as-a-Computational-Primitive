@@ -115,8 +115,62 @@ Diagnostics will be captured at pass 1, 5, 10, 20, 50.
 4. Do higher harmonics (n=3, n=5) strengthen relative to n=1 with more passes?
 5. Do findings from Model A (168-dim) predict the behaviour of Model B (384-dim)?
 
+## Finding: Harmonic Embedding Minimum Dimension
+
+**Date:** 2026-03-23
+**Status:** CONFIRMED — numerical verification + failed training runs
+
+Harmonic embeddings have a minimum dimension for a given vocabulary size. Below this threshold, tokens become geometrically indistinguishable and training is numerically degenerate.
+
+The harmonic embedding for token v at band n is `[cos(n×θ_v), sin(n×θ_v)]` where `θ_v = 2π×v/vocab_size`. The dot product between adjacent tokens (v and v+1) is:
+
+`dot(v, v+1) = Σ_n cos(n × 2π/vocab_size)`
+
+The separation from the self-dot-product (which equals n_bands) determines discriminability.
+
+Measured values:
+
+| Vocab | Bands | Adjacent token separation | Cosine similarity | Trainable? |
+|-------|-------|--------------------------|-------------------|------------|
+| 65 | 84 | 74.66 (of 84) | 0.112 | YES — proven |
+| 2,000 | 84 | 0.99 (of 84) | 0.988 | YES — tested |
+| 50,000 | 84 | 0.0016 (of 84) | 0.99998 | NO — NaN after ~760 iters |
+| 50,000 | 384 | 0.148 (of 384) | 0.99961 | YES — proven at 24L |
+
+At 84 bands with 50K vocab, adjacent tokens differ by 0.0016 in dot product — they are 99.998% identical. Hundreds of tokens occupy the same neighbourhood in embedding space. The softmax over near-identical logits is numerically degenerate: one small perturbation from the ODE flips predictions between indistinguishable tokens, producing unstable gradients that eventually overflow to NaN.
+
+This was confirmed empirically: five different fixes addressing gradient clipping, weight growth, learning rate, output projection, and activation clamping all failed. The NaN is geometric, not numerical — no amount of regularisation can make indistinguishable inputs distinguishable.
+
+**Minimum dimension rule:** For stable training, the adjacent token separation should be at least ~0.1 (empirical threshold). This gives:
+
+| Vocab size | Minimum bands | Minimum dimension |
+|------------|--------------|-------------------|
+| 65 (char) | 8 | 16 |
+| 500 | 21 | 42 |
+| 2,000 | 42 | 84 |
+| 10,000 | 170 | 340 |
+| 50,000 | 384 | 768 |
+
+This is analogous to the Nyquist limit in signal processing: the embedding dimension must provide sufficient angular resolution to separate the vocabulary. Below the limit, the harmonic basis cannot uniquely address every token.
+
+**Practical implication:** For small diagnostic models (168-dim), use a vocabulary matched to the dimension. A 2K BPE vocabulary at 84 bands provides 630x more geometric separation than 50K. For production models (768-dim), 50K vocabulary is geometrically viable.
+
+**Resolution:** Model A uses a custom 2K BPE tokenizer trained on the 12.4MB corpus.
+
+---
+
+## Open Questions
+
+1. At how many corpus passes does semantic discrimination cross 1.5x?
+2. Does the band census become bimodal with more training, or is the continuous distribution a genuine difference at higher band counts?
+3. Does the depth curve develop a peak at 4 layers with sufficient training?
+4. Do higher harmonics (n=3, n=5) strengthen relative to n=1 with more passes?
+5. Do findings from Model A (168-dim) predict the behaviour of Model B (384-dim)?
+6. What is the exact relationship between vocab size, band count, and the minimum separation threshold for stable training?
+
 ## Connections
 
 - **Frequency-depth investigation:** Established 67/33 band split, 0.144 layer correlation at 64 bands. This investigation tests whether those findings scale.
 - **Wave memory investigation:** Memory requires a model with established wave structure. This investigation determines when that structure is sufficient for memory to be meaningful.
 - **Corpus-ordering investigation:** The 12.4MB corpus uses the validated curriculum ordering (grammar → children → letters → essays → Shakespeare → legal → science).
+- **Architecture boundaries (research repo):** The minimum dimension finding adds a new boundary: harmonic embeddings require vocab_size / n_bands below a critical ratio.
