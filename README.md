@@ -96,6 +96,8 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[MLP Weight Structure Analysis](investigations/mlp-analysis/INVESTIGATION.md) (complete — null finding)** — SVD and DFT analysis of all 72 MLP weight matrices across 24 layers of Qwen 2.5 0.5B. Full effective rank 896/896 everywhere, flat frequency spectrum (33/33/33% low/mid/high), no near-identity layers. The "translate existing model to waves" path does not exist. Wave-engine models must be trained from scratch — efficiency gains come from learning a different representation, not compressing existing MLP weights. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 80).
 
+**[ODE Magnitude Regulation](investigations/ode-regulation/INVESTIGATION.md) (active)** — How should signals entering the Kerr-ODE be regulated during training? 5 controlled tests proving physics-bounded adaptive gain control eliminates V-shape training divergence. The maestro pre-conditioner naturally increases magnitudes — fixed clamps throttle the model. AGC with physics-derived ceiling (M < sqrt(pi/2 / (alpha+4*beta))) lets the model self-regulate: rolling average descends monotonically through 20K iterations for the first time at BPE scale. Electronics analogy: fixed resistor, zener diode, AGC + rail voltage. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 81).
+
 ## Documents
 
 | File | Description |
@@ -106,11 +108,11 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
 | [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 34 phases, all results, all nulls |
-| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 80 engine pattern families as prior art |
+| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 81 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
-| investigations/ | 7 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis |
+| investigations/ | 8 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation |
 
 ## Reproduce the Validation
 
