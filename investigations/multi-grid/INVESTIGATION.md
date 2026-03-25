@@ -367,6 +367,23 @@ Each layer handles what the others cannot. The traditions maintained them as sep
 
 If the 12-grid and 10-grid compose into richer representations than either alone, harmonic embeddings on multiple incommensurate grids may capture structure that a single grid misses. Different grids serve as different basis sets for different frequency ranges.
 
+**UPDATE (2026-03-24): This prediction was implemented and validated.**
+
+The wave-engine's harmonic embeddings map each token to a phase angle: θ_v = 2π × v / vocab_size. On a single circle, adjacent tokens in a large vocabulary become geometrically indistinguishable (see wave-structure investigation — Harmonic Embedding Minimum Dimension).
+
+Measured separation at 84 bands:
+
+| Vocab | Single grid separation | Multi-grid separation | Improvement |
+|-------|----------------------|----------------------|-------------|
+| 2,000 | 0.94 | 95.01 | **101×** |
+| 50,000 | 0.0016 | 18.60 | **11,800×** |
+
+The fix applies the Sexagenary principle directly: two coprime moduli (m1, m2) near √vocab_size, each grid gets half the bands. Tokens that collide on grid 1 (same v mod m1) are separated on grid 2 (different v mod m2). The lcm(m1, m2) ≥ vocab_size guarantees every token has a unique combined position.
+
+Implementation: `wave-engine/src/common/embed.rs` — `build_harmonic_table()` with `find_coprime_moduli()`. Published as Pattern 53 in ENGINE-PATTERNS.md.
+
+This is a direct application of Test 6's finding: "Don't warp the space — build the right space." The ancient Sexagenary system used two incommensurate grids (10 × 12) to encode a 60-position cycle. The wave-engine uses two coprime grids to encode vocabularies that a single grid cannot resolve. Same principle, same mathematics, separated by millennia.
+
 ---
 
 ## Scorecard
