@@ -2123,6 +2123,57 @@ Trained MLP weights do not contain hidden wave structure translatable to ODE par
 
 ---
 
+## 81. Physics-Bounded Adaptive Regulation (AGC for Neural ODE)
+
+### 81.1 Core Architecture
+
+An automatic gain control system that regulates the magnitude of signals entering a nonlinear ODE layer during neural network training. The regulation adapts to the model's learned operating range via exponential moving averages while respecting a physics-derived stability ceiling.
+
+**The problem unique to neural ODE architectures:** A learned pre-conditioner (maestro) naturally increases magnitudes during training to carry more information through the ODE's nonlinear dynamics. Without regulation, magnitudes exceed the ODE's stability threshold (phase shift > 90°), causing numerical divergence. Fixed regulation (hard clamps) throttles the model — the pre-conditioner fights the clamp, creating V-shaped loss divergence.
+
+**Implementation pattern:**
+- **Floor** (min_threshold): prevents the ODE from receiving too-weak signal for meaningful computation
+- **Ceiling** (max_threshold): derived from ODE physics — M < √(π/2 / (α + 4β)) where α, β are coupling constants
+- **Adaptive range**: EMA of observed magnitudes (mean + 3σ) sets the compression threshold between floor and ceiling
+- **Knee compressor**: below threshold, signal passes unchanged (zero compression tax on normal operation). Above threshold, smooth compression on the excess only: `output = threshold + threshold × tanh((excess) / threshold)`
+
+### 81.2 Electronics Analogy Progression
+
+The design follows a signal processing evolution, each step proven necessary by test data:
+
+| Stage | Electronics equivalent | Implementation | Limitation |
+|-------|----------------------|----------------|------------|
+| Fixed clamp | Resistor | Hard cutoff at constant | Clips signal, V-shape divergence |
+| Higher clamp | Larger resistor | Higher constant | Eventually outgrown (92% clamped) |
+| Soft clamp | Zener diode | tanh compression | Over-compresses normal signal (17%) |
+| Adaptive | AGC circuit | EMA-based threshold | No upper bound → ODE blows up |
+| **Physics-bounded AGC** | **AGC + rail voltage** | **EMA + ODE ceiling** | **Adapts freely within stable range** |
+
+### 81.3 ODE Stability Derivation
+
+For the Kerr-ODE with coupling constants α, β and dt=1.0:
+- Phase shift per step: δφ = (α + 4β) × M²
+- Stability requires δφ < π/2
+- Maximum stable magnitude: M_max = √(π/2 / (α + 4β))
+- At α = β = 0.01: M_max ≈ 5.6 (ceiling set to 6.0 for margin)
+- At α = β = 0.1: M_max ≈ 1.77 (explains why α=0.1 caused immediate NaN at small dims)
+
+### 81.4 Validated Results
+
+Five controlled tests at 256-dim, 12 layers, 512 BPE, 20K iterations:
+
+| Regulation | Best loss | Rolling avg stable? | V-shape? |
+|-----------|----------|-------------------|----------|
+| Hard 2.5 | 4.16 | No — rising | YES |
+| Hard 5.0 | 3.75 | No — mild rise | Delayed |
+| Soft tanh | 3.83 | Yes through 16K | Mild late |
+| AGC no ceiling | 4.57 | No — NaN at iter 4K | Blew up |
+| **AGC + ceiling 6.0** | **3.76** | **Yes through 20K** | **NO** |
+
+The physics-bounded AGC eliminated V-shape divergence while matching the best individual loss. Rolling averages descended monotonically through 20K iterations — something no fixed regulation achieved.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2207,6 +2258,7 @@ Trained MLP weights do not contain hidden wave structure translatable to ODE par
 | 78 | Ping-pong buffer GPU consistency (pre-allocated alternating buffer sets, cache-by-pointer) | Computing / GPU |
 | 79 | Pipeline monitor and diagnostic engine (VRAM tracking, NaN recovery, JSONL telemetry) | AI / Training / Infrastructure |
 | 80 | MLP weight structure analysis — null finding (full rank, flat spectrum, no wave structure in trained MLP weights) | AI / Research / Boundaries |
+| 81 | Physics-bounded adaptive regulation (AGC for neural ODE, knee compressor with stability ceiling) | AI / Signal Processing / Training |
 
 ---
 
