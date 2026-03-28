@@ -1,6 +1,6 @@
 # 256-dim Scaling — Can the Model Speak?
 
-**Status:** ACTIVE — C8 both channels above 1.0x (θ=1.55, Δθ=1.34). Near-phrases emerging.
+**Status:** ACTIVE — C9 gentle dip after C8 dual encoding. Model still learning. Near-phrases sustained.
 **Date:** 2026-03-28 (updated 2026-03-29)
 **Engine:** wave-engine (Rust, Apache 2.0)
 **Hardware:** Intel i7-14700K, RTX 4070 Ti, 32GB DDR5
@@ -283,7 +283,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
 | C6 | 60K | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
 | C7 | 70K | 3.84 | 0.86x | 1.46x | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple" |
-| **C8** | **80K** | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x. "preposition", "sentence means", "speech", "plural", "pronouns", "thine", "shall pass"** |
+| C8 | 80K | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x.** "preposition", "sentence means", "speech", "pronouns", "shall pass" |
+| **C9** | **90K** | 3.88 | 0.93x | 0.88x | 0.486 | band 84 (15.1x) | Gentle dip. "predicate", "express", "begin", "subject", "Thou art", "blood" |
 
 ---
 
