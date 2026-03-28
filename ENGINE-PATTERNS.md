@@ -2259,6 +2259,12 @@ The physics-bounded AGC eliminated V-shape divergence while matching the best in
 | 79 | Pipeline monitor and diagnostic engine (VRAM tracking, NaN recovery, JSONL telemetry) | AI / Training / Infrastructure |
 | 80 | MLP weight structure analysis — null finding (full rank, flat spectrum, no wave structure in trained MLP weights) | AI / Research / Boundaries |
 | 81 | Physics-bounded adaptive regulation (AGC for neural ODE, knee compressor with stability ceiling) | AI / Signal Processing / Training |
+| 82 | Asymmetric coupling ratio (β ≠ α) as independent design parameter — controls encoding strategy, prevents crystallisation, enables dual-channel semantic encoding | AI / Architecture / Training |
+| 83 | Sub-harmonic diagnostics — differential phase clustering, magnitude coupling decay, inter-modulation spectrum, cross-band semantic discrimination, coupling energy budget | AI / Diagnostics / Research |
+| 84 | Rotational learning — alternating θ/Δθ encoding channel leadership with monotonic entropy ratchet across training cycles | AI / Training Dynamics / Research |
+| 85 | Wave transduction output decoder — phase coherence cos(Δθ) scoring with per-band learned weights and magnitude confidence, replacing linear lm_head projection | AI / Architecture / Output |
+| 86 | Cos expansion optimisation — cos(a-b) = cos(a)cos(b) + sin(a)sin(b) precompute, eliminates O(vocab×bands) transcendental calls, matches linear projection speed | Computing / Optimisation |
+| 87 | Progressive dimension scaling — band-preserving checkpoint transplant between dimensions, pad weights with identity/random, recompute frozen components | AI / Architecture / Scaling |
 
 ---
 
