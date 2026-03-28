@@ -242,7 +242,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C3 | 30K | 4.09 | 1.61x | 0.88x | **0.433** | band 85 (16.2x) | "subject", "action", "verb", "compound", "object", "heart", "name" |
 | C4 | 40K | 3.93 | 1.80x | 0.86x | 0.437 | band 84 (14.6x) | "adverb", "meaning", "thought", "adjective", "quest", "relinquish" |
 | C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
-| **C6** | **60K** | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
+| C6 | 60K | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
+| **C7** | **70K** | 3.84 | 0.86x | **1.46x** | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple", "father", "brother" |
 
 ---
 
