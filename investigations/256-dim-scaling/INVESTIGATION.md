@@ -1,6 +1,6 @@
 # 256-dim Scaling — Can the Model Speak?
 
-**Status:** ACTIVE — C6 confirms rotational learning at 256-dim. Δθ crossed 1.0x (1.68x).
+**Status:** ACTIVE — C8 both channels above 1.0x (θ=1.55, Δθ=1.34). Near-phrases emerging.
 **Date:** 2026-03-28 (updated 2026-03-29)
 **Engine:** wave-engine (Rust, Apache 2.0)
 **Hardware:** Intel i7-14700K, RTX 4070 Ti, 32GB DDR5
@@ -183,6 +183,25 @@ Comprehension at C6 is the richest yet. "The king" produces Shakespeare register
 
 ---
 
+## C8 — Both Channels Active
+
+| Metric | C6 | C7 | **C8** |
+|--------|----|----|--------|
+| Best loss | 3.97 | 3.84 | 3.92 |
+| θ disc | 0.76x | 0.86x | **1.55x** |
+| Δθ disc | **1.68x** | 1.46x | **1.34x** |
+| Both >1.0x | No | No | **YES** |
+
+**First dual-channel encoding at 256-dim.** θ recovered to 1.55x while Δθ held at 1.34x. The model achieved what 168-dim could only do in brief flashes — both encoding channels active simultaneously.
+
+The path was clean. C5 peaked θ (1.37x). C6 rotated to Δθ (1.68x). C7 held Δθ while θ recovered. C8 both above 1.0x. No violent oscillation, no both-channel collapse. The 128-band space gives the model room to rotate smoothly.
+
+Comprehension: "preposition", "sentence means", "speech", "plural", "pronouns", "language", "thine", "shall pass", "gentle", "cannot well". Meta-linguistic terms AND near-phrases. The model is producing word pairs that belong together — not sentences yet, but the clustering is tightening toward composition.
+
+Transplant boundary at 14.8x — steadily easing from 17.3x at C1. The old and new bands are integrating.
+
+---
+
 ## The 168-dim vs 256-dim Comparison
 
 Three cycles in, the differences are already clear:
@@ -243,7 +262,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C4 | 40K | 3.93 | 1.80x | 0.86x | 0.437 | band 84 (14.6x) | "adverb", "meaning", "thought", "adjective", "quest", "relinquish" |
 | C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
 | C6 | 60K | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
-| **C7** | **70K** | 3.84 | 0.86x | **1.46x** | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple", "father", "brother" |
+| C7 | 70K | 3.84 | 0.86x | 1.46x | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple" |
+| **C8** | **80K** | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x. "preposition", "sentence means", "speech", "plural", "pronouns", "thine", "shall pass"** |
 
 ---
 
