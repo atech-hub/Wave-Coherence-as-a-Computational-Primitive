@@ -177,6 +177,8 @@ At 168-dim, C6 was the dip where BOTH channels dropped below 1.0x (θ=0.77, Δθ
 
 Entropy dropped to 0.453 — back near the C3 low of 0.433. The model tightens structure during the rotation, same as 168-dim's entropy ratchet.
 
+Comprehension at C6 is the richest yet. "The king" produces Shakespeare register: "death", "life", "world", "great", "shall". "Love is" produces: "English", "nouns", "verb", "adjective", "world", "phrase", "heart". The model is producing semantically clustered outputs — words from the same domain appearing together. Not composed sentences, but the clusters are tightening.
+
 **Prediction:** C7 should see θ recover (possibly to a new record) while Δθ holds or eases. If both channels are above 1.0x at C7, that's the dual encoding that 168-dim achieved at C4 and C8 but couldn't sustain.
 
 ---
@@ -240,7 +242,7 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C3 | 30K | 4.09 | 1.61x | 0.88x | **0.433** | band 85 (16.2x) | "subject", "action", "verb", "compound", "object", "heart", "name" |
 | C4 | 40K | 3.93 | 1.80x | 0.86x | 0.437 | band 84 (14.6x) | "adverb", "meaning", "thought", "adjective", "quest", "relinquish" |
 | C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
-| **C6** | **60K** | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | **Δθ crossed 1.0x — rotational learning confirmed at 256-dim** |
+| **C6** | **60K** | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
 
 ---
 
