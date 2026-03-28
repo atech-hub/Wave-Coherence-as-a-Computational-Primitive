@@ -183,6 +183,26 @@ Comprehension at C6 is the richest yet. "The king" produces Shakespeare register
 
 ---
 
+## C7 — Δθ Holds, θ Recovers
+
+| Metric | C6 (60K) | **C7 (70K)** |
+|--------|----------|-------------|
+| Best loss | 3.97 | 3.84 |
+| θ disc | 0.76x | 0.86x |
+| Δθ disc | **1.68x** | **1.46x** |
+| Entropy | 0.453 | 0.466 |
+| Most coupled | band 84 (15.9x) | band 84 (14.9x) |
+
+Δθ held above 1.0x for a second consecutive cycle — something 168-dim never achieved. θ slowly recovering (0.76 → 0.86). The model is building toward dual encoding patiently, not spiking.
+
+Loss recovering from the C6 dip: 3.97 → 3.84. Not back to C5's 3.78 yet but heading there.
+
+Comprehension: "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple", "father", "brother", "death", "war", "know", "show", "follow". Vocabulary massive. Function words appearing alongside content words: "following the", "first", "common", "simple", "without".
+
+Transplant boundary easing: 14.9x (from 17.3x at C1).
+
+---
+
 ## C8 — Both Channels Active
 
 | Metric | C6 | C7 | **C8** |
