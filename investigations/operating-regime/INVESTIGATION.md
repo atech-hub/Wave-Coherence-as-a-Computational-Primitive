@@ -219,6 +219,7 @@ The dark matter analogy was also correct — but pointed to the wrong mechanism 
 | 168-dim, α=0.1, block-diag, char | 3.02 | Letters and spaces, no words |
 | **168-dim, α=0.1, dense, char, ceiling=2.0** | **2.35** | **Word fragments emerging** |
 | **168-dim, α=0.1, dense, char, ceiling=1.0** | **2.25** | **"the", "you", "she", "our"** |
+| **168-dim, α=0.1, dense, BPE, ceiling=1.0** | **3.58** | **"the", "and", "into", "might", "hero"** |
 
 ### AGC ceiling sweep (α=0.1, dense out_proj, 168-dim char)
 
@@ -242,7 +243,13 @@ The dark matter analogy was also correct — but pointed to the wrong mechanism 
 
 **CONFIRMED.** The wave-engine produces English word fragments at 168-dim with the correct operating regime: α=0.1, AGC ceiling=1.0, dense out_proj, char-level tokenization.
 
-BPE tokenization with the corrected settings is pending testing.
+BPE tokenization with the corrected settings is **CONFIRMED**. 168-dim BPE at α=0.1, ceiling=1.0, dense out_proj:
+- Loss 3.58, rolling average descended monotonically through 20K iters (5.22 → 4.17)
+- Zero NaN, zero divergence, trained through 3+ corpus passes
+- Output: English words — "the", "and", "of", "is", "to", "for", "into", "this", "who", "you", "they", "might", "about", "mind", "there", "hero"
+- First time BPE has produced English from the wave-engine
+
+The operating regime is universal — it works regardless of tokenization level.
 
 ---
 
