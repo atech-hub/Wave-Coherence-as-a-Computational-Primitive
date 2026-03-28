@@ -96,6 +96,8 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[Harmonic Scaling Investigation](investigations/harmonic-scaling/INVESTIGATION.md) (active)** — Does vocabulary complexity drive harmonic diversity? 21+ training cycles across two coupling regimes, a β sweep, and four output decoder experiments at 168-dim. Key discoveries: (1) **β is an independent design parameter** — β=0.2 with α=0.1 doubles cross-band coupling (7.82x vs 3.94x), enables dual-channel encoding, prevents crystallisation; (2) **Rotational learning** — the model alternates θ and Δθ encoding channels, each rotation tightening entropy (0.911→0.842); (3) **3.38x per-band discrimination** — strongest semantic signal in the investigation, 2x stronger than α=β=0.1's lifetime best; (4) **Sub-harmonic diagnostics** — 5 measurements detecting cross-band information channels (coupling 3.94x architectural, invariant to training); (5) **Wave transduction** — phase coherence output decoder (85 params) beats tied embeddings (5.84 vs 6.23), validates that phase-native measurement preserves what dot products destroy. All at 168-dim, 340K params, 1.36MB. The model is still learning at 120K iterations with no crystallisation at β=0.2.
 
+**[Output Decoding Investigation](investigations/output-decoding/INVESTIGATION.md) (complete)** — The model knows more than it can say. Five output decoders tested at 168-dim: tied embeddings (null — rigid decoder), wave transduction V1 (85 params, phase-native, 5.84), wave transduction V2 (dual-channel, no improvement), unfrozen wave decode (86K params, 5.25 — broke frozen ceiling), low-rank 32 (38K params, 4.62 — best efficiency). Conservation argument validated: phase coherence preserves what dot products destroy. Low-rank wins on efficiency for 256-dim. Defensive publication: Patterns 85-86.
+
 **[Wave Structure Emergence](investigations/wave-structure/INVESTIGATION.md) (superseded by Harmonic Scaling)** — Initial wave structure diagnostics. Phase clustering at 0.553, multi-grid coprime embeddings (11,800x improvement), per-band ODE clamping. Built into the engine as `--analyze` flag. Findings incorporated into the Harmonic Scaling investigation.
 
 **[MLP Weight Structure Analysis](investigations/mlp-analysis/INVESTIGATION.md) (complete — null finding)** — SVD and DFT analysis of all 72 MLP weight matrices across 24 layers of Qwen 2.5 0.5B. Full effective rank 896/896 everywhere, flat frequency spectrum (33/33/33% low/mid/high), no near-identity layers. The "translate existing model to waves" path does not exist. Wave-engine models must be trained from scratch — efficiency gains come from learning a different representation, not compressing existing MLP weights. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 80).
@@ -116,7 +118,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
-| investigations/ | 10 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling |
+| investigations/ | 11 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling, output-decoding |
 
 ## Reproduce the Validation
 
