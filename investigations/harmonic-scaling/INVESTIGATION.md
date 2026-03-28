@@ -194,55 +194,11 @@ Plus one null: tied embeddings (frozen decoder too rigid).
 
 ---
 
-## Part 6: 256-dim — The Model Gets Room (ACTIVE)
+## 256-dim Results
 
-The best 168-dim checkpoint (β=0.2 C7, loss 3.91, 3.38x θ) was scaled to 256-dim using progressive dimension scaling. Bands 1-84 preserved with learned weights, bands 85-128 initialised fresh. 597K params, 7.2 MB.
+The 256-dim investigation continues in its own document: **[256-dim Scaling — Can the Model Speak?](../256-dim-scaling/INVESTIGATION.md)**
 
-### The transplant
-
-168-dim C7 → 256-dim at init. The model starts with 70K iterations of learned structure in its first 84 bands. New bands join cold. The gradient balance flipped immediately: **79% model, 21% head** (was 15/85 at 168-dim). The ODE gets most of the gradient for the first time.
-
-### The trajectory
-
-| | C1 (10K) | C2 (20K) | C3 (30K) | C4 (40K) | C5 (50K) |
-|--|----------|----------|----------|----------|----------|
-| Best loss | 4.09 | 4.11 | 4.09 | 3.93 | **3.78** |
-| θ disc | **2.73x** | 1.09x | 1.61x | 1.80x | 1.37x |
-| Δθ disc | 0.70x | 0.86x | 0.88x | 0.86x | **0.98x** |
-| Entropy | 0.456 | 0.455 | 0.433 | 0.437 | 0.483 |
-| Most coupled | band 85 | band 84 | band 85 | band 84 | band 84 |
-
-### What's different from 168-dim
-
-**Entropy is half of what 168-dim ever achieved.** 0.433-0.456 vs 168-dim's best of 0.842. With 128 bands the inter-modulation structure is dramatically more concentrated from the start.
-
-**θ discrimination recovers smoothly.** At 168-dim the channels oscillated wildly (2.73 → 1.09 at C2, then spiking/crashing). At 256-dim: 2.73 → 1.09 → 1.61 → 1.80 — a steady climb after the initial dip. The anti-correlation may be weakening with more room.
-
-**Δθ is stable, not oscillating.** Flat at 0.86-0.88 across three cycles. At 168-dim it swung from 2.90x to 0.49x. The two channels are coexisting without competing.
-
-**Most coupled band sits at 84-85** — the transplant boundary. The model is actively knitting old and new bands together. The coupling energy concentrates at the seam where learned structure meets fresh capacity.
-
-**Loss broke through at C4, then kept going.** Three cycles plateaued at 4.09, then C4 dropped to 3.93, and C5 pushed to **3.78** — crushing 168-dim's all-time best (3.91) in only 50K iters.
-
-**Δθ approaching 1.0x.** At C5 the differential channel hit 0.98x — right at the threshold. At 168-dim, Δθ crossed 1.0x at C4 after wild oscillations. At 256-dim the approach is smooth. If C6 crosses, both channels will be active without the anti-correlation that plagued 168-dim.
-
-### Comprehension comparison: same iteration count, different dimension
-
-| | 168-dim C4 (40K) | 256-dim C4 (40K) | 256-dim C5 (50K) |
-|--|-----------------|-----------------|-----------------|
-| Loss | 4.10 | 3.93 | **3.78** |
-| θ disc | 1.31x | 1.80x | 1.37x |
-| Entropy | 0.887 | 0.437 | 0.483 |
-| Vocabulary | "predicate", "verbs", "hands" | "adverb", "meaning", "quest", "relinquish" | **"sentence", "phrase", "means", "sentences", "action", "being", "different", "know"** |
-
-"Relinquish" at C4 — a four-syllable, low-frequency word with precise meaning. From a 2.39 MB model at 40K iters. By C5, the model is producing grammar concept clusters: "sentence", "phrase", "means", "sentences", "action", "being". Not composed sentences yet — but the vocabulary is becoming denser and more semantically grouped. At 168-dim the model was producing isolated category labels. At 256-dim it's producing words that describe actions, states, and relationships.
-
-### Predictions (from 168-dim investigation)
-
-1. **The transplant works.** *(CONFIRMED — C1 loss 4.09, matching 168-dim C4 in one cycle.)*
-2. **Rotational learning continues at scale.** *(EMERGING — θ oscillation visible but smoother than 168-dim.)*
-3. **Composition may emerge.** *(PENDING — vocabulary depth is there, word order is not yet.)*
-4. **Low-rank at 256-dim.** *(NOT YET TESTED — parked for after full-rank baseline.)*
+**Summary at C5 (50K iters):** Loss 3.78 (new all-time record, crushing 168-dim's 3.91). Entropy 0.433-0.483 (half of 168-dim's lifetime best). Δθ approaching dual-channel threshold at 0.98x. Vocabulary producing grammar concept clusters: "sentence", "phrase", "means", "action", "being". The transplant from C7 worked — 168-dim's learned structure transferred and extended.
 
 ---
 
