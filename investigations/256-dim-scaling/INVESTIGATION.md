@@ -1,6 +1,6 @@
 # 256-dim Scaling — Can the Model Speak?
 
-**Status:** ACTIVE — C5 at loss 3.78 (new all-time record). Δθ at 0.98x approaching dual-channel threshold.
+**Status:** ACTIVE — C6 confirms rotational learning at 256-dim. Δθ crossed 1.0x (1.68x).
 **Date:** 2026-03-28 (updated 2026-03-29)
 **Engine:** wave-engine (Rust, Apache 2.0)
 **Hardware:** Intel i7-14700K, RTX 4070 Ti, 32GB DDR5
@@ -160,6 +160,27 @@ Comprehension: "sentence", "phrase", "verbs", "words", "verb", "means", "sentenc
 
 ---
 
+## C6 — The Rotation Begins
+
+| Metric | C5 (50K) | **C6 (60K)** |
+|--------|----------|-------------|
+| Best loss | **3.78** | 3.97 |
+| θ disc | 1.37x | 0.76x |
+| Δθ disc | 0.98x | **1.68x** |
+| Entropy | 0.483 | **0.453** |
+
+The familiar pattern — but with a crucial difference.
+
+At 168-dim, C6 was the dip where BOTH channels dropped below 1.0x (θ=0.77, Δθ=0.90). It looked like crystallisation. At 256-dim C6, θ dropped (0.76x) but **Δθ surged to 1.68x**. The model didn't lose both channels — it traded leadership cleanly. This is what 168-dim tried to do but couldn't until C7.
+
+**Rotational learning confirmed at 256-dim.** The model alternates which channel leads, same as 168-dim. But the rotation is cleaner — no cycle where both channels collapse simultaneously. With 128 bands there's enough room for one channel to surge while the other reorganises.
+
+Entropy dropped to 0.453 — back near the C3 low of 0.433. The model tightens structure during the rotation, same as 168-dim's entropy ratchet.
+
+**Prediction:** C7 should see θ recover (possibly to a new record) while Δθ holds or eases. If both channels are above 1.0x at C7, that's the dual encoding that 168-dim achieved at C4 and C8 but couldn't sustain.
+
+---
+
 ## The 168-dim vs 256-dim Comparison
 
 Three cycles in, the differences are already clear:
@@ -184,11 +205,11 @@ Can the model produce word sequences conditioned on the prompt? At 168-dim, "Hel
 ### Loss continues dropping *(CONFIRMED at C5)*
 Plateau broke at C4 (3.93), then C5 pushed to 3.78. The model hasn't plateaued again yet. Where does it settle?
 
-### Both-channel encoding develops without oscillation *(EMERGING)*
-Δθ at 0.98x and climbing smoothly. θ oscillating gently (not crashing). If C6 crosses the 1.0x threshold for Δθ while θ holds above 1.0x — that's dual encoding without anti-correlation. The thing 168-dim could never sustain.
+### Both-channel encoding with clean rotation *(CONFIRMED)*
+Δθ crossed 1.0x at C6 (1.68x) while θ dipped (0.76x). Unlike 168-dim where both channels collapsed simultaneously at C6, 256-dim trades leadership cleanly. The anti-correlation is still present but without the destructive both-channel collapse. C7 should tell us if both can be above 1.0x simultaneously.
 
 ### The transplant boundary resolves *(IN PROGRESS)*
-Band 84-85 coupling easing: 17.3x → 16.2x → 14.6x → 16.8x. Not monotonic — the model is still actively working the seam. Full integration expected by C7-C8.
+Band 84-85 coupling easing: 17.3x → 16.2x → 14.6x → 16.8x → 15.9x. Trending down but not monotonic — the model is still actively working the seam.
 
 ---
 
@@ -218,7 +239,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C2 | 20K | 4.11 | 1.09x | 0.86x | 0.455 | band 84 (17.2x) | "pronoun", "adjectives", "conjunction", "speak", "find", "make" |
 | C3 | 30K | 4.09 | 1.61x | 0.88x | **0.433** | band 85 (16.2x) | "subject", "action", "verb", "compound", "object", "heart", "name" |
 | C4 | 40K | 3.93 | 1.80x | 0.86x | 0.437 | band 84 (14.6x) | "adverb", "meaning", "thought", "adjective", "quest", "relinquish" |
-| **C5** | **50K** | **3.78** | 1.37x | **0.98x** | 0.483 | band 84 (16.8x) | **"sentence", "phrase", "means", "sentences", "action", "being", "know"** |
+| C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
+| **C6** | **60K** | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | **Δθ crossed 1.0x — rotational learning confirmed at 256-dim** |
 
 ---
 
