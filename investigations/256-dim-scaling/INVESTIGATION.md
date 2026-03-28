@@ -222,6 +222,24 @@ Transplant boundary at 14.8x — steadily easing from 17.3x at C1. The old and n
 
 ---
 
+## C9 — The Gentle Dip
+
+| Metric | C8 | **C9** |
+|--------|----|----|
+| Best loss | 3.92 | 3.88 |
+| θ disc | **1.55x** | 0.93x |
+| Δθ disc | **1.34x** | 0.88x |
+| Both >1.0x | YES | No |
+| Entropy | 0.488 | 0.486 |
+
+Both channels dipped below 1.0x — the familiar post-dual-encoding reorganisation. But this dip is gentle. At 168-dim, the equivalent moment (C9 after C8's balance) saw channels crash to 0.67/0.74. At 256-dim: 0.93/0.88. Both channels hovering just below the threshold, not collapsing.
+
+Loss actually improved: 3.92 → 3.88. Final average hit 4.80 — the lowest yet. The model is learning even during the reorganisation. At 168-dim, loss rose during dips. At 256-dim it drops. The dip is productive.
+
+Comprehension sustained: "predicate", "express", "begin", "subject", "adverbs", "preposition", "gentle", "meaning", "present", "adjective", "blood", "Thou", "art". No vocabulary degradation during the dip. "Thou art" — the model is placing Shakespeare pronouns next to Shakespeare verbs. Not a coincidence at this frequency.
+
+---
+
 ## The 168-dim vs 256-dim Comparison
 
 Three cycles in, the differences are already clear:
