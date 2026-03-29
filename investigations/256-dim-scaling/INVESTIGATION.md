@@ -350,6 +350,7 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C11 | 110K | 3.92 | 1.10x | 0.95x | 0.526 | band 84 (14.0x) | θ back above 1.0x. "express", "DUKE", "conjunction", "blood", "world", "lord" |
 | C12 | 120K | 3.96 | **1.84x** | 1.27x | 0.533 | **band 60** (17.4x) | **2nd DUAL. Coupling OFF transplant. "DUKE", "language", "sentences", "shall"** |
 | C13 | 130K | 4.04 | 1.65x | 1.11x | 0.543 | band 84 (16.7x) | Dual sustained. "KING", "RICHARD", "plural", "past", "person", "possess" |
+| **C14** | **140K** | 3.98 | 1.32x | **1.88x** | 0.569 | **band 43** (16.4x) | **3rd consecutive dual. Δθ record. Coupling exploring grid 1.** |
 
 ---
 
