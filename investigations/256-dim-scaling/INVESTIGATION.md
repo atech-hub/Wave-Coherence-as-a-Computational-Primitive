@@ -352,6 +352,7 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C13 | 130K | 4.04 | 1.65x | 1.11x | 0.543 | band 84 (16.7x) | Dual sustained. "KING", "RICHARD", "plural", "past", "person", "possess" |
 | C14 | 140K | 3.98 | 1.32x | **1.88x** | 0.569 | **band 43** (16.4x) | 3rd consecutive dual. Δθ record. Coupling exploring grid 1. |
 | C15 | 150K | **3.87** | 1.38x | 0.90x | 0.592 | band 43 (16.1x) | Dual streak ends. Loss 2nd best. Δθ traded for loss improvement. |
+| **C16** | **160K** | 3.93 | **3.29x** | 0.94x | 0.590 | band 43 (17.9x) | **θ spike — near all-time record. Final avg 4.78 (new low).** |
 
 ---
 
