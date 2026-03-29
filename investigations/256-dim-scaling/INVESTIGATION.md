@@ -240,6 +240,18 @@ Comprehension sustained: "predicate", "express", "begin", "subject", "adverbs", 
 
 ---
 
+## C12 — The Model Becomes Its Own
+
+For eleven cycles, the most coupled band sat at 84-85 — the transplant boundary where the old 168-dim structure met the new 128-band space. The coupling energy concentrated at the seam, knitting old and new together.
+
+At C12, the most coupled band shifted to **band 60**. Deep inside the original grid 2 (bands 42-83). The transplant boundary is no longer the hotspot. The model built its own coupling structure.
+
+This is the moment the 256-dim model stops being "168-dim with extra bands" and becomes its own model. The transplant is fully integrated. The progressive dimension scaling strategy (Pattern 87) is validated end to end — not just "the weights transfer" but "the model absorbs the transfer and reorganises beyond it."
+
+And at the same cycle: θ=1.84x (256-dim record) and Δθ=1.27x — the second dual encoding. The model found dual-channel encoding AND reorganised its coupling structure in the same cycle. It's not just learning — it's restructuring.
+
+---
+
 ## The 168-dim vs 256-dim Comparison
 
 Three cycles in, the differences are already clear:
