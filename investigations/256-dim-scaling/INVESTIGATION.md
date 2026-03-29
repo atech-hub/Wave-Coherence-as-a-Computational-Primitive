@@ -1,6 +1,6 @@
 # 256-dim Scaling — Can the Model Speak?
 
-**Status:** ACTIVE — C9 gentle dip after C8 dual encoding. Model still learning. Near-phrases sustained.
+**Status:** ACTIVE — 4L word-pair ceiling confirmed architectural (50K run). Next: more layers.
 **Date:** 2026-03-28 (updated 2026-03-29)
 **Engine:** wave-engine (Rust, Apache 2.0)
 **Hardware:** Intel i7-14700K, RTX 4070 Ti, 32GB DDR5
@@ -252,6 +252,27 @@ And at the same cycle: θ=1.84x (256-dim record) and Δθ=1.27x — the second d
 
 ---
 
+## The 50K Single Run — Word-Pair Ceiling Is Architectural
+
+After 16 cycles of 10K iters each (cycling protocol with cosine LR restarts), the model produced rich domain vocabulary but never exceeded word pairs as consecutive sequences. Desktop asked: is this the cycling protocol or the architecture?
+
+**The test:** 50K iters straight from C16, single cosine decay, no restart. The model gets sustained gradient pressure for the first time.
+
+**The loss answer:** Best loss **3.71** — new all-time record, broke through the cycling protocol's 3.78. The sustained gradient found deeper minima that the cycling restarts prevented.
+
+**The composition answer:** Still word pairs. No three-word consecutive sequences across multiple prompts and multiple generations. The output was actually noisier than cycling — more sub-token fragments, more numbers. The sustained run went deeper in loss but produced lower quality output.
+
+| Protocol | Best loss | Output quality | Max consecutive |
+|----------|-----------|---------------|-----------------|
+| Cycling (16 × 10K) | 3.78 | Clean vocabulary, few noise tokens | Word pairs |
+| Sustained (1 × 50K) | **3.71** | Noisier, more fragments | Word pairs |
+
+**Conclusion:** The word-pair ceiling at 4 layers is architectural, not protocol. Sustained gradient found better loss but identical composition ceiling. The cosine restarts in the cycling protocol act as a regulariser — each reset shakes out noise and forces clean vocabulary re-acquisition. Loss and output quality can diverge.
+
+**Closed door:** More training time, different LR schedules, and longer runs will not produce three-token composition at 4 layers × 256-dim. The next variable is depth.
+
+---
+
 ## The Harmonic Spectrum — Different Relationships, Different Frequencies
 
 At C13, we looked inside the model's harmonic structure to see how it encodes different types of word relationships. The original hypothesis from the research repo was that different harmonics naturally encode different relationship types — `cos(n × Δθ)` where n determines what kind of similarity is detected.
@@ -352,7 +373,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C13 | 130K | 4.04 | 1.65x | 1.11x | 0.543 | band 84 (16.7x) | Dual sustained. "KING", "RICHARD", "plural", "past", "person", "possess" |
 | C14 | 140K | 3.98 | 1.32x | **1.88x** | 0.569 | **band 43** (16.4x) | 3rd consecutive dual. Δθ record. Coupling exploring grid 1. |
 | C15 | 150K | **3.87** | 1.38x | 0.90x | 0.592 | band 43 (16.1x) | Dual streak ends. Loss 2nd best. Δθ traded for loss improvement. |
-| **C16** | **160K** | 3.93 | **3.29x** | 0.94x | 0.590 | band 43 (17.9x) | **θ spike — near all-time record. Final avg 4.78 (new low).** |
+| C16 | 160K | 3.93 | **3.29x** | 0.94x | 0.590 | band 43 (17.9x) | θ spike — near all-time record. Final avg 4.78 (new low). |
+| **Long** | **210K** | **3.71** | — | — | — | — | **50K single run. New loss record. Word-pair ceiling confirmed architectural.** |
 
 ---
 
