@@ -216,7 +216,7 @@ Transplant boundary easing: 14.9x (from 17.3x at C1).
 
 The path was clean. C5 peaked θ (1.37x). C6 rotated to Δθ (1.68x). C7 held Δθ while θ recovered. C8 both above 1.0x. No violent oscillation, no both-channel collapse. The 128-band space gives the model room to rotate smoothly.
 
-Comprehension: "preposition", "sentence means", "speech", "plural", "pronouns", "language", "thine", "shall pass", "gentle", "cannot well". Meta-linguistic terms AND near-phrases. The model is producing word pairs that belong together — not sentences yet, but the clustering is tightening toward composition.
+Comprehension: "preposition", "speech", "plural", "pronouns", "language", "thine", "gentle", "sentence", "means", "shall", "pass". Meta-linguistic terms appearing consistently. **Note:** words like "sentence" and "means" appear in the same output but were not verified as consecutive tokens. The vocabulary is domain-rich but composition into consecutive meaningful sequences is not yet confirmed.
 
 Transplant boundary at 14.8x — steadily easing from 17.3x at C1. The old and new bands are integrating.
 
@@ -236,7 +236,7 @@ Both channels dipped below 1.0x — the familiar post-dual-encoding reorganisati
 
 Loss actually improved: 3.92 → 3.88. Final average hit 4.80 — the lowest yet. The model is learning even during the reorganisation. At 168-dim, loss rose during dips. At 256-dim it drops. The dip is productive.
 
-Comprehension sustained: "predicate", "express", "begin", "subject", "adverbs", "preposition", "gentle", "meaning", "present", "adjective", "blood", "Thou", "art". No vocabulary degradation during the dip. "Thou art" — the model is placing Shakespeare pronouns next to Shakespeare verbs. Not a coincidence at this frequency.
+Comprehension sustained: "predicate", "express", "begin", "subject", "adverbs", "preposition", "gentle", "meaning", "present", "adjective", "blood", "Thou", "art". No vocabulary degradation during the dip. Shakespeare vocabulary ("Thou", "art", "blood") and grammar terms appearing in the same outputs.
 
 ---
 
@@ -344,9 +344,9 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C5 | 50K | **3.78** | 1.37x | 0.98x | 0.483 | band 84 (16.8x) | "sentence", "phrase", "means", "sentences", "action", "being", "know" |
 | C6 | 60K | 3.97 | 0.76x | **1.68x** | 0.453 | band 84 (15.9x) | "express", "language", "meaning", "sentences", "English", "phrase", "death", "life", "world" |
 | C7 | 70K | 3.84 | 0.86x | 1.46x | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple" |
-| C8 | 80K | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x.** "preposition", "sentence means", "speech", "pronouns", "shall pass" |
-| C9 | 90K | 3.88 | 0.93x | 0.88x | 0.486 | band 84 (15.1x) | Gentle dip. "predicate", "express", "begin", "subject", "Thou art", "blood" |
-| C10 | 100K | **3.81** | 0.75x | 0.95x | 0.483 | band 84 (17.0x) | "conjunction", "verb forms", "clause", "preposition", "noun", "class", "struck", "sing" |
+| C8 | 80K | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x.** "preposition", "sentence", "means", "speech", "pronouns", "shall" |
+| C9 | 90K | 3.88 | 0.93x | 0.88x | 0.486 | band 84 (15.1x) | Gentle dip. "predicate", "express", "begin", "subject", "Thou", "art", "blood" |
+| C10 | 100K | **3.81** | 0.75x | 0.95x | 0.483 | band 84 (17.0x) | "conjunction", "verb", "forms", "clause", "preposition", "noun", "class" |
 | C11 | 110K | 3.92 | 1.10x | 0.95x | 0.526 | band 84 (14.0x) | θ back above 1.0x. "express", "DUKE", "conjunction", "blood", "world", "lord" |
 | C12 | 120K | 3.96 | **1.84x** | 1.27x | 0.533 | **band 60** (17.4x) | **2nd DUAL. Coupling OFF transplant. "DUKE", "language", "sentences", "shall"** |
 | C13 | 130K | 4.04 | 1.65x | 1.11x | 0.543 | band 84 (16.7x) | Dual sustained. "KING", "RICHARD", "plural", "past", "person", "possess" |
