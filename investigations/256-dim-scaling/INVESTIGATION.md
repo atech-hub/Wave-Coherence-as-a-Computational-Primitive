@@ -303,7 +303,8 @@ Settings: α=0.1, β=0.2, AGC ceiling=1.0, dense out_proj, 1K BPE, grammar+Shake
 | C7 | 70K | 3.84 | 0.86x | 1.46x | 0.466 | band 84 (14.9x) | "predicate", "language", "compound", "adjectives", "verbs", "meaning", "form", "common", "simple" |
 | C8 | 80K | 3.92 | **1.55x** | **1.34x** | 0.488 | band 84 (14.8x) | **BOTH >1.0x.** "preposition", "sentence means", "speech", "pronouns", "shall pass" |
 | C9 | 90K | 3.88 | 0.93x | 0.88x | 0.486 | band 84 (15.1x) | Gentle dip. "predicate", "express", "begin", "subject", "Thou art", "blood" |
-| **C10** | **100K** | **3.81** | 0.75x | 0.95x | 0.483 | band 84 (17.0x) | "conjunction", "verb forms", "clause", "preposition", "noun", "class", "struck", "sing" |
+| C10 | 100K | **3.81** | 0.75x | 0.95x | 0.483 | band 84 (17.0x) | "conjunction", "verb forms", "clause", "preposition", "noun", "class", "struck", "sing" |
+| C11 | 110K | 3.92 | **1.10x** | 0.95x | 0.526 | band 84 (**14.0x**) | θ back above 1.0x. "express", "DUKE", "conjunction", "blood", "world", "lord" |
 
 ---
 
