@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2174,6 +2174,173 @@ The physics-bounded AGC eliminated V-shape divergence while matching the best in
 
 ---
 
+## 88. Learnable ODE Backward — Gradient Flow Through Kerr-ODE RK4 Integration
+
+### 88.1 Core Pattern
+
+Direct backpropagation through the full RK4 ODE integration, replacing the identity pass-through that treated the ODE as a fixed transform for gradient purposes. Each layer's coupling constants (α self-modulation, β cross-modulation, γ damping) become learnable parameters with per-layer gradient flow.
+
+**Implementation pattern:**
+- Forward pass caches all RK4 intermediate states (16 steps × 4 k-values × n_bands × 2)
+- Backward unrolls the RK4 in reverse, applying the Jacobian of the Kerr derivative at each evaluation point
+- Parameter gradients (d_alpha, d_beta, d_gamma_raw) accumulated across all RK4 steps and all sequence positions
+- `--freeze-ode` flag preserves legacy identity backward for A/B comparison
+- Memory cost: ~22MB at batch=4, seq=64, 4 layers (feasible on consumer GPU)
+
+### 88.2 Three-Tier Implementation
+
+| Tier | Forward | Backward | Status |
+|------|---------|----------|--------|
+| CPU | RK4-16 with caching | Direct backprop through cached states | Implemented |
+| wgpu | RK4 via WGSL shaders | CPU fallback (ODE <10% of matmul cost) | Implemented |
+| Candle | Perturbative tensor ops | Autograd (automatic, already worked) | No change needed |
+
+### 88.3 Validated Results
+
+| Run | Loss | vs Frozen | Iters |
+|-----|------|-----------|-------|
+| Frozen cycling 10K | 4.48 | baseline | 10K |
+| Learnable cycling 10K | 3.76 | -0.72 (16% better) | 10K |
+| Learnable sustained 30K | 3.18 | -1.01 (24% better) | 30K |
+| Previous all-time best | 3.91 | learnable beat in 10K vs 70K | 70K (7 cycles) |
+
+The learnable ODE achieved better loss in one 10K cycle than the frozen ODE achieved in seven cycles totalling 70K iterations. Training time reduced from ~83 minutes to ~15 minutes for superior results.
+
+### 88.4 Key Finding: The Model Was Handcuffed, Not Lazy
+
+The frozen ODE backward masked the true capability of the architecture for the entire project history. The model could not learn its own coupling dynamics — it learned *around* the ODE through maestro and out_proj, but could not learn *through* it. Multiple engine issues (channel drift, layer integration failure, expression bottleneck) traced to this single root cause. Fixing the root cause resolved multiple symptoms simultaneously.
+
+---
+
+## 89. Per-Layer Coupling Self-Organisation — Depth-Dependent Specialisation
+
+### 89.1 Core Pattern
+
+When given learnable ODE parameters, the model spontaneously develops depth-dependent coupling specialisation without any architectural constraint. The first layer maintains high self-coupling (per-band specialist), while deeper layers reduce self-coupling and maintain/increase cross-coupling (cross-band specialists).
+
+### 89.2 Discovered Structure
+
+Starting from uniform α=0.1, β=0.2 across all layers:
+
+| Layer | α (learned) | β (learned) | α/β ratio | Specialisation |
+|-------|-------------|-------------|-----------|---------------|
+| L0 | 0.116 | 0.142 | 0.82 | Per-band (θ encoding) |
+| L1 | 0.021 | 0.200 | 0.10 | Cross-band (Δθ encoding) |
+| L2 | 0.011 | 0.234 | 0.05 | Cross-band (strongest β) |
+| L3 | 0.010 | 0.217 | 0.05 | Cross-band (α at floor) |
+
+### 89.3 Self-Regulation
+
+The learnable ODE eliminates the need for external channel balance mechanisms:
+- Frozen ODE sustained training: channel drift to θ=10.03x (catastrophic, permanent)
+- Learnable ODE sustained training: peak imbalance 5.5:1 (contained, self-corrected within 500 iters)
+- The model recovers from channel spikes by adjusting its own coupling constants — it IS its own load balancer
+
+### 89.4 Implication for Prior Results
+
+Phase 21b (per-band α/β, previously classified NULL) reclassified as INCONCLUSIVE — the test ran with frozen ODE backward, meaning no gradient flowed to the per-band parameters. The null result was an artefact of the frozen backward, not a property of the architecture.
+
+---
+
+## 90. ODE Distortion Monitoring — RF/Optical Aberration Framework for Neural ODE
+
+### 90.1 Core Pattern
+
+The Kerr ODE's `α|ψ|²·ψ` nonlinearity is mathematically identical to 3rd-order distortion in RF power amplifier theory. Because the wave-engine uses explicit frequency bands, distortion products land at predictable harmonic positions (3rd, 5th, 7th harmonics of the driven band). This makes Total Harmonic Distortion (THD) measurable — a standard RF metric applied to an architecture where it has physical meaning.
+
+### 90.2 Two-Level Monitoring
+
+**Reference sentence monitor:** Measures distortion on a fixed reference sentence during training. Low magnitudes (~0.9), no AGC compression. THD reads 0.003-0.009. Useful for trend tracking but underestimates training distortion by 3x.
+
+**Batch distortion monitor:** Taps the training cache (precond/kerr_out already computed for backward pass). Measures on actual training data where magnitudes are higher. THD reads 0.016-0.032. Zero extra forward passes, zero extra memory.
+
+### 90.3 Per-Layer Distortion Profile
+
+| Layer | THD at 10K | Behaviour | Interpretation |
+|-------|-----------|-----------|---------------|
+| L0 | 0.027 | Highest, climbing | Impedance matching layer, highest α |
+| L1 | 0.016 | Moderate | Mid-stack |
+| L2 | 0.029 | Rising fast, overtook L0 | Strongest β coupling |
+| L3 | 0.011 | Lowest, stabilising | Model protects output (α at floor) |
+
+### 90.4 Key Finding: Distortion Is Pure ODE Nonlinearity (Not AGC)
+
+At 168-dim with α=0.1, β=0.2, the AGC ceiling is 1.77. Training magnitudes stay well below (n_compressed=0 throughout). All measured distortion comes from the Kerr nonlinearity itself, not from AGC compression. The AGC's role as a distortion source only applies at higher dimensions (256-dim) where magnitudes reach 12x.
+
+### 90.5 Optical Aberration Framework
+
+The per-layer distortion maps directly to optical aberration theory (Seidel aberrations):
+- Each ODE layer = one optical surface with its own aberration contribution
+- The `α|ψ|²·ψ` term = spherical aberration (magnitude-dependent, axially symmetric)
+- The β coupling = field-dependent aberrations (coma, astigmatism — asymmetric, position-dependent)
+- Aberration CANCELLATION across surfaces is the mechanism used in multi-element lens design (Cooke triplet)
+- L3 minimising its own distortion = placing the cleanest optical element nearest the image plane
+
+Dense MLPs have identical distortion from their nonlinearities but it is invisible — entangled across all dimensions with no frequency structure. The wave-engine makes distortion measurable because bands are explicit frequencies. This is a unique diagnostic capability of the architecture.
+
+---
+
+## 91. Corrector Plate — Per-Band Learnable Phase Correction After ODE
+
+### 91.1 Core Pattern
+
+A vector of n_bands learnable phase offsets applied as 2D rotations after the ODE output, before the maestro_out and residual stream. The corrector plate gives the model a tool for per-band phase correction that the existing architecture cannot express — the maestro_out and out_proj are linear transforms that mix bands together and cannot perform independent per-band phase adjustment without magnitude change.
+
+**Optics analogy:** A Schmidt corrector plate. The primary optic (ODE) does the computational work but creates phase aberrations. The corrector plate (learned phase offsets) applies the inverse aberration. Magnitude stays on the sphere — only phase rotates.
+
+### 91.2 Implementation
+
+Forward (per band k, per position):
+```
+let (sin_c, cos_c) = correction[k].sin_cos();
+r_out = r * cos_c - s * sin_c;
+s_out = r * sin_c + s * cos_c;
+```
+
+Backward:
+```
+d_r_in =  cos_c * d_r_out + sin_c * d_s_out;
+d_s_in = -sin_c * d_r_out + cos_c * d_s_out;
+d_c += d_r_out * (-r*sin_c - s*cos_c) + d_s_out * (r*cos_c - s*sin_c);
+```
+
+### 91.3 Properties
+
+- **Magnitude preserved** — rotation is orthogonal, sphere boundary unchanged
+- **Per-band, per-layer** — 84 corrections per layer, 336 total (0.1% of model)
+- **Zero-initialised** — transparent at start, model earns every correction
+- **Position-independent** — same correction for all sequence positions (like a Schmidt plate correcting average aberration)
+- **Backward is trivial** — 5 lines (rotation inverse + cross product for d_correction)
+
+### 91.4 Design Rationale
+
+The model already attempts self-correction — L3 drove its own α to the clamp floor (0.010) to minimise its distortion contribution. But α reduction is avoidance, not cancellation. The corrector plate enables active cancellation: the model can produce distortion that exactly opposes the accumulated aberration from earlier layers. This is the Cooke triplet principle — surfaces with opposite-sign aberrations that sum to near-zero total aberration.
+
+---
+
+## 92. Channel Drift Dynamics — Dimension-Dependent Optimiser Commitment Under Sustained Training
+
+### 92.1 Core Pattern
+
+Under sustained training (no cycling restarts), the optimiser commits to whichever encoding channel (θ per-band or Δθ cross-band) is locally easier. The direction of commitment depends on the coupling geometry at that dimension, not on a fixed architectural bias.
+
+### 92.2 Dimension-Dependent Drift Direction
+
+| Dimension | n_bands | Drift direction | Peak imbalance | Mechanism |
+|-----------|---------|----------------|---------------|-----------|
+| 168-dim | 84 | θ dominant | θ=10.03x, Δθ dead | Fewer bands → per-band encoding easier |
+| 256-dim | 128 | Δθ dominant | Δθ=3.03x, θ=1.19x | Denser coupling → cross-band encoding easier |
+
+### 92.3 Sharp Phase Transition
+
+The drift is not gradual. At 168-dim, θ jumped from ~1.0x to 10.03x in three consecutive health samples (iter 14000-16000). This is a phase transition — the optimiser crosses a threshold and commits hard. Once committed, recovery requires a cycling restart (under frozen ODE) or self-correction (under learnable ODE).
+
+### 92.4 Resolution via Learnable ODE
+
+With learnable ODE parameters, the model self-regulates: at the exact iteration where the frozen model committed to θ=10.03x (iter 15000), the learnable model spiked to Δθ=5.31x then recovered to balanced within 500 iterations. The load balancer concept (external channel regulation) was superseded — the model IS its own load balancer when it can learn its own coupling.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2265,6 +2432,11 @@ The physics-bounded AGC eliminated V-shape divergence while matching the best in
 | 85 | Wave transduction output decoder — phase coherence cos(Δθ) scoring with per-band learned weights and magnitude confidence, replacing linear lm_head projection | AI / Architecture / Output |
 | 86 | Cos expansion optimisation — cos(a-b) = cos(a)cos(b) + sin(a)sin(b) precompute, eliminates O(vocab×bands) transcendental calls, matches linear projection speed | Computing / Optimisation |
 | 87 | Progressive dimension scaling — band-preserving checkpoint transplant between dimensions, pad weights with identity/random, recompute frozen components | AI / Architecture / Scaling |
+| 88 | Learnable ODE backward — gradient flow through Kerr-ODE RK4 integration, per-layer α/β/γ learning, 7x training speedup over frozen ODE cycling | AI / Architecture / Training |
+| 89 | Per-layer coupling self-organisation — depth-dependent specialisation emerges spontaneously, L0 per-band specialist, L1-L3 cross-band specialists, self-regulation | AI / Training Dynamics / Research |
+| 90 | ODE distortion monitoring — THD measurement on training batch data, per-layer distortion profiles, RF/optical aberration framework for neural ODE | AI / Diagnostics / Signal Processing / Optics |
+| 91 | Corrector plate — per-band learnable phase correction after ODE (Schmidt corrector), 336 params (0.1%), zero-init, magnitude-preserving 2D rotation | AI / Architecture / Optics |
+| 92 | Channel drift dynamics — dimension-dependent optimiser commitment, sharp phase transition, resolution via learnable ODE self-regulation | AI / Training Dynamics / Research |
 
 ---
 
