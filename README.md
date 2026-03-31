@@ -107,6 +107,12 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[ODE Magnitude Regulation](investigations/ode-regulation/INVESTIGATION.md) (complete)** — How should signals entering the Kerr-ODE be regulated during training? 5 controlled tests proving physics-bounded adaptive gain control eliminates V-shape training divergence. The maestro pre-conditioner naturally increases magnitudes — fixed clamps throttle the model. AGC with physics-derived ceiling (M < sqrt(pi/2 / (alpha+4*beta))) lets the model self-regulate: rolling average descends monotonically through 20K iterations for the first time at BPE scale. Electronics analogy: fixed resistor, zener diode, AGC + rail voltage. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 81).
 
+**[The Handcuffed Model — ODE Backward](investigations/ode-backward/INVESTIGATION.md) (confirmed)** — Six symptoms, six partial fixes, one root cause: the identity backward line. The ODE backward was `d_precond = d_kerr_out` — the entire RK4 integration invisible to the optimizer. Fix: full backpropagation through 16-step RK4. Per-layer coupling self-organisation emerges from uniform starting conditions. Loss 3.76 in 15 minutes vs 3.91 in 83 minutes. The model was never lazy — it was handcuffed. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 88-89).
+
+**[The Corrector Plate](investigations/corrector-plate/INVESTIGATION.md) (confirmed)** — RF distortion meets telescope optics. The Kerr nonlinearity IS 3rd-order distortion. THD measurable because bands are explicit frequencies. The model drove L3's α to the floor — it knew distortion was a problem but could only avoid it, not cancel it. The corrector plate (336 params, 0.1% of model) gave it per-band phase correction. L0 tripled its nonlinearity. Loss 2.70. THD flat over 30K sustained. Dual-channel encoding unlocked. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 90-91).
+
+**[The Scaling Wall](investigations/scaling-wall/INVESTIGATION.md) (confirmed)** — Three divergences at 256-dim, three wrong diagnoses (AGC, curriculum, α clamp). Actual cause: block-diagonal out_proj created 29% body / 71% head parameter imbalance. Dense out_proj rebalanced to 56/44. Loss 3.07 — new 256-dim record. The β that ran away to 0.41 at groups=8 settled at 0.20 at groups=1. The model didn't need extreme coupling when it had enough body capacity. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 92).
+
 ## Documents
 
 | File | Description |
@@ -121,7 +127,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
-| investigations/ | 12 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling, output-decoding, 256-dim-scaling |
+| investigations/ | 15 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling, output-decoding, 256-dim-scaling, ODE backward, corrector plate, scaling wall |
 
 ## Reproduce the Validation
 
