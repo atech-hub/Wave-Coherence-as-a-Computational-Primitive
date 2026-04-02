@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-99)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2444,6 +2444,9 @@ With learnable ODE parameters, the model self-regulates: at the exact iteration 
 | 97 | Phase vocabulary — single file containing wave patterns for all tokens, serves as both tokeniser and decoder, bidirectional translation between human text and model wave space, portable model dictionary independent of checkpoint | AI / Architecture / Infrastructure |
 | 98 | ODE basin invariance to training dynamics — coupling structure (α/β/γ per layer) is identical across spring, gate, LR scale, and no-regulation configurations, but changes with architectural parameters (band count, loss function), constitutes architectural fingerprint | AI / Research / Training Dynamics |
 | 99 | ODE reference map — embedding table as navigation map during L3 RK4 computation, learnable coupling strength κ, guides ODE toward valid token patterns during computation not just after, validated as over-constraining (fights cross-band coupling) | AI / Architecture / Signal Processing |
+| 100 | Dot product phase-native loss — raw dot product against fixed embeddings replaces phase coherence, magnitude preserved as confidence signal, 8x loss improvement (2.045→0.247), reaches 7/10 matching lm_head at 40K iters with zero decoder params | AI / Architecture / Training / Efficiency |
+| 101 | Sphere encoding — Pythagorean harmonic magnitude profiles (1/√n decay), physically natural energy distribution, same total energy on the sphere, accelerates ODE coupling convergence but concentrates discrimination in low bands (1/10 at 20K) | AI / Architecture / Signal Processing / Research |
+| 102 | Loss function as gradient lens — three loss functions (phase coherence, dot product, lm_head) create three different ODE coupling basins from identical starting conditions, the decoder shapes what the ODE learns not just how it decodes, lm_head is a gradient accelerator (7/10 at 20K) not a computational necessity (dot product reaches 7/10 at 40K) | AI / Research / Training Dynamics |
 
 ---
 
