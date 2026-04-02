@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-99)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2437,6 +2437,13 @@ With learnable ODE parameters, the model self-regulates: at the exact iteration 
 | 90 | ODE distortion monitoring — THD measurement on training batch data, per-layer distortion profiles, RF/optical aberration framework for neural ODE | AI / Diagnostics / Signal Processing / Optics |
 | 91 | Corrector plate — per-band learnable phase correction after ODE (Schmidt corrector), 336 params (0.1%), zero-init, magnitude-preserving 2D rotation | AI / Architecture / Optics |
 | 92 | Channel drift dynamics — dimension-dependent optimiser commitment, sharp phase transition, resolution via learnable ODE self-regulation | AI / Training Dynamics / Research |
+| 93 | Spring-regulated dynamic parameters — restoring force inside optimiser step (not loss penalty), per-parameter equilibrium, same mechanism as AdamW weight decay with arbitrary rest position, temporal regulation (parameters peak and retreat as training needs change) | AI / Training Dynamics / Architecture |
+| 94 | Dynamic parameter CLI unification — single flag per parameter, value for manual (`--alpha 0.1`), `dyn` for model-decides (`--alpha dyn`), human-model conversation through same interface, every parameter supports both modes | AI / Architecture / Infrastructure |
+| 95 | Phase-native training — ODE learns to produce outputs in embedding space without lm_head, phase coherence loss against fixed harmonic embeddings, eliminates 51-88% of parameters at scale, 84-param output corrector for phase alignment | AI / Architecture / Training / Efficiency |
+| 96 | Output corrector plate — per-band learnable phase rotation at model output, translates ODE output space toward embedding space, 84 params (97% fewer than lm_head), constraint-as-feature (simpler corrector forces ODE to maintain computational power) | AI / Architecture / Optics / Efficiency |
+| 97 | Phase vocabulary — single file containing wave patterns for all tokens, serves as both tokeniser and decoder, bidirectional translation between human text and model wave space, portable model dictionary independent of checkpoint | AI / Architecture / Infrastructure |
+| 98 | ODE basin invariance to training dynamics — coupling structure (α/β/γ per layer) is identical across spring, gate, LR scale, and no-regulation configurations, but changes with architectural parameters (band count, loss function), constitutes architectural fingerprint | AI / Research / Training Dynamics |
+| 99 | ODE reference map — embedding table as navigation map during L3 RK4 computation, learnable coupling strength κ, guides ODE toward valid token patterns during computation not just after, validated as over-constraining (fights cross-band coupling) | AI / Architecture / Signal Processing |
 
 ---
 
