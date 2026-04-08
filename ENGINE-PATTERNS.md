@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2341,6 +2341,114 @@ With learnable ODE parameters, the model self-regulates: at the exact iteration 
 
 ---
 
+## 112. Hamiltonian Four-Wave Mixing in Neural ODE
+
+### 112.1 Core Pattern
+
+Energy-conserving cubic coupling between harmonic oscillator bands in a neural ODE. The Hamiltonian H = chi * Re(z_a * z_b * z_c* * z_d*) is summed over unique quartets (a,b,c,d) with a+b=c+d, producing derivative terms for all four bands per quartet. Two families of quartets arise from the [1,1,0,1,1] nearest-neighbour kernel: Family A (k-2, k+1, k-1, k) and Family B (k-1, k+2, k, k+1), yielding 2(n-3) total quartets for n bands.
+
+### 112.2 Implementation
+
+FWM is implemented identically across three tiers: CPU (Rust loops in ode_deriv.rs), wgpu (WGSL shader with per-thread quartet enumeration), and candle (tensor cat+narrow shifts for tensor ops, fused CUDA kernel for production). The chi parameter controls coupling strength (0.03 recommended, producing 8-10% of the ODE derivative at training amplitudes). Energy conservation is exact to RK4 integration precision (verified: 1.3e-5 relative error at 84 bands, 1.3 amplitude).
+
+### 112.3 Key Finding
+
+FWM-enabled training converges to the same alpha-collapse structural pattern as non-FWM training (deep layers suppress self-coupling alpha, amplify cross-coupling beta) but differentiates layers more aggressively. At 80K iterations on arithmetic: L3 beta=0.268 matched the 55/55 perfect model (0.267) to three decimal places, while L3 alpha collapsed to 0.010 (floor). Top FWM flux bands migrate during training — goal-directed band mixing, not passive coupling.
+
+---
+
+## 113. FWM Analytical Jacobian — Per-Quartet Backward Through Cubic Coupling
+
+### 113.1 Core Pattern
+
+Analytical backward pass through the four-wave mixing term, enabling gradient flow from the loss through the FWM contribution to the ODE derivative. Per quartet (a,b,c,d), there are 8 derivative outputs (dr and ds for each band) each with up to 8 partials with respect to the other bands' state variables, plus one partial with respect to chi. The Jacobian is sparse — most band pairs don't share a quartet — and is accumulated via a sweep over quartets matching the forward structure.
+
+### 113.2 Implementation
+
+The helper `fwm_quartet_backward` takes one quartet, reads state and incoming gradients for all 4 bands, computes cubic intermediates (p_ab, p_cd), and accumulates contributions into d_r, d_s for all bands plus d_chi. Two structural families: roles a,b receive contributions from z_other * p_cd, roles c,d receive from p_ab * z_other. Sign discipline is critical — half the partials are negative due to ds[role] -= convention.
+
+### 113.3 Verification
+
+Finite-difference gradient checker passes 20/20 at 8 bands chi=0.03 (max_rel_err=0.002), 171/172 at 84 bands (one marginal at 0.051 vs 0.050 threshold on a near-zero value). Chi=0 path is byte-identical to pre-Jacobian behavior. GPU tier ports (wgpu WGSL shader, candle CUDA kernel) translate the CPU helper mechanically.
+
+---
+
+## 114. Fused CUDA AGC+RK4+FWM Kernel — Single-Launch Forward+Backward
+
+### 114.1 Core Pattern
+
+A single CUDA kernel launch performs the complete ODE forward pass: automatic gain control (AGC), 16-step RK4 integration with FWM quartet coupling at each substep, and state caching for backward. Shared memory holds three arrays per block: smem_mag (magnitude-squared for XPM neighbour sum), smem_r and smem_s (complex state for FWM quartet reads). Each thread processes one (position, band) pair and enumerates up to 8 quartet-role memberships per derivative evaluation.
+
+### 114.2 Performance
+
+FWM via the CUDA kernel runs at essentially zero overhead: 105ms/iter with FWM vs 104ms/iter without (at 84 bands, 4 layers). The tensor-ops fallback path is 6.7x slower (29s/iter) due to dozens of intermediate tensor allocations per derivative call. The backward kernel includes FWM in k-value recomputation and gradient accumulation, with d_chi reduced via shared memory atomics.
+
+---
+
+## 115. ODE Physics Decomposition Monitor — Forward and Backward Gradient Flow
+
+### 115.1 Core Pattern
+
+Two complementary monitors that decompose ODE activity per physics term per layer: (1) Forward decomposition shows what fraction of dz/dt came from damping, phase rotation (SPM+XPM), and FWM via the DerivativeCapture struct. (2) Backward decomposition shows what fraction of gradient flow went through each physics term, using a subtraction method (full backward vs chi=0 backward vs damping-only backward). Together they answer: "is the optimizer responding to FWM, or absorbing the signal elsewhere?"
+
+### 115.2 Diagnostic Value
+
+Four regimes identified: FWM high forward + high backward = load-bearing mechanism. FWM high forward + low backward = firing but quarantined by optimizer. FWM low forward + high backward = small effect but optimizer is very sensitive. FWM low + low = dormant. The d_chi norm reports how much the model wants to change FWM strength — signal for when to make chi learnable.
+
+---
+
+## 116. Cross-Tier Parity Battery — CPU as Specification, GPU as Implementation
+
+### 116.1 Core Pattern
+
+A shared test battery of 15 cases (zero input, sparse, broadband at multiple amplitudes, matched/unmatched quartets, edge bands, negative chi, different band counts) where the CPU canonical kerr_derivative_into generates expected outputs. Each tier runs the same inputs through its implementation and compares against CPU ground truth. Tolerance: 1e-5 for SPM/XPM/damping, 1e-4 for FWM (cubic accumulates more float error). Self-consistency test at exact zero error validates the battery generator itself.
+
+### 116.2 Discipline Rule
+
+Adding a new physics term requires: implement in CPU first, add test cases to the battery, then port to wgpu and candle. The CPU implementation defines "correct." If a tier fails the parity test, the tier is wrong, not the specification.
+
+---
+
+## 117. Checkpoint-Aware ODE Probe — Scattering Analysis with Learned Weights
+
+### 117.1 Core Pattern
+
+The wave-probe binary loads trained checkpoints via the canonical load_checkpoint + init_model + unflatten_params_ex functions (no duplicate parser), extracts per-layer KerrWeights, and runs all probe modes with actual learned parameters. Output is organized per-layer showing how each layer's ODE scattering behavior differs after training. Supports both phase-native and lm_head checkpoints, all feature flags (learnable ODE, layer scale, RK4 weights, dynamic harmonics).
+
+### 117.2 Key Finding
+
+Probing trained arithmetic models reveals per-layer structural differentiation: L0 alpha grows (stronger self-coupling), L3 alpha collapses to floor (0.01), L3 beta matches the 55/55 perfect model (0.268 vs 0.267). Damping decreases with depth (0.181→0.166). The model develops a functional pipeline visible through the probe.
+
+---
+
+## 118. Parameter Sweep Instrument — Single-Command Safe Operating Region
+
+### 118.1 Core Pattern
+
+`wave-probe --mode sweep --sweep-param chi --sweep-range 0,0.5,0.05` sweeps any ODE parameter and reports per-value: fwm_frac, phase_frac, energy conservation error, max amplitude, stability flag. Supports chi, alpha, beta, gamma, input_magnitude. Replaces ad-hoc stability testing with a one-shot characterisation of the safe operating region.
+
+---
+
+## 119. FWM Phase-Matching Test — Quartet Selectivity Validation
+
+### 119.1 Core Pattern
+
+`wave-probe --mode four-wave-mixing` validates that the FWM implementation respects the quartet structure by comparing adjacent matching quartets (which share the [1,1,0,1,1] kernel neighbourhood) against non-adjacent bands (which don't share quartets). Adjacent quartet (28,29,30,31) shows fwm=0.021 with energy leakage. Non-adjacent bands show fwm=0.000. Phase-matching ratio = infinity — FWM is selective to local quartets, confirming correct physics.
+
+---
+
+## 120. Single Source of Truth Discipline — Canonical Derivative, All Tiers Call It
+
+### 120.1 Core Pattern
+
+The CPU kerr_derivative_into in ode_deriv.rs is the single canonical implementation. Every caller — training forward, backward cache, monitors, probes, diagnostics — calls this one function. GPU tiers (wgpu WGSL, candle tensor ops, candle CUDA kernel) implement the same math in their respective languages but are measured against CPU output via the parity battery (Pattern 116). When the checkpoint format changes, one function (load_checkpoint) handles it and all callers inherit.
+
+### 120.2 Lesson Learned
+
+Before this discipline was enforced, the codebase had 6 independent copies of the ODE derivative across ode_deriv.rs, ode_backward.rs, block.rs, fwm_monitor.rs, model_backward.rs, and wgpu diagnostics.rs. Adding FWM to one copy but not the others caused training to silently run without FWM even when the flag was set. Consolidation to a single source eliminated this class of bug structurally.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2455,6 +2563,15 @@ With learnable ODE parameters, the model self-regulates: at the exact iteration 
 | 108 | Confidence-brittleness tradeoff in dynamic parameters — dynamic params (spring-regulated learnable hyperparameters) make models more confident (entropy 0.403→0.335, margin 0.811→0.869) but 4x more brittle (worst margin 0.038→0.010). The spring regulation sharpens decision boundaries on well-learned patterns but narrows the safety margin on edge cases. Seven different dynamic configurations tested: all show the same pattern. Accuracy unchanged (49/55) — the confidence gain doesn't translate to correctness | AI / Training Dynamics / Research |
 | 109 | Two-bottleneck architecture calculator — empirical model for sizing wave-engine architectures from dataset characteristics. Two independent bottlenecks must BOTH be satisfied: (1) Band capacity: tokens_per_effective_dim < 0.50, with dead band accounting via coprime moduli — fixing attention without fixing bands gives zero accuracy gain (proved: 8H8L at 168-dim, 5x attention improvement, same rank 18.5). (2) Attention resolution: positions_per_head < 40, head_dim >= 16 — proved: 4H at seq=256 gives max_weight 0.025 (dead), 8H gives 0.122 (alive). Layer capacity bounded by band count: max_useful_layers = 2 + active_bands/20 (proved: 8L at 168-dim, L3-L5 passthrough cos>0.93). Integrated into engine as --recommend flag: reads data, computes moduli, checks both bottlenecks, recommends bands/heads/layers/iters with copy-paste CLI | AI / Architecture / Infrastructure / Diagnostics |
 | 110 | Character-level compositional computation — the ODE composes individual characters into word-level meaning through sequential processing across layers, without subword tokenisation (BPE). Proved: 46/51 (90.2%) word classification accuracy at character level (168-dim, 4L, 25 vocab, zero decoder params). The ODE develops a gradual coupling ramp (β/α 1.6x→6.6x) for word composition vs arithmetic's sharp split (1.5x→7.5x). Fundamental harmonic (h≈1.0) dominates character reading, sub-fundamental (h≈0.5) dominates word-level patterns. Gradient flows to deep layers (late-binding: can't classify until all characters seen). BPE is an engineering optimisation (fewer ODE steps), not an architectural necessity | AI / Architecture / Research / NLP |
+| 112 | Hamiltonian four-wave mixing in neural ODE — cubic band coupling |
+| 113 | FWM analytical Jacobian — per-quartet backward with 8 role partials |
+| 114 | Fused CUDA AGC+RK4+FWM kernel — single launch forward+backward |
+| 115 | ODE physics decomposition monitor — forward and backward gradient flow |
+| 116 | Cross-tier parity battery — CPU as specification, GPU as implementation |
+| 117 | Checkpoint-aware ODE probe — scattering analysis with learned weights |
+| 118 | Parameter sweep instrument — single-command safe operating region |
+| 119 | FWM phase-matching test — quartet selectivity validation |
+| 120 | Single source of truth discipline — one canonical derivative, all tiers call it |
 | 111 | Training data ordering as gradient signal — autoregressive models learn from context windows, so relationships that span multiple examples must appear WITHIN a single window for the gradient to connect them. Proved: arithmetic commutativity (a+b = b+a) fails at 49/55 when each fact appears once at random positions. Placing commutative pairs adjacent in the training data (7+2=9 followed by 2+7=9) achieves 55/55 (100%) — the gradient from both orders hits the same weights in the same step. The 55/55 model is less specialised (L3 β/α 7.5x vs 15.1x) but more robust — higher loss (0.213 vs 0.195) produces higher accuracy. Data ordering is not preprocessing — it is a training signal | AI / Training Dynamics / Data Engineering / Research |
 
 ---
