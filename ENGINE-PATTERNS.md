@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2449,6 +2449,78 @@ Before this discipline was enforced, the codebase had 6 independent copies of th
 
 ---
 
+## 121. Live Framework Monitor — Continuous Harmonic Coherence During Training
+
+### 121.1 Core Pattern
+
+A training-time monitor that runs framework diagnostics (semantic discrimination, band census, phase clustering, depth curve, peak harmonics) at every health interval on a sample forward pass. Reports per-layer to JSONL alongside ODE decomposition and other monitors. Uses wave_analysis.rs primitives (harmonic_coherence, circular_variance, band_census, phase_clustering, semantic_discrimination_spans). Cost: ~5-10ms per health interval. Produces a time series of how harmonic structure evolves during training — the process view that the end-of-training galaxy scan cannot provide.
+
+### 121.2 Key Capability
+
+Overtraining is visible in the framework monitor before the loss curve reflects it. The alpha-collapse pattern (deep layers suppressing self-coupling) is observable in real time. Harmonic peak shifts between layers are tracked per health interval.
+
+---
+
+## 122. Galaxy Map Scan — Pure-Band Geometric Inventory of Learned Structure
+
+### 122.1 Core Pattern
+
+An end-of-training scan that maps the full learned harmonic structure of a wave-engine model as a "galaxy" — per-band positions in 3D coordinates within the AGC-bounded sphere, pairwise angular geometry with catalog matching against 11 geometric relationship types, harmonic coherence matrix at 12 harmonics, constellation detection (triads by trine orb, FWM quartets by a+b=c+d index constraint), and multi-grid decomposition classifying relationships by grid nativity.
+
+### 122.2 Implementation
+
+Auto-triggers at end of every training run. Also available via `--galaxy-scan --resume <checkpoint>` for retrospective analysis. Output: galaxy_map.json (visualiser-ready), galaxy_matrix.bin (GALX format, full pair spectra), phases.bin (PHAS format, raw per-band phases). Pure-band analysis — no token-level references. CPU-only scan regardless of training tier. Non-fatal — scan failure doesn't break training.
+
+---
+
+## 123. Per-Quartet Deviation from Embedding Baseline
+
+### 123.1 Core Pattern
+
+The multi-grid harmonic embedding provides structural FWM quartet coherence for ~37% of quartets at default grids (m1=5, m2=7). The metric measures signed deviation of trained coherence from this embedding baseline using cos(theta_a + theta_b - theta_c - theta_d) — the actual FWM phase-matching condition. Four-category classification: preserved (was-high, still-high), destroyed (was-high, now-low), created (was-low, now-high), noise (was-low, still-low). Plus 2D histogram of (baseline_coh, trained_coh) in 10x10 bins for distribution analysis.
+
+### 123.2 Key Finding
+
+lm_head decoders destroy ALL high-coherence quartets (zero preserved, zero created, ~56K destroyed). Phase-native decoders preserve ~5,866 quartets and create ~1,404 novel ones. The decoder type is the dominant lever on quartet structure — bigger effect than FWM coupling strength. This was the first real comparative finding from the galaxy scan.
+
+---
+
+## 124. Decoder-Dependent Geometric Vocabulary
+
+### 124.1 Core Pattern
+
+The choice of decoder (lm_head vs phase-native) determines not just how many geometric relationships survive training, but which types of relationships form. Phase-native models build primary catalog relationships (squares at 90deg, trines at 120deg, oppositions at 180deg). lm_head models build secondary aspects (quincunx at 150deg, bi-quintile at 144deg, sesquiquadrate at 135deg). Same data, same architecture, same physics — different geometric vocabulary at the output layer.
+
+### 124.2 Mechanism Hypothesis
+
+lm_head gradients say "move phases toward configurations that make the linear projection produce the right token" — no reason to preserve any specific phase-sum structure. Phase-native gradients say "the phase relationships ARE the output — keep the ones that carry semantic content." The gradient signal from the decoder reaches backward through the entire model and shapes the learned geometry at every level.
+
+---
+
+## 125. Backward Decomposition Monitor — Gradient Flow Per Physics Term
+
+### 125.1 Core Pattern
+
+A per-layer monitor that decomposes backward gradient flow into contributions from damping, phase rotation (SPM+XPM), and FWM physics terms. Complements the forward ODE decomposition: forward shows what the ODE did, backward shows what the optimizer cares about. Uses subtraction method (full backward vs chi=0 backward vs damping-only backward) with L1 norm fractions. Reports d_chi norm per layer — signal for when to make chi learnable. Runs on a sample at health intervals, zero cost to training path.
+
+---
+
+## 126. Galaxy Summary Script — Compact Readable Output from Large Scans
+
+### 126.1 Core Pattern
+
+A Python script (standard library only) that reads 21MB galaxy_map.json files and produces ~30KB summary JSON + human-readable markdown. Two modes: single scan summary (top-K pairs, filtered FWM quartets, per-layer relationship counts, grid distribution, band statistics) and pairwise compare with diff (per-layer deltas, relationship type changes, confound warnings). The compare mode auto-detects dataset mismatches, architecture differences, and training tier discrepancies.
+
+---
+
+## 127. Subtractive Training Dynamic Against Embedding Priors
+
+### 127.1 Core Pattern
+
+Observation from galaxy scan analysis: wave-engine training is predominantly subtractive against the embedding's geometric priors. The multi-grid harmonic embedding provides structural coherence at the quartet level. Training removes most of this structure, with the rate and completeness of removal depending on the decoder type (lm_head removes ~100%, phase-native preserves ~10% and creates ~2% novel). The embedding is a rich starting point from which training selectively keeps, weakens, and breaks parts. This is inverted from the standard ML framing of "the model learns representations from scratch" and suggests that frozen harmonic embeddings outperform learned ones because learned embeddings let the subtractive process eat the scaffolding training needs.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2572,6 +2644,13 @@ Before this discipline was enforced, the codebase had 6 independent copies of th
 | 118 | Parameter sweep instrument — single-command safe operating region |
 | 119 | FWM phase-matching test — quartet selectivity validation |
 | 120 | Single source of truth discipline — one canonical derivative, all tiers call it |
+| 121 | Live framework monitor — continuous harmonic coherence during training |
+| 122 | Galaxy map scan — pure-band geometric inventory of learned structure |
+| 123 | Per-quartet deviation from embedding baseline — signed deviation metric |
+| 124 | Decoder-dependent geometric vocabulary — lm_head vs phase-native shapes different catalog relationships |
+| 125 | Backward decomposition monitor — gradient flow per physics term |
+| 126 | Galaxy summary script — compact readable output from large scans |
+| 127 | Subtractive training dynamic — training removes embedding priors, decoder controls what survives |
 | 111 | Training data ordering as gradient signal — autoregressive models learn from context windows, so relationships that span multiple examples must appear WITHIN a single window for the gradient to connect them. Proved: arithmetic commutativity (a+b = b+a) fails at 49/55 when each fact appears once at random positions. Placing commutative pairs adjacent in the training data (7+2=9 followed by 2+7=9) achieves 55/55 (100%) — the gradient from both orders hits the same weights in the same step. The 55/55 model is less specialised (L3 β/α 7.5x vs 15.1x) but more robust — higher loss (0.213 vs 0.195) produces higher accuracy. Data ordering is not preprocessing — it is a training signal | AI / Training Dynamics / Data Engineering / Research |
 
 ---
