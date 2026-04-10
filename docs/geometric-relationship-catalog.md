@@ -635,4 +635,4 @@ The engine does NOT use astrological names in its API. This table maps tradition
 
 ---
 
-*This catalog contains 5 traditions, 26 division systems, 35+ relationship types, 4 cycle systems, and 8 context modifiers. Together they form a complete vocabulary for every structural relationship class discoverable in a phase-encoded database.*
+*This catalog contains 5 traditions, 26 division systems, 35+ relationship types, 4 cycle systems, and 8 context modifiers. Together they form a comprehensive vocabulary of structural relationship classes documented across the traditions surveyed, applicable to phase-encoded databases.*
