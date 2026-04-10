@@ -243,6 +243,24 @@ If the energy signatures correlate with the relationship categories — tokens i
 
 **For the decoder question:** A decoder that reads only phase misses the energy axis. A decoder that reads only energy misses the phase axis. The full readout needs both — per-channel harmonic coherence for relationships, per-band magnitude profile for processing signatures. Two readout channels from the same state, capturing different aspects of what the model learned.
 
+### Cross-model comparison: arithmetic vs grammar energy signatures
+
+*Added: 2026-04-10 late evening*
+
+| Metric | Arithmetic | Grammar |
+|---|---|---|
+| Mean deform_sim | 0.66 | 0.46 |
+| Energy ratio range | 0.86–1.02 | 0.74–0.88 |
+| Phase-energy correlation | 0.56 | 0.51 |
+
+Three observations, each reinforcing the phase findings from a different angle:
+
+**Grammar compresses, arithmetic preserves.** Grammar energy ratios are 0.74–0.88 — every token loses energy, no exceptions. Arithmetic ratios are 0.86–1.02 — near energy-neutral, some tokens even gain slightly. The grammar model actively damps all tokens. This is the energy-domain signature of the L3 regime shift: "controlled destruction" means universal energy compression, not selective destruction of specific tokens.
+
+**Grammar differentiates, arithmetic homogenises.** Deform_sim 0.46 vs 0.66. The grammar model processes different tokens with different energy profiles; the arithmetic model processes all tokens similarly. Consistent with arithmetic being a positional task (token identity encoded by position, not by processing) and grammar being a structural task (the model needs to distinguish token types through processing).
+
+**Arithmetic focuses, grammar spreads.** Arithmetic peak bands cluster around band 34 and bands 58–64. Grammar peaks are scattered across the full 84-band range. Arithmetic found specific bands that matter and concentrated there. Grammar uses the whole spectrum — consistent with the "94% band utilisation" finding from earlier capacity analysis.
+
 ---
 
 ## What We Think We Know (Provisional)
