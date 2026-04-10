@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127); April 10, 2026 (patterns 128-132)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127); April 10, 2026 (patterns 128-136)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2716,6 +2716,10 @@ The accumulated WaveMemory state is per-layer r/s in the same format as embeddin
 | 130 | Task-dependent quartet dynamics — language builds 70% non-random quartets, arithmetic 0.25% |
 | 131 | L3 regime shift — architecture self-reorganises for grammar, cos(in,out) 0.92→0.45 |
 | 132 | Wave memory as native phase-space experience — per-layer EMA of ODE states, decoder-as-experience potential |
+| 133 | Phase encode tool — direct injection of geometric configurations into ODE layers, bypassing token→embedding pipeline. Five modes: text, number, catalog relationship, raw phases, compound. Layer injection point selectable. Blank (untrained) vs trained comparison reveals what training changed about dynamics |
+| 134 | Relate mode — per-harmonic coherence profiles between any two encodings through the ODE. Harmonic search at n={1,2,3,4,5,6,8,12}, shifted MRL with optimal offset, catalog matching. Pairwise matrix for multiple items. Full vocabulary scan with JSON export |
+| 135 | Structural importance as geometric isolation — in character-level grammar models, the ODE places structurally important characters ('s' plural/verb marker, 'q' rare letter, '?' syntactic role) at distinctive phase angles while common letters cluster in conjunction. Geometric position marks structural importance, not semantic category |
+| 136 | Task-dependent geometric vocabulary distribution — arithmetic uses 2/11 catalog types (67% conjunction), grammar uses 11/11 types (54% conjunction). The catalog distribution shape is a fingerprint of what geometric structure the task requires |
 | 111 | Training data ordering as gradient signal — autoregressive models learn from context windows, so relationships that span multiple examples must appear WITHIN a single window for the gradient to connect them. Proved: arithmetic commutativity (a+b = b+a) fails at 49/55 when each fact appears once at random positions. Placing commutative pairs adjacent in the training data (7+2=9 followed by 2+7=9) achieves 55/55 (100%) — the gradient from both orders hits the same weights in the same step. The 55/55 model is less specialised (L3 β/α 7.5x vs 15.1x) but more robust — higher loss (0.213 vs 0.195) produces higher accuracy. Data ordering is not preprocessing — it is a training signal | AI / Training Dynamics / Data Engineering / Research |
 
 ---
