@@ -16,7 +16,7 @@ A validated mathematical framework that uses phase encoding on the unit circle a
 
 ## Origin
 
-This work emerged from an unconventional observation: multiple ancient traditions independently discovered the same geometric relationship patterns by dividing circles into segments and cataloging which angles produce meaningful relationships. When stripped of interpretive layers, what remains is a complete taxonomy of relationship types — symmetric, asymmetric, directed, structural, context-dependent, compound — unified on a single mathematical substrate.
+This work emerged from an unconventional observation: multiple ancient traditions independently discovered the same geometric relationship patterns by dividing circles into segments and cataloging which angles produce meaningful relationships. When stripped of interpretive layers, what remains is a comprehensive taxonomy of relationship types — symmetric, asymmetric, directed, structural, context-dependent, compound — unified on a single mathematical substrate.
 
 ## What Is and Is Not New
 
@@ -119,7 +119,7 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 | File | Description |
 |------|-------------|
-| [docs/geometric-relationship-catalog.md](docs/geometric-relationship-catalog.md) | Complete catalog: 5 traditions, 26 division systems, 35+ relationship types |
+| [docs/geometric-relationship-catalog.md](docs/geometric-relationship-catalog.md) | Comprehensive catalog: 5 traditions, 26 division systems, 35+ relationship types |
 | [docs/wave-mechanics-stripped-catalog.md](docs/wave-mechanics-stripped-catalog.md) | Pure mathematical specification — domain interpretation removed |
 | [docs/MATHEMATICS.md](docs/MATHEMATICS.md) | Formal mathematical foundations in standard notation |
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
@@ -235,7 +235,7 @@ Full citation details: [docs/REFERENCES.md](docs/REFERENCES.md)
 
 This work is a collaboration between Marco Da Cunha (conceptual framework, key theoretical insights, architectural direction) and Claude (Anthropic's AI assistant — mathematical formalization, documentation, test design, and code generation).
 
-The core insights — that ancient geometric relationship catalogs encode a complete taxonomy of structural relationships, that harmonics are infinite and geometric invariants persist across all frequencies, and that these primitives map onto LLM embedding and FFN layers — originated from Marco Da Cunha's observations and questions during extended collaborative sessions.
+The core insights — that ancient geometric relationship catalogs encode a comprehensive taxonomy of structural relationships, that harmonics are infinite and geometric invariants persist across all frequencies, and that these primitives map onto LLM embedding and FFN layers — originated from Marco Da Cunha's observations and questions during extended collaborative sessions.
 
 ## License
 
