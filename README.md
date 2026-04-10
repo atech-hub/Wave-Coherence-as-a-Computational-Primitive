@@ -56,7 +56,7 @@ The full integrated stack (Phases A/B/C):
 
 **Result:** Loss 3.07 at 256-dim (128 bands, 598K params) — new project record. Loss 2.70 at 168-dim char-level (333K params). The learnable ODE backward was the root cause fix: loss 3.76 in 15 minutes vs 3.91 in 83 minutes with frozen ODE. Per-layer coupling self-organises — L0 high self-coupling, L1-L3 cross-band specialists, deepest layer protects output. The corrector plate (Investigation 14) enabled the model to push 3× harder on nonlinearity by providing phase error correction. THD stable over 30K sustained training. At 128 bands, Kerr's structural constraint provides implicit regularisation — stable where MLP overfits.
 
-For the complete experimental record across 34 phases and 15 investigations including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md) and [investigations/](investigations/).
+For the complete experimental record across 34 phases and 17 investigations including null results, corrective findings, and established architectural boundaries, see [experiments/RESULTS.md](experiments/RESULTS.md) and [investigations/](investigations/).
 
 **Training + inference engine:** The [Wave Engine](https://github.com/atech-hub/wave-engine) (Rust, Apache 2.0) is the unified training and inference binary. Train, analyze, generate, and serve — all modes use the same forward pass, eliminating training/inference mismatch. Three compute tiers: CPU (RK4-16 ODE with cached backward), wgpu GPU (fused ODE forward+backward via WGSL shaders, 1152 dispatches in one encoder), and Candle CUDA. Learnable ODE backward, corrector plate, dynamic per-layer AGC, batch distortion monitoring, BPE tokenization, WCHK self-describing checkpoints. KV-cache for fast autoregressive generation (4.7× speedup). OpenAI-compatible API via `--serve` flag (`--features serve`). Successor to the [Kerr Engine](https://github.com/atech-hub/kerr-engine) and [Wave Server](https://github.com/atech-hub/wave-server) (both now deprecated — use wave-engine for all work).
 
@@ -115,6 +115,10 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 
 **[The Scaling Wall](investigations/scaling-wall/INVESTIGATION.md) (confirmed)** — Three divergences at 256-dim, three wrong diagnoses (AGC, curriculum, α clamp). Actual cause: block-diagonal out_proj created 29% body / 71% head parameter imbalance. Dense out_proj rebalanced to 56/44. Loss 3.07 — new 256-dim record. The β that ran away to 0.41 at groups=8 settled at 0.20 at groups=1. The model didn't need extreme coupling when it had enough body capacity. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Pattern 92).
 
+**[The Residual Echo](investigations/residual-echo/INVESTIGATION.md) (complete, updated)** — Why a model that destroyed its inputs couldn't tell you what it found. Phase-native preserves 9x more triads than lm_head — the decoder shapes the model's learned geometry. The dot product is correct for what it measures, but Proposition 3.5 proves it has structural blind spots. Updated April 2026 with new data from the Geometric Vocabulary investigation.
+
+**[The Geometric Vocabulary](investigations/geometric-vocabulary/INVESTIGATION.md) (OPEN — in progress)** — What the model builds when nobody's watching. Galaxy scan, hidden coherence probe, vocabulary relationship matrix, energy deformation signatures. Grammar builds 4,766 locked quartets where arithmetic builds 0. Token 's' is the most geometrically distinct character (8% conjunction) — the model discovered the structural importance of the English plural/verb marker through physics. Phase and energy are complementary axes (r=0.51). Same catalog angle carries different energy flavours (preliminary yin/yang observation). Five provisional patterns, six next experiments. Defensive publication: [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) (Patterns 121-138).
+
 ## Documents
 
 | File | Description |
@@ -125,11 +129,11 @@ Deep-dives into specific questions, each self-contained with narrative, tests, a
 | [docs/KERR-ODE-MATHEMATICS.md](docs/KERR-ODE-MATHEMATICS.md) | Kerr-ODE mathematical foundations — ODE system, integration, reversibility |
 | [docs/ARCHITECTURE-BOUNDARIES.md](docs/ARCHITECTURE-BOUNDARIES.md) | Where harmonic structure helps and where it does not |
 | [experiments/RESULTS.md](experiments/RESULTS.md) | Complete experimental record: 34 phases, all results, all nulls |
-| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 87 engine pattern families as prior art |
+| [ENGINE-PATTERNS.md](ENGINE-PATTERNS.md) | Defensive publication: 138 engine pattern families as prior art |
 | src/ | Rust validation suite — 25 tests, zero dependencies |
 | python/ | Python translation of full test suite |
 | experiments/ | 34 training experiments with PyTorch |
-| investigations/ | 15 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling, output-decoding, 256-dim-scaling, ODE backward, corrector plate, scaling wall |
+| investigations/ | 17 deep-dive investigations: multi-grid, spherical, frequency-depth, corpus-ordering, wave-memory, wave-structure, MLP analysis, ODE regulation, operating-regime, harmonic-scaling, output-decoding, 256-dim-scaling, ODE backward, corrector plate, scaling wall, residual-echo, geometric-vocabulary |
 
 ## Reproduce the Validation
 
