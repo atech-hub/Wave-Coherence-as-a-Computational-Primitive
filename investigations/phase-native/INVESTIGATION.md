@@ -332,6 +332,18 @@ The baseline over-specialised L3 to compensate for position-dependent attention 
 
 ---
 
+## Update: Per-Channel Decoder Direction (2026-04-10)
+
+The Geometric Vocabulary investigation found evidence that the single-scalar dot product decoder is provably blind to harmonic structure. Proposition 3.5 in MATHEMATICS.md demonstrates that summing `cos(n*delta_theta)` across channels can equal zero even when individual channels equal 1.0 — the decoder reports "no relationship" between perfectly coherent entities.
+
+New tool `--relate-vocab` shows the grammar model places structurally important characters ('s', 'q', '?') at distinctive catalog angles while clustering common letters in conjunctions. All 11 catalog relationship types present in grammar vocabulary; only 2 in arithmetic. The model IS organising its vocabulary geometrically — the question is whether a per-channel decoder that reads harmonic profiles instead of computing one scalar per token could break the plateau.
+
+The 2x2 decoder comparison (April 9) adds evidence: phase-native preserves 9x more triads and 4-5x more FWM quartets than lm_head. The decoder shapes the model's learned geometry. Phase-native builds structure that lm_head doesn't — but the current phase-native readout can't see that structure because the dot product collapses it.
+
+Open direction: per-channel harmonic decoder using `cos(n*delta_theta)` at each harmonic separately, potentially weighted by accumulated wave-memory state. See Geometric Vocabulary investigation for full data and next experiments.
+
+---
+
 ## Reproduction
 
 ```bash
