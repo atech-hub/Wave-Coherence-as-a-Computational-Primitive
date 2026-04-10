@@ -261,6 +261,29 @@ Three observations, each reinforcing the phase findings from a different angle:
 
 **Arithmetic focuses, grammar spreads.** Arithmetic peak bands cluster around band 34 and bands 58–64. Grammar peaks are scattered across the full 84-band range. Arithmetic found specific bands that matter and concentrated there. Grammar uses the whole spectrum — consistent with the "94% band utilisation" finding from earlier capacity analysis.
 
+### First look at yin/yang: same angle, different energy?
+
+*Added: 2026-04-10 late evening*
+
+The catalog says every relationship has two meanings. Trine = harmony AND stagnation. Opposition = clash AND combination. If the energy axis carries the distinction, then pairs at the same catalog angle should split into energy-similar and energy-opposite flavours.
+
+Preliminary test on grammar `--relate-vocab` data — within-catalog energy similarity:
+
+| Catalog type | N pairs | Energy sim range | Spread |
+|---|---|---|---|
+| Conjunction | 1,591 | 0.193–0.920 | 0.727 |
+| Opposition | 11 | 0.209–0.560 | 0.351 |
+| Trine | 5 | 0.200–0.380 | 0.180 |
+| Sextile | 11 | 0.217–0.549 | 0.332 |
+
+Within oppositions: '!' ↔ 'j' at energy_sim=0.21 (energy-opposite processing) while '3' ↔ 'q' at energy_sim=0.56 (energy-similar processing). Same 180° angle, different energy flavour.
+
+Within trines: '9' ↔ '?' at 0.20 (energy-opposite) while '?' ↔ 'A' at 0.38 (energy-similar). Same 120°, different flavour.
+
+**Assessment: too few to claim the pattern is real.** Five trines and eleven oppositions at character level cannot establish a finding. The spread IS there within each catalog type — same angle, different energy signature. The data does not say no. But it doesn't say yes either. This needs BPE-level data with hundreds of trines to test properly.
+
+**What to look for at BPE level:** within each catalog type, do energy-similar pairs share one kind of linguistic relationship (synonyms? same part of speech?) while energy-opposite pairs share a different kind (antonyms? different parts of speech?)? That would be the two-meaning property showing up in the data. The tools are ready. The question is defined. The data isn't here yet.
+
 ---
 
 ## What We Think We Know (Provisional)
