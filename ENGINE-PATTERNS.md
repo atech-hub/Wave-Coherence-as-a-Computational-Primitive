@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127); April 10, 2026 (patterns 128-132)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2521,6 +2521,66 @@ Observation from galaxy scan analysis: wave-engine training is predominantly sub
 
 ---
 
+## 128. Hidden Coherence Detection — Multi-Harmonic Mean Resultant Length
+
+### 128.1 Core Pattern
+
+Standard galaxy scan coherence `cos(n·Δθ)` averaged across positions measures coherence at zero phase offset only. Many band pairs have strong coherence at a non-zero fixed offset — the phase difference is stable but not centered on a catalog angle. Multi-harmonic MRL (mean resultant length) search across harmonics {1,2,3,4,6} captures coherence at ANY fixed offset. Computed analytically as `sqrt(S² + C²) / P` where `S = Σ sin(n·Δθ)`, `C = Σ cos(n·Δθ)`. MRL ≥ |signed_mean| always; when MRL >> |signed_mean|, there's hidden coherence at `atan2(S,C)/n`.
+
+### 128.2 Key Finding
+
+Grammar at L4: 1,328 shifted pairs with MRL > 0.5 where signed coherence ≈ 0. Arithmetic at L4: 11 shifted pairs. Language builds coherent band relationships at phase offsets the standard zero-offset measurement misses entirely. This was invisible until the probe was built.
+
+---
+
+## 129. Quartet Trajectory Classification — Phase-Sum MRL
+
+### 129.1 Core Pattern
+
+For each FWM quartet (a,b,c,d), compute phase-sum `θ_a + θ_b - θ_c - θ_d` at every position, then classify the trajectory by its MRL: random (MRL < 0.3, phase-sum uniformly distributed), oscillating (MRL 0.3-0.7, weakly coupled), locked (MRL > 0.7, phase-sum concentrated around a fixed value). Also checks for rotation (systematic drift across positions) — confirmed zero rotating quartets in all tested models.
+
+### 129.2 Key Finding
+
+Grammar model: 4,766 locked quartets + 60,830 oscillating = 70% non-random. Arithmetic model: 0 locked + 236 oscillating = 0.25% non-random. Language builds phase-locked four-body relationships by the thousands where arithmetic builds essentially none. This is the largest structural difference found between tasks.
+
+---
+
+## 130. Task-Dependent Quartet Dynamics — Language vs Arithmetic
+
+### 130.1 Core Pattern
+
+On identical architecture (168-dim, 4H, 4L, phase-native + FWM), training on language (grammar) vs arithmetic produces qualitatively different quartet dynamics. Arithmetic: quartet phase-sums are essentially random (99.75% random category). Grammar: quartet phase-sums are predominantly structured (70% oscillating or locked). The difference is not in the architecture, the FWM strength, or the decoder — it's in the task. Language requires four-body phase coordination that arithmetic does not.
+
+### 130.2 Implications
+
+The FWM coupling term in the Kerr-ODE (`χ · Re(z_a · z_b · z_c* · z_d*)`) operates on quartets. When the task requires complex relational structure (grammar: nouns, verbs, modifiers interacting), training organises bands into phase-locked quartets. When the task is simpler (single/multi-digit arithmetic), training leaves quartets random. The quartet dynamics are a fingerprint of task complexity visible through the galaxy scan.
+
+---
+
+## 131. L3 Regime Shift — Architecture Self-Reorganises for Grammar
+
+### 131.1 Core Pattern
+
+Training grammar at 168-dim with FWM, the deepest processing layer (L3) undergoes a regime shift between iter 6K and 18K. L3 transitions from preservative (cos(in,out)=0.92, residual dominates at 0.95, FFN ratio 0.37) to destructive (cos=0.45, residual=0.15, FFN ratio=0.93). Alpha driven to minimum (0.010), beta at 0.187 — extreme β/α decoupling (compositional/late-binding regime). The performance improvement (loss 2.64→2.41) arrives ~10K iters after the regime shift completes. Architecture reorganises before performance catches up.
+
+### 131.2 Significance
+
+This was predicted by the GPT-2 comparison in Chat 18: "language needs destruction" (cos(in,out) should drop from the wave-engine's preservative 0.87 toward GPT-2's destructive -0.09). L3 achieved cos=0.45 organically — not from tuning residual strength, but from the ODE parameters self-organising. Breaks the "grammar plateau 3.1 at 168-dim" claim — best loss 2.34, still descending.
+
+---
+
+## 132. Wave Memory as Native Phase-Space Experience
+
+### 132.1 Core Pattern
+
+Persistent per-layer oscillator state (r/s per band) accumulated via EMA across conversations. The model reads memory by adding scaled offsets to ODE initial conditions: `Z_k = input_k + α·memory_k`. Memory is in the model's native coordinate system — no translation, no lossy conversion. Model weights stay frozen; memory is experience, not education. Stored in KWMF binary format via the kerr-memory library.
+
+### 132.2 Decoder-as-Experience Potential
+
+The accumulated WaveMemory state is per-layer r/s in the same format as embedding phases. A future phase-native decoder variant could compare model output against accumulated memory phases instead of frozen embedding phases — a decoder that evolves with experience rather than being vocabulary-bound. This is architecturally open: the MemoryOffsets struct and build_offsets() live in common/ where phase_decode.rs can reach them.
+
+---
+
 ## Summary of Covered Patterns
 
 | # | Pattern | Domain |
@@ -2651,6 +2711,11 @@ Observation from galaxy scan analysis: wave-engine training is predominantly sub
 | 125 | Backward decomposition monitor — gradient flow per physics term |
 | 126 | Galaxy summary script — compact readable output from large scans |
 | 127 | Subtractive training dynamic — training removes embedding priors, decoder controls what survives |
+| 128 | Hidden coherence detection — multi-harmonic MRL reveals pairs coherent at non-zero phase offsets |
+| 129 | Quartet trajectory classification — phase-sum MRL categorises quartets as random/oscillating/locked |
+| 130 | Task-dependent quartet dynamics — language builds 70% non-random quartets, arithmetic 0.25% |
+| 131 | L3 regime shift — architecture self-reorganises for grammar, cos(in,out) 0.92→0.45 |
+| 132 | Wave memory as native phase-space experience — per-layer EMA of ODE states, decoder-as-experience potential |
 | 111 | Training data ordering as gradient signal — autoregressive models learn from context windows, so relationships that span multiple examples must appear WITHIN a single window for the gradient to connect them. Proved: arithmetic commutativity (a+b = b+a) fails at 49/55 when each fact appears once at random positions. Placing commutative pairs adjacent in the training data (7+2=9 followed by 2+7=9) achieves 55/55 (100%) — the gradient from both orders hits the same weights in the same step. The 55/55 model is less specialised (L3 β/α 7.5x vs 15.1x) but more robust — higher loss (0.213 vs 0.195) produces higher accuracy. Data ordering is not preprocessing — it is a training signal | AI / Training Dynamics / Data Engineering / Research |
 
 ---
