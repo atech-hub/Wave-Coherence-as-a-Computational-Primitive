@@ -205,6 +205,46 @@ The grammar model identified **which characters are structurally special** and p
 
 ---
 
+## The Second Axis: Energy Deformation Signatures
+
+*Added: 2026-04-10 evening*
+
+The vocabulary relationship matrix looked at phase — WHERE tokens sit relative to each other. Marco asked a different question: what about the energy? When the ODE processes a token, it doesn't just rotate the phases — it reshapes the magnitudes. Some bands get amplified, others get damped. Does each token leave a characteristic energy fingerprint?
+
+The experiment: encode every token individually through the ODE, compute the per-band magnitude ratio `mag_out / mag_in` (the deformation vector), and compare deformation vectors between tokens.
+
+This is spectroscopy applied to neural networks. Different materials absorb and emit at different frequencies — a spectral fingerprint. Each token might have a characteristic absorption/emission pattern across the 84 bands. The architecture makes this measurable because the bands ARE explicit frequencies. A standard transformer's activations have no frequency structure — you couldn't do this.
+
+### Results: r = 0.51
+
+The correlation between phase distinctiveness (MRL from `--relate-vocab`) and energy distinctiveness (deformation similarity) is **0.51**.
+
+This is the perfect number. High enough to confirm both signals come from the same model — they're related, not independent random noise. Low enough to prove they carry independent information — not redundant. About half the information is shared, half is unique to each axis.
+
+### Where the axes agree
+
+'?', 'A', 'j', ':' have the most distinctive signatures in BOTH domains. The model treats these tokens differently in how it rotates them (phase) AND how it reshapes their energy (magnitude). Both signals reinforce each other for these tokens.
+
+Common letters ('t', 'a', 'I', 'O') have the most generic signatures in both domains. Same pattern as phase alone: common letters cluster together.
+
+### Where the axes diverge
+
+**'s' — phase-distinctive but energy-generic.** The most geometrically distinct token (8% conjunction rate, 22 non-conjunction relationships) has an average energy signature. The model knows 's' belongs at a distinctive ANGLE but doesn't process it with unusual energy redistribution. Phase says: "'s' is structurally special." Energy says: "'s' gets processed normally."
+
+**'.' and ':' — energy-distinctive but phase-generic.** Ordinary phase positions but distinctive energy signatures. The model processes punctuation with unusual energy patterns even though it doesn't place them at unusual angles. Energy says: "punctuation gets processed differently." Phase says: "punctuation sits in an ordinary position."
+
+A token can be phase-distinctive without being energy-distinctive, energy-distinctive without being phase-distinctive, or both. **Two dimensions of how the model marks structural importance — not one.**
+
+### What this means
+
+Phase tells you WHERE a token belongs in the geometric space. Energy tells you HOW the model processes it — which bands get amplified, which get damped. Both are already in the data. We just hadn't looked at the magnitude axis systematically until now.
+
+If the energy signatures correlate with the relationship categories — tokens in trines also sharing similar energy profiles — that would strengthen the catalog by providing a physical mechanism (energy redistribution) backing the geometric relationships. Early data suggests partial correlation (r=0.51) with meaningful divergences. More data needed before claiming a mechanism.
+
+**For the decoder question:** A decoder that reads only phase misses the energy axis. A decoder that reads only energy misses the phase axis. The full readout needs both — per-channel harmonic coherence for relationships, per-band magnitude profile for processing signatures. Two readout channels from the same state, capturing different aspects of what the model learned.
+
+---
+
 ## What We Think We Know (Provisional)
 
 These are patterns we've observed. They are NOT confirmed findings. Each one needs replication, confound-checking, or additional data before it can be stated as a result.
@@ -216,6 +256,8 @@ These are patterns we've observed. They are NOT confirmed findings. Each one nee
 **Pattern 3: Architecture reorganises before performance improves.** L3 regime shift 6K–18K, loss improvement 20K–25K. *Needs:* replication on a second training run. Does the same shift happen at the same iteration, or is it seed-dependent?
 
 **Pattern 4: The galaxy scan was missing half the picture.** Hidden coherence probe found 1,328 shifted pairs at grammar L4 that zero-offset measurement couldn't see. *Status:* Confirmed and instrumented. The MRL metric is now baked into every scan.
+
+**Pattern 5: Phase and energy are complementary axes of structural importance.** Correlation r=0.51 — partially related, not redundant. Some tokens are phase-distinctive but energy-generic ('s'), others energy-distinctive but phase-generic ('.', ':'). The model marks importance on two independent dimensions. *Needs:* replication at BPE level. Check whether the two axes correlate with different linguistic properties (phase → grammatical role, energy → frequency/rarity?).
 
 ---
 
@@ -244,6 +286,8 @@ These are patterns we've observed. They are NOT confirmed findings. Each one nee
 4. **Second grammar training run.** Same config, different seed. Does L3 shift at the same iteration? If yes: deterministic architectural property. If no: seed-dependent and less reliable.
 
 5. **Wave-memory port + galaxy scan of KWMF.** After porting wave-memory to the engine, scan a populated memory file. What structure does accumulated experience contain?
+
+6. **Energy-phase correlation by linguistic property.** Do phase-distinctive tokens correspond to grammatical roles (structural position) while energy-distinctive tokens correspond to processing frequency (how often/unusually the model encounters them)? Test by grouping tokens by known properties (vowel/consonant, frequent/rare, punctuation/letter) and checking which axis separates each grouping better.
 
 ---
 
