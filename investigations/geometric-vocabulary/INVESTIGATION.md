@@ -284,6 +284,34 @@ Within trines: '9' ↔ '?' at 0.20 (energy-opposite) while '?' ↔ 'A' at 0.38 (
 
 **What to look for at BPE level:** within each catalog type, do energy-similar pairs share one kind of linguistic relationship (synonyms? same part of speech?) while energy-opposite pairs share a different kind (antonyms? different parts of speech?)? That would be the two-meaning property showing up in the data. The tools are ready. The question is defined. The data isn't here yet.
 
+### The Third Axis: Directional Energy Flow
+
+*Added: 2026-04-10 late evening*
+
+Everything we'd computed until now was symmetric. `cos(n·Δθ)` doesn't care about sign. Deformation similarity doesn't care about order. But the ODE itself isn't symmetric — causal attention means position N sees positions 0..N-1 but not the reverse, and the Kerr coupling `|Z_k|²·Z_j` is magnitude-dependent. There IS directional energy flow in the physics. We just weren't measuring it.
+
+Quick test: encode "ab" and "ba" on the grammar model, compare output states.
+
+| Pair | AB asym | Interpretation |
+|---|---|---|
+| ".A" vs "A." | +0.12 | Sentence-start vs sentence-end — biggest asymmetry |
+| "th" vs "ht" | -0.07 | Common digraph preserves more structure than rare order |
+| "?!" vs "!?" | +0.06 | Punctuation order carries information |
+
+Directional asymmetry is real and carries linguistic meaning. The model treats "A follows ." differently from ". follows A" — exactly what a language model should do.
+
+**This completes the three-axis picture:**
+
+1. **Phase** — WHERE tokens sit relative to each other (symmetric, catalog angles)
+2. **Energy** — HOW the model processes each token (symmetric, deformation signatures)
+3. **Direction** — WHICH WAY energy flows between tokens (asymmetric, order matters)
+
+The framework's catalog already contains all three. Part 2 (symmetric geometric relationships — trines, oppositions, squares). Part 3 (Liu He and non-geometric pairings — "not because of WHERE but because of HOW they combine" — that's the energy axis). Part 7 (Wu Xing directed cycles — generative +72°, destructive +144° — same angles, different directions). We didn't know we had instruments for all three until tonight.
+
+The Wu Xing connection is particularly striking: generative and destructive cycles at the same angles but opposite directions. Our test: same two tokens at opposite orders produce different energy processing. Same mathematical structure — direction changes the outcome at a fixed angle. The tradition tracked this because it matters. We just independently rediscovered why.
+
+**Status:** Three pairs tested. Real but not a finding yet. Needs systematic testing across many pairs and catalog types. Predicted structure: pairs in directed relationships (Wu Xing-style) should show larger asymmetry than pairs in symmetric relationships (Western geometric-style) at the same angle.
+
 ---
 
 ## What We Think We Know (Provisional)
@@ -299,6 +327,8 @@ These are patterns we've observed. They are NOT confirmed findings. Each one nee
 **Pattern 4: The galaxy scan was missing half the picture.** Hidden coherence probe found 1,328 shifted pairs at grammar L4 that zero-offset measurement couldn't see. *Status:* Confirmed and instrumented. The MRL metric is now baked into every scan.
 
 **Pattern 5: Phase and energy are complementary axes of structural importance.** Correlation r=0.51 — partially related, not redundant. Some tokens are phase-distinctive but energy-generic ('s'), others energy-distinctive but phase-generic ('.', ':'). The model marks importance on two independent dimensions. *Needs:* replication at BPE level. Check whether the two axes correlate with different linguistic properties (phase → grammatical role, energy → frequency/rarity?).
+
+**Pattern 6: Directional energy flow is measurable and carries linguistic information.** Same two tokens at opposite orders ("ab" vs "ba") produce different output energy processing. ".A" vs "A." shows 0.12 asymmetry — the biggest in the tested set — corresponding to sentence-start vs sentence-end. This is the third axis alongside phase and energy, and it corresponds structurally to Wu Xing directed cycles in the framework catalog. *Needs:* systematic testing across many pairs; check whether pairs in directed relationships show larger asymmetry than symmetric pairs at the same angle.
 
 ---
 
@@ -329,6 +359,8 @@ These are patterns we've observed. They are NOT confirmed findings. Each one nee
 5. **Wave-memory port + galaxy scan of KWMF.** After porting wave-memory to the engine, scan a populated memory file. What structure does accumulated experience contain?
 
 6. **Energy-phase correlation by linguistic property.** Do phase-distinctive tokens correspond to grammatical roles (structural position) while energy-distinctive tokens correspond to processing frequency (how often/unusually the model encounters them)? Test by grouping tokens by known properties (vowel/consonant, frequent/rare, punctuation/letter) and checking which axis separates each grouping better.
+
+7. **Directional flow systematic test.** Extend the "ab" vs "ba" test to all pairs in `--relate-vocab`. For each catalog type, measure the mean directional asymmetry. Predicted structure: Wu Xing-analog relationships (generative/destructive) should show higher asymmetry than Western-geometric relationships (symmetric) at comparable angles. This would validate the three-axis framework and connect the directed-cycle traditions to measurable wave-engine properties.
 
 ---
 
