@@ -1,7 +1,7 @@
 # Wave Coherence Engine Patterns: Defensive Publication
 
 **Authors:** Marco Da Cunha (Independent Researcher) and Claude (Anthropic)
-**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127); April 10, 2026 (patterns 128-139); April 11, 2026 (patterns 140-143)
+**Date:** February 28, 2026 (patterns 1-70); March 22, 2026 (patterns 71-80); March 30, 2026 (patterns 88-92); April 2, 2026 (patterns 93-102); April 8, 2026 (patterns 112-120); April 9, 2026 (patterns 121-127); April 10, 2026 (patterns 128-139); April 11, 2026 (patterns 140-146)
 **License:** MIT (same as parent framework)
 **Purpose:** Defensive prior art publication to prevent patent enclosure of implementation patterns derived from Wave Coherence as a Computational Primitive.
 
@@ -2727,6 +2727,9 @@ The accumulated WaveMemory state is per-layer r/s in the same format as embeddin
 | 141 | Targeted destruction develops through depth — recognition-triggered extraction, not general pattern matching. L0 detects (1.29x ratio), L1 amplifies (1.96x), L2 peaks (2.61x maximum discrimination), L3 processes (1.79x). Model destroys familiar (on-grid) structure more than unfamiliar (off-grid) — opposite of pattern matching. On-grid cos 0.17 vs off-grid 0.30 at L3 |
 | 142 | Decoder controls directionality — six-model scan. Phase-native arithmetic 0.04-0.07 mean asymmetry, lm_head 0.14-0.15. Clean 3x gap. FWM adds directionality (+75% for PN). Data augmentation is third lever: augmented PN matches lm_head-level asymmetry. Operators (+, -) drive arithmetic directionality |
 | 143 | Four-axis structural measurement framework — phase (WHERE), energy (HOW), dignity (context-dependence), direction (order-dependence). At 168-dim 80K iters: four of six pairwise correlations below 0.3, zero tokens in all four top-10s. Axes appear independent BUT caveat: may be fuzzy picture from undertrained model. Correlation matrix should be tracked across scans to detect alignment emergence at convergence |
+| 144 | Wu He grid-aware opposition — same 180° angle behaves differently on grid-1 (MRL=0.412) vs grid-2 (MRL=0.554), 35% difference. The yin/yang principle: same geometric relationship, different cycle, different coherence. Per-pair grid tagging (same_g1/same_g2/cross) baked into --relate-vocab |
+| 145 | Liu Hai catalog-vs-friction coherence — pairs at recognized catalog angles have 47% higher MRL (0.482 vs 0.329) and 14% higher energy similarity than non-catalog pairs. The model treats catalog angles as coherent vocabulary and non-catalog angles as friction. Computed as single diagnostic ratio per scan |
+| 146 | Multi-grid scaffolding separation — same-grid pairs provide coherence scaffolding (high MRL, 64% conjunction), cross-grid pairs provide learned geometric diversity (78 non-conjunction matches, 52% conjunction). The interesting structure lives between grids, not within them |
 | 111 | Training data ordering as gradient signal — autoregressive models learn from context windows, so relationships that span multiple examples must appear WITHIN a single window for the gradient to connect them. Proved: arithmetic commutativity (a+b = b+a) fails at 49/55 when each fact appears once at random positions. Placing commutative pairs adjacent in the training data (7+2=9 followed by 2+7=9) achieves 55/55 (100%) — the gradient from both orders hits the same weights in the same step. The 55/55 model is less specialised (L3 β/α 7.5x vs 15.1x) but more robust — higher loss (0.213 vs 0.195) produces higher accuracy. Data ordering is not preprocessing — it is a training signal | AI / Training Dynamics / Data Engineering / Research |
 
 ---
