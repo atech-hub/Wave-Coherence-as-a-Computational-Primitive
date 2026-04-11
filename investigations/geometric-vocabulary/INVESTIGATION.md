@@ -722,6 +722,32 @@ This is the same category of framing catch as:
 
 The question of whether the axes are fundamentally independent or merely unaligned-in-undertrained-models requires data from a converged model at a dimension with headroom.
 
+## Test 7: Mayan Compound Cycles — Clean Null + Incidental Finding
+
+*Added: 2026-04-11*
+
+**Hypothesis:** The Mayan Tzolkin system uses compound cycles (20 Day Signs × 13 Tones = 260 positions) with per-position relationship rules. The wave-engine's multi-grid embedding (m1=9 × m2=11) has the same compound-cycle structure. Do tokens at the same grid position share relationship partners?
+
+**Results:**
+
+| Group | N pairs | Mean MRL | Conjunction % | Non-conj catalog |
+|---|---|---|---|---|
+| Same grid-1 only | 292 | 0.452 | 64% | 2 |
+| Same grid-2 only | 231 | 0.468 | 64% | 5 |
+| Different both | 2,403 | 0.407 | 52% | 78 |
+
+Per-token partner sharing (Jaccard similarity of top-5 partner sets for tokens at same grid-1 position): 0.02–0.20. No evidence of grid-determined relationship rules.
+
+**Mayan null:** Clean. Each token has idiosyncratic learned relationships that don't follow grid membership. Per-position computed rules do not manifest at character level.
+
+**Incidental finding:** The multi-grid embedding separates "coherence scaffolding" from "learned geometric structure." Same-grid pairs have higher MRL (0.45–0.47) but cluster in conjunctions (64%, only 2–5 non-conjunction matches). Cross-grid pairs have lower MRL (0.41) but dramatically richer catalog diversity (78 non-conjunction matches, 52% conjunction).
+
+**Confound noted:** When we reported "grammar uses all 11 catalog types," some of that diversity comes mechanically from cross-grid pairs having more angular freedom. Cross-grid tokens aren't constrained by sharing a grid position, so they can land at any catalog angle. This doesn't invalidate the grammar-vs-arithmetic difference (which is much larger) but it's a mechanism to understand.
+
+**Multi-grid principle refined:** The grids provide positional coverage (sexagenary principle) AND coherence scaffolding (same-grid = close). The interesting learned structure lives in the cross-grid space.
+
+---
+
 ## Next Question: Can We Encode at the Grid Level?
 
 *Added: 2026-04-11 morning — new experimental direction*
