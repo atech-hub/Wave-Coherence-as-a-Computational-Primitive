@@ -364,6 +364,68 @@ These are patterns we've observed. They are NOT confirmed findings. Each one nee
 
 ---
 
+## Test 1: Multi-Resolution Harmonics (Vedic Vargas) — Breadcrumb Found
+
+*Added: 2026-04-11 morning*
+
+### The question
+
+The Vedic tradition encodes meaningful structure at multiple resolution tiers simultaneously: D1 (12 buckets), D9 Navamsa (108 buckets), D27 Nakshatra, D60 Shashtiamsa. The catalog claims these aren't arbitrary divisions — each tier reveals relationships invisible at coarser resolutions. Our `--relate-vocab` sweeps n ∈ {1..6, 8, 12}. Does extending to n ∈ {9, 16, 20, 24, 27, 36, 60} reveal structure we were missing?
+
+### The test
+
+Python probe `scripts/multi_resolution_probe.py` reads existing `phases.bin` files from galaxy scans, computes per-pair harmonic coherence across the extended range, and compares best-MRL-at-extended-n against best-MRL-at-standard-n for each pair.
+
+### Results
+
+| | Grammar L0 | Arithmetic L0 | Grammar L4 | Arithmetic L4 |
+|---|---|---|---|---|
+| Pairs with best at extended n | 8.4% | 23.9% | 0.9% | 26.5% |
+
+At first glance: arithmetic has more extended-harmonic structure than grammar. That's backwards from what we'd expect if extended harmonics revealed learned complexity.
+
+### The confounds
+
+**Embedding grid mathematics.** The multi-grid embedding uses coprime moduli m1=5 and m2=7 at 84 bands. 5 × 12 = 60, so bands (10, 19) at n=60 with MRL=0.995 appear in BOTH models at the same pair — because it's grid arithmetic, not learned structure. Most of arithmetic's "26.5% extended" is this kind of artifact: the model preserved the embedding's harmonic structure without reshaping it, because arithmetic is a positional task that doesn't need to.
+
+**Undertrained model.** The grammar checkpoint is 80K iters at 168-dim with loss still descending (2.34 best, curve not flat). The band capacity is ~94% full. Multi-resolution structure may take longer to form than single-resolution structure — if 80K is "enough to break the 3.1 plateau but not enough to organise deeper resolutions," we're looking too early.
+
+### The breadcrumb
+
+**One cluster is not artifact.** Grammar L0 shows 8 pairs in the grid-2 region (bands 56–78) with best coherence at n=9 (Navamsa resolution), MRL 0.75–0.78 versus standard 0.53–0.58 — a ~40% improvement at specific bands. The equivalent region in arithmetic does NOT show this cluster.
+
+If this were pure grid arithmetic it would appear in both models. It doesn't. Something about grammar training at L0 produced coherence at n=9 that arithmetic training at the same bands didn't.
+
+And notably: grid 2 uses m2=7. The Navamsa division is 9-fold. 9 and 7 are coprime but interact — the combination creates specific angular positions that a trained model could exploit for structural encoding. This is exactly what the Vedic tradition predicts: the grid provides the resolution tiers, the model finds meaningful relationships at those tiers.
+
+### Status: OPEN, not resolved
+
+The multi-resolution axis is not dismissed. We found a breadcrumb (8-pair n=9 cluster at grammar L0 grid-2) with a plausible mechanism (grid-2 modulus m2=7 interacting with Navamsa 9-fold division), confounded by training stage (80K undertrained) and dimensional capacity (168-dim near ceiling).
+
+**The test that would resolve the confound:** run the probe on a grammar model trained to convergence at a dimension with headroom (256-dim or BPE-level). If the n=9 cluster grows stronger and extends to more bands as training progresses, it's learned structure exploiting the Vedic-analog resolution. If it stays at 8 pairs regardless of training length or dimension, it's a grid-harmonic interaction artifact.
+
+**The probe script (`scripts/multi_resolution_probe.py`) is committed and ready to re-run whenever a better-trained checkpoint is available.**
+
+---
+
+## Next Question: Can We Encode at the Grid Level?
+
+*Added: 2026-04-11 morning — new experimental direction*
+
+The multi-grid embedding assigns each token to two phase positions: one on grid 1 (mod m1=5), one on grid 2 (mod m2=7). Currently the `--encode` tool only accepts tokens or raw phases — it doesn't let us specify "encode at grid 1 position 3, grid 2 position 5" directly. If we could, we could test:
+
+- **Does the model treat grid-native positions differently from interpolated positions?** Encode a position that exists ON the grids (grid1=2, grid2=3) versus one that doesn't (grid1=2.5, grid2=3.5 — not reachable by any real token). If the model's output differs, the grids are causally structural, not just an encoding convenience.
+- **Does the n=9 cluster respond to grid-level encoding?** Inject at grid-2 positions specifically (vary m2 position, hold m1 fixed) and see if the n=9 L0 cluster activates more strongly than with text encoding.
+- **Can we construct synthetic tokens that occupy unused grid positions?** With 77 vocab and 5×7=35 grid-1 positions and 35 grid-2 positions (total 35 unique compound positions at lcm=35... wait, that's only 35, not 84). Check: is the grammar vocab actually filling the grid space, or are there gaps the model could use?
+
+This requires extending `phase_encode.rs` with a new encoding mode: `--encode-grid "m1:N,m2:M"` that produces the same phase pattern as `build_harmonic_table` would for a token at that (grid1, grid2) position, without requiring the position to correspond to any real token.
+
+**This is experimental analysis territory** — we don't know what grid-level encoding will reveal, but it's the cleanest way to separate "embedding grid structure" from "learned model structure" because we can encode positions that have no training signal at all and see what the model does with them.
+
+Python-first approach again: write a script that constructs grid-level phase patterns, calls the engine's `--encode-phases` mode with the raw phase values, and compares outputs. If the script proves the hypothesis useful, then Code adds `--encode-grid` to the engine proper.
+
+---
+
 ## The Thread We're Following
 
 Five civilizations independently divided circles into segments and cataloged which angles produce meaningful relationships. The framework's geometric relationship catalog strips those observations to pure geometry — 35+ relationship types across 11 angular families. The wave-engine's ODE processes information through coupled harmonic oscillators that naturally produce angular relationships between bands.
