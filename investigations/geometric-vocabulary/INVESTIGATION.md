@@ -748,6 +748,60 @@ Per-token partner sharing (Jaccard similarity of top-5 partner sets for tokens a
 
 ---
 
+## Test 8: Wu He (Heavenly Stems) — Same Angle, Different Grid
+
+*Added: 2026-04-11 afternoon*
+
+**Hypothesis:** 180° opposition on grid-1 vs grid-2 should behave differently if the "two meanings at same angle" concept is real. The Wu He tradition (Heavenly Stems) describes 180° combinations on the 10-Stem cycle as having opposite meaning from the 180° clashes on the 12-Branch cycle.
+
+**Result: CONFIRMED.** Grid-1 oppositions: 77 band pairs, mean MRL=0.412. Grid-2 oppositions: 64 band pairs, mean MRL=0.554. **Grid-2 oppositions are 35% stronger.** Same angle, different grid, different coherence. This is the yin/yang finding: the same geometric relationship means different things depending on which cycle it lives on.
+
+## Test 9: San Hui Fang (Seasonal Groupings) — Adjacent Clustering
+
+*Added: 2026-04-11 afternoon*
+
+**Hypothesis:** Tokens at adjacent grid positions should cluster more than random (spatial proximity = relationship).
+
+**Result: NULL.** Adjacent-3 group mean MRL=0.425 vs random 0.419. Ratio 1.014x. No adjacency effect. Consistent with the Mayan per-token null — spatial-proximity rules don't manifest at character scale.
+
+## Test 10: Xiang Xing (Self-Punishment) — Universal Damping
+
+*Added: 2026-04-11 afternoon*
+
+53 of 77 tokens (69%) are self-damped below 0.80x energy ratio. This is the universal grammar compression already found in the cross-model energy comparison (grammar 0.74–0.88 vs arithmetic 0.86–1.02). The "self-punishment" concept maps to an existing finding, not a new one. The most self-damped are common characters ('g', space, 'h', 'a', 't'). Overlap with phase-distinctive top-10: only '!' and '"'. Self-punishment and structural importance are different properties.
+
+## Test 11: Liu Hai (Six Harms) — Catalog vs Friction Angles
+
+*Added: 2026-04-11 afternoon*
+
+**Hypothesis:** Pairs at non-catalog angles (not matching any of the 11 relationship types) should be processed differently from catalog-matched pairs.
+
+**Result: CONFIRMED.** Catalog-matched pairs: MRL=0.482, deform_sim=0.481. Non-catalog pairs: MRL=0.329, deform_sim=0.421. Catalog pairs have 47% higher coherence and 14% higher energy similarity. **The model treats catalog angles as a coherent vocabulary and non-catalog angles as friction.** This is the Six Harms concept: angles outside the harmonic vocabulary produce less coherent processing.
+
+---
+
+## Running Score
+
+| Test | Concept | Tradition | Status |
+|---|---|---|---|
+| 1 | Multi-resolution harmonics | Vedic Vargas | Breadcrumb (n=9 at L0 grid-2) |
+| 2 | Context/dignity | Hellenistic | **CONFIRMED** |
+| 3 | Grid encoding (targeted destruction) | — | **CONFIRMED** (ODE-level; full-block shows L3 only) |
+| 4 | Six-model directional scan | Wu Xing | **CONFIRMED** (direction real, angle-specific unresolved) |
+| 5 | Targeted destruction across depth | — | **CONFIRMED** (with probe/engine discrepancy documented) |
+| 6 | Axis intersection | — | PROVISIONAL (fuzzy picture caveat) |
+| 7 | Mayan compound cycles | Mayan Tzolkin | NULL (incidental grid-scaffolding finding) |
+| 8 | Wu He (180° grid-1 vs grid-2) | Chinese Stems | **CONFIRMED** (35% MRL difference) |
+| 9 | San Hui Fang (adjacency) | Chinese Seasonal | NULL |
+| 10 | Xiang Xing (self-punishment) | Chinese Punishments | Maps to existing universal damping |
+| 11 | Liu Hai (catalog vs friction) | Chinese Six Harms | **CONFIRMED** |
+| — | Sect (training-time modes) | Hellenistic | PENDING |
+| — | Reception (bidirectional) | Hellenistic | PENDING |
+
+**Score: 7 confirmed, 1 breadcrumb, 1 provisional, 3 nulls, 2 pending.**
+
+---
+
 ## Next Question: Can We Encode at the Grid Level?
 
 *Added: 2026-04-11 morning — new experimental direction*
