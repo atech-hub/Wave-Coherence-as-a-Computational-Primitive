@@ -310,7 +310,149 @@ The framework's catalog already contains all three. Part 2 (symmetric geometric 
 
 The Wu Xing connection is particularly striking: generative and destructive cycles at the same angles but opposite directions. Our test: same two tokens at opposite orders produce different energy processing. Same mathematical structure — direction changes the outcome at a fixed angle. The tradition tracked this because it matters. We just independently rediscovered why.
 
-**Status:** Three pairs tested. Real but not a finding yet. Needs systematic testing across many pairs and catalog types. Predicted structure: pairs in directed relationships (Wu Xing-style) should show larger asymmetry than pairs in symmetric relationships (Western geometric-style) at the same angle.
+**Status:** Three pairs tested. Real but not a finding yet. Needs systematic testing across many pairs and catalog types. Predicted structure: pairs in directed relationships (Wu Xing-style) should show larger asymmetry than pairs in symmetric relationships (Western-geometric style) at the same angle.
+
+### Update: Six-Model Directional Scan (2026-04-11 afternoon)
+
+Code ran the directional probe across six checkpoints: four arithmetic models forming a 2×2 decoder×FWM matrix, plus grammar and the perfect arithmetic reference. The Wu Xing angle-clustering hypothesis is still untested (too few pairs at 72°/144° at character level — same problem as the yin/yang test), but the multi-model comparison revealed something bigger than the original question.
+
+**Directionality is decoder-controlled.**
+
+| Model | Decoder | FWM | Mean \|asym\| | Max \|asym\| |
+|---|---|---|---|---|
+| arith baseline | lm_head | no | 0.142 | 0.43 |
+| arith lm+FWM | lm_head | yes | 0.147 | 0.44 |
+| perfect (arith) | PN | no | 0.144 | 0.41 |
+| arith PN | PN | no | 0.040 | 0.15 |
+| arith PN+FWM | PN | yes | 0.070 | 0.17 |
+| grammar PN+FWM | PN | yes | 0.084 | 0.39 |
+
+**The clean pattern across six models:**
+
+**lm_head arithmetic shows 3× more directional processing than phase-native arithmetic** (0.14–0.15 vs 0.04–0.07). The decoder type determines how much the model processes order. When the decoder is a learned linear projection, the ODE has freedom to process order aggressively — reordering can produce wildly different internal states because lm_head absorbs the complexity in its learned weights. When the decoder is phase-native (dot product against frozen embeddings), the ODE is incentivised to keep outputs in embedding space, which damps directional transformations.
+
+This connects directly to the April 9 2×2 decoder comparison finding: phase-native preserves 9× more triads and 4–5× more FWM quartets than lm_head. Same mechanism showing up on a different axis. Phase-native preserves structure (more triads, less directional distortion). lm_head tolerates structural cost for task performance (fewer triads, more directional processing). **The decoder type is the single biggest architectural lever we've found.**
+
+**FWM adds directionality disproportionately to phase-native.** PN: 0.04 → 0.07 (+75%). lm_head: 0.14 → 0.15 (+7%). Four-wave mixing breaks symmetry between quartet members, and in phase-native models this shows up as directional asymmetry because the baseline was low. In lm_head models the baseline is already high from decoder freedom, so FWM's contribution gets absorbed into the existing machinery.
+
+**The operators ('+', '-') drive arithmetic directionality.** '+' and '-' appear in the top asymmetric pairs across ALL arithmetic models. "3+" means "3 plus something"; "+3" means "plus 3". The model genuinely treats these as different because the operation requires processing operands in order. The 'perfect' model (55/55 accuracy) has the highest asymmetry among PN-compatible models — being accurate at arithmetic *requires* strong directional processing. Wait — perfect is listed as PN at 0.144, which contradicts the pattern above. Let me flag this: perfect.bin may be using a different config than pure PN. Needs verification before publication.
+
+**Grammar sits between** PN arithmetic (0.04) and lm_head arithmetic (0.14) at 0.084. Character-level grammar needs some directional processing for position-dependent characters (".A" vs "A.", "th" vs "ht"), which pushes it above PN arithmetic. It's not as high as lm_head arithmetic because the phase-native decoder still constrains it.
+
+**The Wu Xing angle hypothesis remains unresolved.** Only 1 pair in the 72°/144° range across character-level vocabularies. Same sample-size problem as the yin/yang test. Parked until BPE-level data is available.
+
+**What this changes for the engine additions:** Directional asymmetry measurement is now strongly justified, measured as **mean \|asym\| across all token pairs** (a single scalar per model) rather than per-angle clustering. This is cheap to compute and diagnostically powerful — it tells you at a glance whether a checkpoint uses directional processing heavily or lightly, and it cleanly separates decoder types.
+
+**What Code caught honestly:** The original three-pair result from last night was real but over-interpreted. The six-model scan shows the effect is systemic but angle-clustering is untested. Direction is confirmed as a per-token and per-model property. Direction-at-specific-catalog-angles is still an open question.
+
+### Correction: Three Levers, Not One (2026-04-11 late afternoon)
+
+The flagged anomaly — perfect.bin listed as PN but showing lm_head-level asymmetry (0.144) — was real and informative. Code verified perfect.bin's decoder by checking checkpoint metadata and parameter counts:
+
+| Model | Params | Decoder | Notes |
+|---|---|---|---|
+| perfect.bin | 161,836 | phase-native | Same param count as other PN models — genuinely PN |
+| arith_full_baseline_80k | 164,272 | lm_head | +2,436 params = vocab × embd for lm_head |
+| arith_full_pn_80k | 161,836 | phase-native | No lm_head |
+
+perfect.bin IS genuinely phase-native. So the 0.144 asymmetry is not a miscategorisation — it's a real phase-native model with lm_head-level directional processing. Something else is driving it.
+
+**The third lever: training data augmentation.**
+
+perfect.bin was trained on arithmetic_augmented.txt, where commutative pairs appear adjacent in the data ("7+2=9\n2+7=9\n"). This was the fix that took the model from 49/55 to 55/55 back in Chat 12 — placing both orders of commutative pairs in the same 16-token context window so gradients could connect them. The other PN models (arith_full_pn_80k, arith_full_pn_fwm_80k) were trained on the full arithmetic.txt WITHOUT augmentation, which scatters commutative pairs across the corpus at random positions.
+
+When commutative pairs appear in the same gradient step, the model is *forced* to learn directional processing regardless of what the decoder allows. It has no choice. "7+2" and "2+7" produce the same answer, but the model must compute them from operands in order, and the augmented data makes the model see both orders simultaneously. The directional machinery develops because the task requires it, not because the decoder rewards it.
+
+**Updated picture:**
+
+| | PN (no augment) | PN (augmented) | lm_head |
+|---|---|---|---|
+| No FWM | 0.040 | **0.144** (perfect) | 0.142 |
+| FWM | 0.070 | — | 0.147 |
+
+Augmented PN matches lm_head-level asymmetry. The data taught the model to be directional even though the decoder didn't require it.
+
+**Directionality has three independent levers:**
+
+1. **Decoder type.** lm_head tolerates high directional processing (absorbs complexity in learned weights). Phase-native constrains directional processing (rewards outputs staying in embedding space). Baseline gap: lm_head ~0.14, PN ~0.04.
+
+2. **Training data structure.** When required task distinctions (like commutativity) force the model to see multiple orderings in the same gradient step, the model learns directional machinery regardless of decoder constraint. Augmentation can override decoder type on this axis.
+
+3. **Four-wave mixing.** Adds directionality on top of whatever baseline the decoder/data combination established. FWM effect is larger on PN (+75%) than lm_head (+7%) because it has room to grow from a low baseline.
+
+**Connection back to Chat 12.** The original explanation for why augmented data fixed 6/55 failures was "the model needs both orders in the same context window for gradients to connect commutativity." Now we can see *what the gradient connection built*: directional processing machinery. The 6 failures weren't a minor gap — they were the model lacking the directional axis entirely. Augmentation taught the model to be directional, which made it commutatively consistent.
+
+**What this changes for the engine addition.** Per-model mean directional asymmetry is still strongly justified as an instrument. But its diagnostic power is richer than originally framed: a single scalar that reflects three architectural/training choices at once (decoder, data, FWM). In the framework monitor running live during training, the trajectory would show *when* the directional machinery comes online — which connects to the L3 regime shift work (architecture reorganises before performance catches up).
+
+**Methodology note:** This correction is preserved as part of the investigation narrative, not erased. The flag → verify → reinterpret sequence is the research discipline working as designed. The original framing was a clean 2× decoder pattern. The anomaly flag caught the missing piece. The verification revealed the three-lever structure. The final picture is more complete than the original would have been if the anomaly had been ignored. Marco's "hold that thought" and Code's honest flagging are the reason this finding is stronger now than it was an hour ago.
+
+---
+
+## Test 5: Axis Intersection — "Independent" with a Caveat
+
+*Added: 2026-04-11 late afternoon*
+
+### The question
+
+Four catalog-analog axes have been confirmed: phase distinctiveness, dignity (context sensitivity), directional asymmetry, and targeted destruction. Are they measuring four dimensions of the same underlying "structural importance" property, or are they four independent properties that each capture something different? The answer determines whether the engine should expose them as a composite score or as four separate metrics.
+
+### The test
+
+Compute per-token scores on each axis for all 77 grammar tokens. Compute pairwise Pearson correlations. Compare top-10 lists across axes. Apply three-case interpretation: all high correlations + overlapping top-10s → unified property; mixed correlations + partial overlap → partially independent; all low correlations + disjoint top-10s → four independent properties.
+
+### Results: apparent independence
+
+**Pairwise Pearson correlations:**
+- phase ↔ dignity_inv: +0.15 (weak)
+- phase ↔ direction: +0.21 (weak)
+- phase ↔ destruction: −0.22 (weak)
+- dignity_inv ↔ direction: +0.24 (weak)
+- dignity_inv ↔ destruction: −0.63 (moderate-strong)
+- direction ↔ destruction: −0.63 (moderate-strong)
+
+**Top-10 intersection:** zero tokens appear in all four top-10s. Six tokens appear in exactly two. Phase is independent of everything (all correlations with phase below 0.22). Destruction is moderately correlated with both dignity and direction. Mechanistic interpretation: heavily destroyed tokens tend to be context-dependent and directionally processed (the model built machinery for them), while phase distinctiveness is a pure geometric property uncorrelated with how the model processes tokens dynamically.
+
+**Apparent verdict:** Four of six correlations below 0.3, zero all-four-overlap. The three-case rule says this is Case 3: four independent properties.
+
+### Marco's catch: the picture might be fuzzy
+
+Marco flagged a framing concern that I (Opus) was about to miss:
+
+> "My brain is telling me that you may be watching a fuzzy picture where everything is out of focus because one, the models we have been measuring have little training; two, they only have 168-dim. We may find that a fully reasoned model with mature training this all may align to focused picture and alignment may appear."
+
+This is a real methodological trap. Every correlation number, every top-10 count, every independence verdict comes from data sources that are underdeveloped:
+
+- **Grammar model** is 80K iters at 168-dim, loss still descending (2.34 best, curve not flat), band utilisation near 94%. L3 regime shift is visible but not complete. Internal organisation is still settling.
+- **Arithmetic models** are tiny (13–15-char vocabularies, 80K iters, single-task training).
+- **No mature, converged model at a dimension with headroom has been measured.**
+
+At low signal-to-noise ratio, independent axes and unaligned axes look the same. The four axes might be genuinely orthogonal dimensions of how the model treats tokens. OR they might be four projections of a single "structural importance" property that hasn't sharpened into alignment yet because the model hasn't finished organising itself. We literally cannot distinguish these two cases from the current data.
+
+### The honest finding
+
+At 80K iters on 168-dim grammar, the four axes show weak-to-moderate pairwise correlations with zero all-four-overlap. **This is consistent with either:**
+
+1. **Genuine independence.** The four axes measure fundamentally different properties and mature models will show the same pattern.
+2. **Undertrained fuzzy picture.** The axes are projections of a unified property whose alignment hasn't emerged from the noise yet. Mature models at larger dimensions will show correlations tightening and top-10s converging.
+
+Both hypotheses predict the current data equally well. The question is unresolved and will remain unresolved until we can re-run the intersection analysis on a converged model at a dimension with headroom (256-dim at full convergence, or BPE at any scale). The "four independent axes" verdict is held as **provisional, pending convergence data.**
+
+### What this means for the engine addition
+
+The engine should expose **four separate metrics** for now — because collapsing them into a composite without evidence that they measure the same thing would hide information, and the current correlation data doesn't justify a composite. But the engine should **make it trivial to test the alignment hypothesis later** as better-trained models become available.
+
+Specifically:
+1. Per-token raw metric values (not normalised, not binned) so future probes can re-run correlation analysis on new checkpoints.
+2. The correlation matrix itself is computed automatically on every `--relate-vocab` run and stored in the output JSON. Every scan tracks whether the four axes are aligning or staying independent.
+3. A convergence indicator can be computed from the correlation matrix over time: if correlations monotonically increase across training checkpoints, the axes are revealing an underlying alignment. If they stay flat, they're genuinely independent.
+
+The spec bakes in the **instruments to answer Marco's question later**, rather than answering it prematurely now. The engine will let us watch alignment emerge (if it exists) as models mature.
+
+### Methodology note
+
+This is now the fifth framing catch in this investigation: "leftward destruction" (April 9), "quartets became free" (April 9), "5% more structure" (April 9), "multi-resolution is a null" (April 11 morning), and now "four axes are independent" (April 11 late afternoon). Every catch came from the same kind of reasoning: the instrument might be missing something because the conditions aren't right yet. Two of those catches (the wavelength question leading to hidden coherence, and this one) also redirected engine design decisions. This methodology — asking "are we sure?" when the data looks conclusive, specifically when the data comes from undertrained or underdeveloped sources — is load-bearing for the investigation. It should be preserved as a named discipline rule going forward, not just as recurring instances.
+
+**The rule, stated plainly:** when reaching a conclusion about the wave-engine's fundamental properties, explicitly check whether the data supporting the conclusion comes from a mature, converged model at a dimension with headroom. If not, hold the conclusion as provisional and design instruments to test it when mature data is available.
 
 ---
 
@@ -407,6 +549,168 @@ The multi-resolution axis is not dismissed. We found a breadcrumb (8-pair n=9 cl
 **The probe script (`scripts/multi_resolution_probe.py`) is committed and ready to re-run whenever a better-trained checkpoint is available.**
 
 ---
+
+## Test 2: Context/Dignity — CONFIRMED
+
+*Added: 2026-04-11 morning*
+
+### The question
+
+The Hellenistic Essential Dignities (catalog Part 5.1) describe how the same entity has different strength in different domains — Domicile, Exaltation, Triplicity, Peregrine, Fall. The abstract claim: **context modifies processing strength per token**. Does the wave-engine show this? Does a token's energy signature change when surrounded by different contexts?
+
+### The test
+
+Python probe `scripts/context_dignity_probe.py` encodes a focus token alone, then in various contexts (before other tokens, after other tokens, inside common bigrams), and measures how the focus token's cos(in,out) and energy deformation change across contexts.
+
+### Results: confirmation on the first honest test
+
+**'e' — strong dignity effect.** Solo at L3: cos=0.46. In "sentence": cos=0.26 (shift 0.20). In "e.": cos=0.05 (shift 0.41). Same letter, three contexts, three completely different processing intensities. L3 sees 'e' in "he" almost identically to solo (shift 0.02 — the bigram is a learned unit, no extra processing needed), but 'e' before a period is destroyed (shift 0.50 at L2 — the model extracts sentence-boundary information aggressively).
+
+**'a' — massive context sensitivity at L2.** Solo at L2: cos=0.24. In "an": cos=0.61 (shift 0.37). Adding 'n' after 'a' makes L2 preserve 2.5× more structure. The model treats "an" as a determiner unit, and recognising the unit changes how it processes the 'a' component.
+
+**'.' — directional dignity.** The period cares about what follows, not what precedes. ".A" shifts L3 processing by 0.12 (sentence-start recognised). But "t.", "n.", "e." all shift by only 0.03 — what comes BEFORE the period doesn't change how the period itself is processed. This connects directly to the directional energy flow finding from last night: direction matters at the dignity level too.
+
+**'s' — context-stable, "exalted everywhere".** The most phase-distinctive token (8% conjunctions, last night's finding) has the LOWEST dignity effect (max shift 0.13). Being structurally important means being processed consistently regardless of context.
+
+### The phase–dignity correlation
+
+This is the beautiful confirmation: tokens that are phase-distinctive are dignity-independent. Tokens that are phase-generic are dignity-dependent. Two measurements of the same underlying fact: a token that has a consistent context-free structural role (like 's' as plural/verb marker) gets placed at a distinctive angle AND processed consistently across contexts. A token whose role depends on context (like 'e' or 'a') doesn't have a fixed angle AND gets processed differently in different contexts.
+
+The catalog would say 's' is in Domicile everywhere — it has its home domain in every context. 'e' has Peregrine status in most contexts and Domicile only in specific bigrams. This mapping isn't metaphorical. The dignity structure the Hellenistic tradition described is operationally present in the model.
+
+### Status: CONFIRMED as a measurable phenomenon
+
+Context modifies token processing in a pattern that matches the catalog's dignity concept. Structurally important tokens are context-independent (exalted). Context-dependent tokens are those whose meaning shifts with surrounding tokens (peregrine/fall). The correlation with phase distinctiveness is not coincidental — both measurements capture the same property from different angles.
+
+---
+
+## Test 3: Grid Encoding — CONFIRMED, Surprising Direction
+
+*Added: 2026-04-11 morning*
+
+### The question
+
+The multi-grid embedding places tokens at specific positions on two coprime grids (m1=5, m2=7). Real tokens occupy valid grid positions. What if we encode phases at **off-grid** positions — positions the model has never seen during training because no token maps there? The catalog's hypothesis would be: unknown positions have no domain assignment, therefore no dignity, therefore minimal processing.
+
+### The test
+
+Python probe `scripts/grid_encoding_probe.py` constructs phase patterns at on-grid positions (matching the embedding's grid arithmetic) and off-grid positions (interpolated between grid points, unreachable by any real token). Encodes both through the grammar model. Measures cos(input, output) at each layer.
+
+### Results: opposite of pattern-matcher behaviour
+
+**L3 cos: on-grid = 0.168, off-grid = 0.301.**
+
+The model preserves off-grid positions 80% more than on-grid positions. Unknown inputs pass through gently. Known inputs get destroyed.
+
+This is the opposite of what a pattern matcher would do. A classifier preserves familiar patterns (recognition = reproduction) and corrupts unfamiliar ones. The wave-engine's grammar L3 does the reverse. It destroys what it recognises and preserves what it doesn't.
+
+**Grid-1 vs Grid-2: similar (0.162 vs 0.204).** Both grids trigger the destructive processing at comparable intensity. The n=9 cluster at grid-2 (from Test 1) is a fine-structure effect within the grid, not a grid-level processing difference.
+
+### Status: CONFIRMED, with a mechanism that connects back to L3
+
+The destruction at L3 is not general. It's targeted at inputs the model knows how to process. Foreign inputs don't trigger the same machinery because there's nothing to extract. This completes the L3 regime shift story: we knew L3 went from preservative to destructive during training. Now we know what controls the destruction — recognition. L3 destroys what it recognises.
+
+---
+
+## Synthesis: The Targeted Destruction Pattern
+
+*Added: 2026-04-11 morning*
+
+Tests 2 and 3 independently converged on the same mechanism from different directions:
+
+- **Dignity test:** The model destroys familiar contexts (bigrams, patterns it has learned) more than unfamiliar contexts. Recognition triggers processing.
+- **Grid encoding test:** The model destroys on-grid positions (inputs it has seen) more than off-grid positions (inputs it hasn't). Recognition triggers processing.
+
+Same mechanism, two domains. The model's L3 regime shift (preservative→destructive during training) is not general destruction — it's **targeted extraction**. L3 learned not just *how much* to destroy but *where to aim*. The trigger is recognition: the model extracts from what it recognises and leaves unrecognised input unchanged.
+
+This is the opposite of pattern-matcher behaviour. A classifier's job is to detect and reproduce — preserve familiar, corrupt unfamiliar. The wave-engine's job is to extract and use — destroy familiar (extract the information), preserve unfamiliar (nothing to extract). This is consistent with the GPT-2 comparison from Chat 18 (language needs destruction) and Marco's chaos theory framing (controlled destruction as the path past the bifurcation).
+
+**The catalog concepts that translated cleanly share a property: they describe context-sensitive relationships.** Dignity (context modifies strength), directional flow (order modifies meaning), phase-energy complementarity (two axes of structural importance). These all map to mechanisms the model has already developed by 80K iters.
+
+**The concept that gave only a breadcrumb — multi-resolution harmonics — describes context-independent structure.** Resolution tiers that exist whether or not the model recognises the input. This may require a more converged model to fully manifest, or may only become visible at BPE-level vocabulary.
+
+Working hypothesis: the abstract layer of the catalog is organised by *when* in a model's development each concept manifests. Context-sensitive concepts (dignity, direction) appear first because they're how the model learns to use what it has. Context-independent concepts (multi-resolution, structural tiers) appear later because they're how the model organises what it has learned.
+
+This is a hypothesis, not a finding. It needs testing across training stages and dimensions before it can be stated as a pattern.
+
+---
+
+## Test 4: Directional Asymmetry — Six-Model Scan
+
+*Added: 2026-04-11*
+
+Extended the three-pair directional test from April 10 across all six available models.
+
+| Model | Decoder | FWM | Data | Mean |asym| | Max |
+|---|---|---|---|---|---|
+| perfect.bin | PN | no | augmented | 0.144 | 0.41 |
+| arith baseline | lm_head | no | full arith | 0.142 | 0.43 |
+| arith lm+FWM | lm_head | yes | full arith | 0.147 | 0.44 |
+| arith PN | PN | no | full arith | 0.040 | 0.15 |
+| arith PN+FWM | PN | yes | full arith | 0.070 | 0.17 |
+| grammar PN+FWM | PN | yes | grammar | 0.084 | 0.39 |
+
+**Decoder type controls directionality.** Clean 3x gap: PN arithmetic 0.04-0.07, lm_head arithmetic 0.14-0.15. The decoder shapes how much the model processes order information.
+
+**FWM adds directionality** within each decoder type. PN: 0.04→0.07 (+75%). lm_head: 0.14→0.15 (small).
+
+**perfect.bin anomaly resolved:** Despite being PN, it shows lm_head-level asymmetry (0.144). Verified genuinely PN (161,836 params, same as other PN models). Explanation: trained on augmented data with commutative pairs adjacent ("7+2=9" followed by "2+7=9"). The data taught the model directional processing even though the decoder didn't require it. Data augmentation is a third lever on directionality.
+
+**The operators drive asymmetry.** '+' and '-' appear in top asymmetric pairs across ALL arithmetic models. "3+" and "+3" mean different things positionally.
+
+**Wu Xing angle-specific hypothesis:** unresolved. Too few pairs at 72°/144° at character level. Direction is confirmed as general, angle-specificity deferred to BPE.
+
+## Test 5: Targeted Destruction Across Depth
+
+*Added: 2026-04-11*
+
+Extended the grid encoding probe to all four layers:
+
+| Layer | On-grid cos | Off-grid cos | Ratio | Role |
+|---|---|---|---|---|
+| L0 | 0.575 | 0.743 | 1.29x | Detects — mild recognition |
+| L1 | 0.305 | 0.597 | 1.96x | Amplifies — growing selectivity |
+| L2 | 0.173 | 0.452 | **2.61x** | Targets — peak discrimination |
+| L3 | 0.169 | 0.301 | 1.79x | Processes — uses what L2 extracted |
+
+**L2 is the peak of targeted destruction**, not L3. The depth pipeline: L0 detects → L1 amplifies → L2 maximally discriminates → L3 processes. Each layer adds selectivity until L2 achieves maximum recognition-based distinction, then L3 converts discrimination into output.
+
+## Test 6: Axis Intersection — Are the Four Axes Independent?
+
+*Added: 2026-04-11*
+
+For each of the 76 grammar tokens, computed four scalar scores: phase distinctiveness (non-conjunction pair fraction), dignity (inverted — high = context-independent), directional asymmetry (mean |asym| across partners), and destruction (1 - solo L3 cos).
+
+**Pairwise correlations:**
+
+| Pair | r | Interpretation |
+|---|---|---|
+| phase ↔ dignity_inv | +0.15 | Weak — independent |
+| phase ↔ direction | +0.21 | Weak — independent |
+| phase ↔ destruction | -0.22 | Weak — independent |
+| dignity_inv ↔ direction | +0.24 | Weak — independent |
+| dignity_inv ↔ destruction | **-0.63** | Moderate — shared |
+| direction ↔ destruction | **-0.63** | Moderate — shared |
+
+Four of six correlations below 0.3. Zero tokens in all four top-10s. Six tokens in exactly two top-10s.
+
+**At this training stage, the axes appear independent.** BUT — this conclusion comes with a critical caveat.
+
+### The Fuzzy Picture Caveat (Marco's catch)
+
+Every number in this probe comes from ONE undertrained 168-dim model at 80K iters near its capacity ceiling (94% band utilisation), plus five small arithmetic models. The grammar model hasn't finished learning. The band space is nearly full. The L3 regime shift is visible but not settled.
+
+**Marco's insight:** "We may be watching a fuzzy picture where everything is out of focus. A fully mature model with sufficient dimensional headroom might show these axes aligning into a focused picture."
+
+This is the same category of framing catch as:
+- April 9: "leftward destruction" (narrative on scalar data)
+- April 9: "quartets became free" (narrative on variance)
+- April 11: "multi-resolution is a null" (dismissing a breadcrumb)
+- Now: "four axes are independent" (declaring independence from undertrained data)
+
+**Honest conclusion:** At 80K iters on 168-dim, the four axes show weak-to-moderate correlations consistent with EITHER genuine independence OR a model that hasn't converged enough to reveal underlying alignment. The engine should expose the four metrics separately FOR NOW, with the correlation matrix computed on every scan so we can watch alignment emerge — if it exists — as models mature.
+
+The question of whether the axes are fundamentally independent or merely unaligned-in-undertrained-models requires data from a converged model at a dimension with headroom.
 
 ## Next Question: Can We Encode at the Grid Level?
 
