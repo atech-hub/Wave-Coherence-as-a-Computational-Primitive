@@ -664,16 +664,26 @@ Extended the three-pair directional test from April 10 across all six available 
 
 *Added: 2026-04-11*
 
-Extended the grid encoding probe to all four layers:
+Extended the grid encoding probe to all four layers. **Two measurements exist — Python probe (pure ODE) and engine (full block with attention+residual):**
 
-| Layer | On-grid cos | Off-grid cos | Ratio | Role |
-|---|---|---|---|---|
-| L0 | 0.575 | 0.743 | 1.29x | Detects — mild recognition |
-| L1 | 0.305 | 0.597 | 1.96x | Amplifies — growing selectivity |
-| L2 | 0.173 | 0.452 | **2.61x** | Targets — peak discrimination |
-| L3 | 0.169 | 0.301 | 1.79x | Processes — uses what L2 extracted |
+| Layer | Python on | Python off | Py ratio | Engine on | Engine off | En ratio |
+|---|---|---|---|---|---|---|
+| L0 | 0.575 | 0.743 | 1.29x | 0.757 | 0.746 | 0.99x |
+| L1 | 0.305 | 0.597 | 1.96x | 0.594 | 0.577 | 0.97x |
+| L2 | 0.173 | 0.452 | **2.61x** | 0.465 | 0.465 | 1.00x |
+| L3 | 0.169 | 0.301 | 1.79x | 0.237 | 0.281 | **1.19x** |
 
-**L2 is the peak of targeted destruction**, not L3. The depth pipeline: L0 detects → L1 amplifies → L2 maximally discriminates → L3 processes. Each layer adds selectivity until L2 achieves maximum recognition-based distinction, then L3 converts discrimination into output.
+**The profiles disagree on which layer peaks.** Python probe: L2 (2.61x). Engine: L3 (1.19x).
+
+The cause: the Python probe's `grid_encoding_probe.py` injects a state and measures pure ODE evolution. The engine's `forward_from_layer` runs through `wave_block_forward` which includes attention + residual stream. Self-attention with one position is degenerate (identity with projection), but the attention projection and residual add-back smooth the ODE's discrimination signal at L0-L2. Only L3's effect is strong enough to survive.
+
+**Neither measurement is wrong.** They measure different things:
+- Python probe: "How does the **Kerr-ODE** process on-grid vs off-grid?" Answer: peaked at L2 (2.61x).
+- Engine: "How does the **full transformer block** process on-grid vs off-grid?" Answer: only L3 shows it (1.19x).
+
+**Revised interpretation:** The "L0 detects → L1 amplifies → L2 peaks → L3 processes" pipeline is a pure-ODE property. When attention and residual are included, targeted destruction is visible only at L3. The practical finding holds (trained model destroys familiar input more than unfamiliar) but the depth pipeline needs the caveat that it describes ODE dynamics, not full-block behaviour.
+
+**Methodology rule (framing catch #6):** When baking a Python finding into the engine, explicitly verify numerical reproduction, not just directional agreement. Different code paths include different architectural components and can produce quantitatively different results from the same conceptual measurement.
 
 ## Test 6: Axis Intersection — Are the Four Axes Independent?
 
