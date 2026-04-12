@@ -713,7 +713,24 @@ For each of the 76 grammar tokens, computed four scalar scores: phase distinctiv
 
 Four of six correlations below 0.3. Zero tokens in all four top-10s. Six tokens in exactly two top-10s.
 
-**At this training stage, the axes appear independent.** BUT — this conclusion comes with a critical caveat.
+**Post-AGC-fix re-run (2026-04-12):** The original correlations were measured before the AGC bug fix and are WRONG. Corrected numbers:
+
+| Pair | Before fix | After fix |
+|---|---|---|
+| phase ↔ dignity_inv | +0.15 | **-0.36** |
+| phase ↔ direction | +0.21 | **+0.41** |
+| phase ↔ destruction | -0.22 | -0.28 |
+| dignity_inv ↔ direction | +0.24 | -0.36 |
+| dignity_inv ↔ destruction | -0.63 | +0.03 |
+| direction ↔ destruction | -0.63 | **-0.88** |
+
+**Verdict shifts to PARTIALLY INDEPENDENT.** Only 2/6 below 0.3. Direction and destruction share 77% variance (r²=0.77). The old "dignity↔destruction" correlation was a pure AGC artifact — vanishes with fix.
+
+**What stands:** Zero tokens in all four top-10s. Four separate metrics still correct for the engine (don't collapse). Direction-destruction could potentially merge but keep both until converged data clarifies which is more fundamental.
+
+**What doesn't stand:** The "four independent axes" claim is retracted. The axes are partially tangled, with one strong pair.
+
+This is the critical caveat, now doubly motivated:
 
 ### The Fuzzy Picture Caveat (Marco's catch)
 

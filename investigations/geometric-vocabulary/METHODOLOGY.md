@@ -93,4 +93,20 @@ The goal is not to be right on the first try. The goal is to be honest about wha
 
 This section will be extended as new framing catches occur. Each new rule should be tied to a specific instance, should fit the same tactical format as the six above, and should be added in chronological order so the history of the investigation's methodological development is preserved.
 
-*(No new catches yet beyond the six listed. Additions go here as they happen.)*
+## Rule 7: Silent numerical drift from missing state initialisation
+
+**The catch:** April 11-12, 2026. The encode/relate forward path used `wave_block_forward` → `dual_maestro_forward_cached` → `kerr_ode_forward_cpu` which had no AGC clamping. Training uses `ffn_forward_via_backend` which includes AGC. The encode path didn't crash — it produced plausible-looking numbers. BPE models produced NaN (caught quickly), but character-level models produced wrong-but-plausible destruction profiles (0.99-1.19x) where the correct values were 1.29-3.11x. The entire probe-vs-engine discrepancy (framing catch #6) was caused by this bug, not by attention smoothing as originally hypothesised.
+
+**The rule:** When adding a new forward path through the model, explicitly verify it routes through the same initialisation sequence as training. Missing initialisation doesn't always crash — it can produce wrong numbers that look plausible and pass surface-level sanity checks. The canonical check: run the same input through training path and new path, compare output values numerically. If they disagree, something is missing.
+
+**When to apply:** Every time a new CLI mode, diagnostic tool, or analysis path is added that creates its own forward pass through the model.
+
+---
+
+## Rule 8: Correlation results on buggy measurement paths are untrustworthy
+
+**The catch:** April 12, 2026. The axis intersection (Test 5) was re-run after the AGC bug fix. Four of six correlations changed substantially. `dignity_inv ↔ destruction` went from -0.63 to +0.03 (artifact vanished). `direction ↔ destruction` went from -0.63 to -0.88 (real correlation was stronger than measured). The "four independent axes" verdict was retracted. Marco's fuzzy-picture catch (Rule 5) was vindicated — but by a different mechanism than expected (broken measurement, not undertrained model).
+
+**The rule:** When a measurement path bug is found and fixed, ALL results that went through that path must be re-verified. Don't assume "the direction was probably right even if the magnitude was off." Correlation analysis is particularly sensitive — a bug that adds noise to one axis can create, destroy, or invert correlations between axes. Re-run, compare, and document which numbers changed and which didn't.
+
+**When to apply:** After any bug fix to a measurement path. Specifically: re-run the highest-level analysis that depended on the fixed path, compare old vs new numbers, and update the investigation with both.
