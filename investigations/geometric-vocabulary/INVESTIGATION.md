@@ -681,9 +681,18 @@ The cause: the Python probe's `grid_encoding_probe.py` injects a state and measu
 - Python probe: "How does the **Kerr-ODE** process on-grid vs off-grid?" Answer: peaked at L2 (2.61x).
 - Engine: "How does the **full transformer block** process on-grid vs off-grid?" Answer: only L3 shows it (1.19x).
 
-**Revised interpretation:** The "L0 detects → L1 amplifies → L2 peaks → L3 processes" pipeline is a pure-ODE property. When attention and residual are included, targeted destruction is visible only at L3. The practical finding holds (trained model destroys familiar input more than unfamiliar) but the depth pipeline needs the caveat that it describes ODE dynamics, not full-block behaviour.
+**Post-AGC-fix update (2026-04-12):** The original engine numbers (0.99x-1.19x) were measured BEFORE the AGC bug was fixed. The encode/relate path was missing AGC clamping (fixed in commit dfe2973). After the fix:
 
-**Methodology rule (framing catch #6):** When baking a Python finding into the engine, explicitly verify numerical reproduction, not just directional agreement. Different code paths include different architectural components and can produce quantitatively different results from the same conceptual measurement.
+| Layer | Python probe | Engine (post-fix) |
+|---|---|---|
+| L0 | 1.29x | **1.29x** |
+| L1 | 1.96x | **2.06x** |
+| L2 | 2.61x | **3.11x** |
+| L3 | 1.79x | **1.88x** |
+
+**Engine now reproduces the probe.** The depth pipeline is confirmed in the full block, not just the ODE. L2 peaks at 3.11x (even stronger than the probe). The "probe-vs-engine discrepancy" was caused by the AGC bug, not by attention smoothing.
+
+**Methodology rule #6 partially retracted:** The rule "verify numerical reproduction when porting probes to engine" remains valid, but the specific discrepancy that motivated it turned out to be a bug, not an architectural difference. The depth pipeline finding stands in both measurements.
 
 ## Test 6: Axis Intersection — Are the Four Axes Independent?
 
