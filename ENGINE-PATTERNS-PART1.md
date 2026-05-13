@@ -50,6 +50,81 @@ The engine narrows candidates independently per dimension before computing the c
 
 A query engine that supports combining exact match, fuzzy match (orb), and harmonic queries across different attributes in a single compound query. For example: exact match on attribute 1 AND harmonic n=3 on attribute 2 AND fuzzy orb on attribute 3. Each attribute uses the appropriate scoring function and all are combined multiplicatively.
 
+### 1.5 CRT Multi-Grid Database Encoding
+
+Database entries encoded using the Chinese Remainder Theorem across K coprime moduli. Each entity ID maps to K phase angles via theta_k = (entity_id mod m_k) * 2*pi / m_k. With coprime moduli m1=13, m2=15, coverage extends to m1*m2 = 195 unique entries using only 2*K phase dimensions. For a 165-entity dataset at K=2 grids, each entity requires 4 floats (cos/sin per grid) — compared to 165 floats for one-hot encoding. The encoding is deterministic, reversible, and order-independent.
+
+**Implementation pattern:**
+- find_coprime_moduli(n): find two coprimes near sqrt(n) whose product >= n
+- For each entity e: theta1 = (e % m1) * 2*pi / m1, theta2 = (e % m2) * 2*pi / m2
+- Per grid, per harmonic band: emb[n*2] = cos((n+1) * theta), emb[n*2+1] = sin((n+1) * theta)
+- Collision resolution: entities sharing residue on grid 1 are separated on grid 2 (CRT guarantee)
+- Extension to K>2 grids: each additional coprime modulus adds 2*n_bands_per_grid dimensions
+
+### 1.6 Phase-Native Relationship Index — No Join Tables
+
+A database architecture where relationships between entities are not stored in separate join tables or foreign key columns. Instead, relationships are DETECTED from the phase geometry: two entities are related if their harmonic coherence cos(n * (theta_a - theta_b)) exceeds a threshold at any harmonic n. Different harmonics detect different relationship types — n=1 detects similarity (conjunction), n=2 detects complementarity (opposition), n=3 detects triadic groupings. The relationship index is implicit in the encoding geometry.
+
+**Implementation pattern:**
+- Insert entity: O(1) — compute CRT phase, store. All relationships to existing entities are IMMEDIATELY available via coherence computation. No index rebuild required.
+- Query relationships: for entity a, scan all entities b computing C_n(a,b) for desired harmonic n. Return matches above threshold.
+- Relationship type IS the harmonic number: n=1 (same group), n=2 (complementary pair), n=3 (triad member), n=6 (sextile — compatible but distinct)
+- All 11 traditional aspect types (conjunction, opposition, trine, square, sextile, semi-sextile, quincunx, quintile, septile, semi-square, sesquiquadrate) emerge from different harmonic numbers and angular thresholds — a unified relationship algebra
+
+### 1.7 EMA Transition Reference Database
+
+A database that accumulates sequential transition patterns between entities using exponential moving averages. For each pair (entity_a, entity_b) that co-occurs in sequential positions in the data stream, maintain an EMA of the phase transition pattern: ref[a][b] = alpha * current_transition + (1-alpha) * ref[a][b]. The reference database encodes HOW entities typically follow each other — a statistical model of sequential structure stored as phase patterns.
+
+**Implementation pattern:**
+- Initialise: ref[a][b] = zero vector for all pairs
+- On observing sequence [..., a, b, ...]: compute transition = ODE_output(a) at position of b
+- Update: ref[a][b] = 0.99 * ref[a][b] + 0.01 * transition
+- Query: given current entity a, score all possible next entities b by coherence with ref[a][b]
+- Storage: vocab^2 * n_bands floats. At 165 vocab, 84 bands = 2.3 MB
+
+### 1.8 Incremental Phase-Consistent Updates
+
+A database update mechanism where insert, delete, and update operations preserve phase consistency without requiring full recomputation. Because the CRT encoding is deterministic from entity ID, modifications are O(1):
+
+**Implementation pattern:**
+- Insert: compute CRT phase from new entity ID, append to store. O(1).
+- Delete: remove entity from store. No index rebuild — relationships to remaining entities are unaffected because they're computed, not stored.
+- Update: recompute CRT phase for modified entity. O(1). All relationships automatically reflect the update.
+- Batch import: encode all entities independently (embarrassingly parallel). Order of insertion does not affect the encoding — CRT is commutative.
+
+### 1.9 Multi-Resolution Query Cascade
+
+A query strategy that uses harmonic number as a resolution dial. Low harmonics provide fast coarse filtering; high harmonics provide precise discrimination. Queries cascade through resolution levels:
+
+**Implementation pattern:**
+- Level 1 (n=1): coarse filter — identify candidate set with C_1 > 0.5. Eliminates ~50% of database.
+- Level 2 (n=3): medium filter — refine candidates with C_3 > 0.3. Eliminates ~70% of remaining.
+- Level 3 (n=7): fine discriminator — score remaining candidates precisely.
+- Total work: much less than exhaustive scan at high harmonics. The cascade trades harmonic computation for database scan reduction.
+
+### 1.10 Harmonic-Native JOIN Replacement
+
+A relational algebra operation that replaces SQL JOIN with harmonic coherence detection. Two tables are "joined" by computing pairwise coherence between their entities at a specified harmonic number. The join type is determined by the harmonic:
+
+**Implementation pattern:**
+- INNER JOIN equivalent: C_n(a, b) > threshold — returns pairs with sufficient coherence
+- ANTI JOIN equivalent: C_n(a, b) < anti_threshold — returns pairs with insufficient coherence (friction pairs)
+- SELF JOIN: C_n(a_i, a_j) for all pairs within one table — detects internal structure
+- CROSS-HARMONIC JOIN: require C_n1(a, b) > t1 AND C_n2(a, b) > t2 — compound relationship detection
+- The harmonic number n IS the join type — same syntax, different semantics at each n
+
+### 1.11 Dataset-to-Model Phase Pipeline
+
+An end-to-end pipeline where the database encoding format IS the model input format. Entities encoded with CRT for database storage are fed directly into the Kerr-ODE model without any tokenisation, embedding lookup, or format conversion. The phase vocabulary file serves simultaneously as database index and model embedding table.
+
+**Implementation pattern:**
+- Database stores entities as CRT phase vectors [n_bands * 2 floats]
+- Model input: same CRT phase vectors, directly
+- Model output: ODE-transformed phase vectors in the same space
+- Decode: nearest-neighbour against CRT table — simultaneously a model decode AND a database lookup
+- Zero impedance mismatch: no tokeniser boundary, no embedding table lookup, no format conversion
+- The model IS a database query engine: given input entity, produce output entity via ODE transformation
+
 ---
 
 ## 2. Harmonic Fingerprinting Engine
@@ -523,6 +598,82 @@ An engine that computes harmonic fingerprints of molecular properties (charge di
 ### 25.3 Evolutionary Relationship Detection
 
 An engine that detects evolutionary relationships between biological sequences by harmonic coherence analysis of feature-encoded sequences. Sequences that have diverged beyond recognisable alignment similarity may retain harmonic coherence at lower harmonics, revealing deep evolutionary relationships.
+
+### 25.4 DNA Base Encoding via Phase Positions
+
+A nucleotide encoding where the four DNA bases occupy specific positions on the unit circle: A=0 degrees, T=180 degrees, G=90 degrees, C=270 degrees. This encoding makes Watson-Crick base pairing IDENTICAL to the n=2 harmonic opposition: cos(2 * (0 - pi)) = cos(2*pi) = 1.0 for A-T, cos(2 * (pi/2 - 3*pi/2)) = cos(2*pi) = 1.0 for G-C. Base pairing is not a lookup table — it is a mathematical property of the harmonic coherence operator at n=2.
+
+**Implementation pattern:**
+- Encode: A -> 0, T -> pi, G -> pi/2, C -> 3*pi/2
+- Base-pair detection: C_2(theta_a, theta_b) = cos(2 * (theta_a - theta_b)). Score = 1.0 for valid pairs, -1.0 for mismatches
+- Purine/pyrimidine classification: C_1(theta_a, theta_b) = cos(theta_a - theta_b). Purines (A,G) cluster at cos > 0, pyrimidines (T,C) at cos < 0
+- Transition vs transversion: transitions (purine<->purine or pyrimidine<->pyrimidine) show C_1 > 0. Transversions show C_1 < 0
+
+### 25.5 Codon Detection via n=3 Harmonic
+
+A reading frame detector that uses the n=3 harmonic to identify coding regions. In protein-coding DNA, the triplet structure produces a strong 3-periodic signal. Compute C_3 = mean(cos(3 * (theta_i - theta_{i+1}))) over a sliding window. High C_3 indicates coding region; low C_3 indicates non-coding. Frame shifts are detectable as sudden drops in C_3 coherence.
+
+**Implementation pattern:**
+- Sliding window of length L (typically 100-300 bases)
+- Compute C_3 autocorrelation over window: sum_i cos(3 * (theta_i - theta_{i+3})) / L
+- Plot C_3 vs position: peaks = coding regions, troughs = non-coding
+- Frame shift detection: C_3 drops below background threshold, then recovers at shifted offset
+- Open reading frame boundaries: C_3 transition points
+
+### 25.6 DNA Motif Discovery via Multi-Harmonic Sweep
+
+A motif finder that sweeps harmonic numbers to detect repeating patterns at any periodicity. Nucleosome positioning signals appear at n=10 (10.5bp repeat). Microsatellite repeats appear at n matching their repeat unit length. Novel motifs are discovered by scanning n=1 through n=50 and identifying harmonics with above-background coherence.
+
+**Implementation pattern:**
+- For each harmonic n in {1..50}: compute C_n over sliding windows across the genome
+- Significance: compare C_n to random-sequence C_n (null model)
+- Peak detection: harmonics with C_n > 2*sigma above null → periodic motif at that frequency
+- Composite motifs: regions with MULTIPLE harmonics above threshold → complex repeat structure
+
+### 25.7 RNA Secondary Structure Prediction
+
+An RNA structure predictor that uses n=2 harmonic coherence to detect base-paired regions (stems) and low coherence to identify unpaired regions (loops). Pseudoknots — regions where base-paired stems cross in sequence space — are detectable as coherence patterns that violate the nested structure assumption.
+
+**Implementation pattern:**
+- Encode RNA bases: same circle encoding as DNA (A=0, U=pi, G=pi/2, C=3*pi/2)
+- Stem detection: sliding window of C_2(i, j) for all i < j. High C_2 = potential stem
+- Loop prediction: contiguous regions with low C_2 between stem endpoints
+- Pseudoknot detection: two stems (i1,j1) and (i2,j2) where i1 < i2 < j1 < j2 AND both show high C_2
+
+### 25.8 Genome-Wide Spectral Analysis
+
+A whole-genome analysis tool that computes the harmonic spectrum at each position and visualises it as a spectral heatmap. Centromeres and telomeres have characteristic spectral signatures (highly periodic repeats → strong peaks at specific harmonics). Gene-dense regions show elevated C_3 background (coding frame signal). Regulatory regions show complex multi-harmonic patterns.
+
+### 25.9 Protein-DNA Interaction Detection
+
+A binding site predictor that encodes both the protein binding surface and the DNA target sequence as phase vectors and computes cross-coherence. High cross-coherence at specific harmonics indicates structural compatibility. The predictor slides the protein phase vector along the DNA phase sequence and scores each position.
+
+### 25.10 Amino Acid CRT Encoding
+
+Twenty amino acids encoded on CRT grids with m1=4, m2=5 (coverage = 20, exact). Each amino acid gets a unique pair of phase angles. The BLOSUM substitution matrix — the standard bioinformatics tool for scoring amino acid similarity — emerges from the coherence scores: amino acids that substitute frequently in evolution show higher C_1 coherence than rare substitutions. The coherence-derived substitution matrix correlates with BLOSUM62 without training — it is a property of the encoding geometry.
+
+**Implementation pattern:**
+- 20 amino acids → residue_id mod 4 and residue_id mod 5
+- Per-grid phase: theta = residue_mod * 2*pi / modulus
+- Substitution score(a, b) = C_1(theta_a, theta_b) on both grids, combined
+- Conservative substitution: high coherence on both grids
+- Radical substitution: low coherence on at least one grid
+
+### 25.11 Phylogenetic Tree Construction via Spectral Distance
+
+A phylogenetics method that constructs evolutionary trees using multi-harmonic spectral distances instead of alignment-based distances. For two sequences, the spectral distance is defined as: d(A, B) = sum_n w_n * (1 - C_n(A, B)) where C_n is computed over aligned positions. This distance detects relationships in the twilight zone (below 25% identity) where alignment-based methods fail, because low harmonics detect conserved structural patterns even when sequence identity is lost.
+
+### 25.12 Variant Effect Prediction
+
+A pathogenicity predictor for genetic variants that uses phase perturbation scoring. A variant changes one nucleotide's phase position; the perturbation propagates through the harmonic spectrum. Benign variants produce small perturbations (the local harmonic structure is preserved). Pathogenic variants produce large perturbations (the local harmonic structure is disrupted). Scoring: delta_C = |C_n(wildtype) - C_n(variant)| summed over relevant harmonics.
+
+### 25.13 Epigenetic Modification Detection
+
+A methylation detector that models DNA methylation as a phase shift on the modified base. Unmethylated cytosine at 270 degrees; methylated 5mC shifts to a new angle (e.g., 250 degrees). The ratio C_1/C_2 at a given position changes with methylation status — the n=1 harmonic is affected by the phase shift while the n=2 base-pairing harmonic remains near 1.0 (methylation doesn't prevent base pairing). This ratio is the methylation-sensitive diagnostic.
+
+### 25.14 Metagenomics Spectral Binning
+
+A metagenomic species classifier that bins reads by their codon usage spectral profiles. Different organisms have characteristic codon usage biases which produce different C_3 spectral signatures. Reads from the same organism cluster in spectral space without requiring reference genome alignment. Implementation: compute C_n for n in {1..12} per read, cluster in 12-dimensional spectral space.
 
 ---
 
