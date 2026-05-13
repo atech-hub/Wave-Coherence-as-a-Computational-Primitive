@@ -2065,6 +2065,47 @@ The architecture provides safety guarantees that weight-update-based memory (fin
 
 This separation mirrors human cognition: education (knowledge, skills) is stable and slow to change; memory (experiences, context) is fluid and constantly updated. Neither corrupts the other.
 
+### 69.6 EMA Write Path
+
+The memory write path uses Exponential Moving Average (EMA) accumulation of ODE output states. After each position's forward pass through the ODE, the memory state is updated:
+
+**Implementation pattern:**
+```
+For each ODE layer L, each band k, after forward pass at position p:
+  r_mem[L][k] = α × r_output[L][k] + (1-α) × r_mem[L][k]
+  s_mem[L][k] = α × s_output[L][k] + (1-α) × s_mem[L][k]
+
+Where α is the EMA decay rate (default 0.01).
+```
+
+The accumulation operates in the SAME coordinate system as the model — (r, s) Cartesian pairs per band per layer. No projection, no encoding conversion. The memory IS model space. Reading memory (Pattern 69.2) and writing memory use the same representation as the ODE itself.
+
+**Timing:** Accumulation happens per-position DURING the conversation. The memory file is written ONCE at conversation end (merge step). This means:
+- Within a conversation: memory accumulates progressively as each position is processed
+- Between conversations: memory persists via the file on disk
+- The EMA decay rate α controls how fast old memory fades (low α = slow fade, long memory; high α = fast fade, short memory)
+
+**Merge step at conversation end:**
+```
+For each layer L, each band k:
+  file_mem[L][k] = β × session_mem[L][k] + (1-β) × file_mem[L][k]
+
+Where β is the merge rate (default 0.1).
+```
+
+Two decay rates: α controls within-conversation accumulation speed; β controls between-conversation persistence. This two-stage EMA enables fast within-session learning (α=0.01, ~100 positions to saturate) with slow between-session drift (β=0.1, ~10 conversations to saturate).
+
+**File format:** Flat binary array of f32 values:
+```
+[r_0_0, s_0_0, r_0_1, s_0_1, ..., r_0_{n-1}, s_0_{n-1},   // Layer 0
+ r_1_0, s_1_0, r_1_1, s_1_1, ..., r_1_{n-1}, s_1_{n-1},   // Layer 1
+ ...]                                                        // etc.
+Total size: n_layers × n_bands × 2 × sizeof(f32) bytes
+Example: 4 layers × 84 bands × 2 × 4 = 2,688 bytes (~2.6 KB)
+```
+
+Zero external dependencies. Pure Rust implementation (~920 lines). The memory file is human-inspectable (load as f32 array, apply harmonic census from Pattern 69.3).
+
 ---
 
 ## 70. Versioned Wave Memory with Checkpoint/Rollback Semantics
