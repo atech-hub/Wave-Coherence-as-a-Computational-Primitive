@@ -96,11 +96,11 @@
 | 55 | Magnitude-adjusted phase coherence | ✓ |
 | 56 | Reversibility diagnostic for ODE layers | ✓ |
 | 57 | Progressive bandwidth as computational staging | ✓ |
-| 58 | Architecture-adaptive training schedule | ✗ |
-| 59 | Optimal coupling radius for band-coupled ODE | ✗ |
-| 60 | Dispersive coupling for frequency-band ODE layers | ✗ |
-| 61 | Hierarchical coordination via learned bottleneck (maestro) | ✗ |
-| 62 | Implicit regularisation via ODE structural constraints | ✗ |
+| 58 | Architecture-adaptive training schedule | ✓ |
+| 59 | Optimal coupling radius for band-coupled ODE | ✓ |
+| 60 | Dispersive coupling for frequency-band ODE layers | ✓ |
+| 61 | Hierarchical coordination via learned bottleneck (maestro) | ✓ |
+| 62 | Implicit regularisation via ODE structural constraints | ✓ |
 | 63 | Sports performance analytics engine | ✓ |
 | 64 | Cryptocurrency and digital asset analytics | ✓ |
 | 65 | Depth-axis spectral diagnostics for ODE layers | ✓ |
@@ -125,36 +125,36 @@
 | 79 | Pipeline monitor and diagnostic engine | ✓ |
 | 80 | MLP weight structure analysis (null finding) | ✓ |
 | 81 | Physics-bounded adaptive regulation (AGC) | ✓ |
-| 82 | Phase-native readout (dot-product decoding in wave space) | ✗ |
-| 83 | Logit temperature scaling for phase-native decoding (1/√n_embd) | ✗ |
-| 84 | BPE tokenisation adapter for wave-native architectures | ✗ |
-| 85 | Token-pair capacity ceiling (architectural, not data) | ✗ |
-| 86 | Stall detector (early-abort for non-converging training) | ✗ |
-| 87 | Preflight diagnostic battery (embedding separation, token/band ratio) | ✗ |
+| 82 | Asymmetric coupling ratio (dual-channel semantic encoding) | ✓ |
+| 83 | Sub-harmonic diagnostics (multi-scale phase structure analysis) | ✓ |
+| 84 | Rotational learning (alternating channel leadership, entropy ratchet) | ✓ |
+| 85 | Wave transduction output decoder (phase coherence scoring) | ✓ |
+| 86 | Cos expansion optimisation (eliminate transcendental calls) | ✓ |
+| 87 | Progressive dimension scaling (band-preserving transplant) | ✓ |
 | 88 | Learnable ODE backward — gradient flow through Kerr-ODE RK4 | ✓ |
 | 89 | Per-layer coupling self-organisation | ✓ |
 | 90 | ODE distortion monitoring (RF/optical aberration framework) | ✓ |
 | 91 | Corrector plate — per-band learnable phase correction | ✓ |
 | 92 | Channel drift dynamics | ✓ |
-| 93 | Wave-space training pipeline (L2 loss on ODE output states) | ✗ |
-| 94 | Teacher-forced accuracy as architecture capacity probe | ✗ |
-| 95 | Magnitude vs phase error decomposition in wave training | ✗ |
-| 96 | Input preservation vs targeted destruction (cos similarity diagnostic) | ✗ |
-| 97 | Two computation modes: positional (arithmetic) vs compositional (language) | ✗ |
-| 98 | β/α ratio as depth-dependent specialisation metric | ✗ |
-| 99 | Band utilisation monitoring (dead band detection) | ✗ |
-| 100 | Layer capacity formula: max_useful_layers = 2 + active_bands/20 | ✗ |
-| 101 | Frequency migration through depth (L0 high-to-low confirmed) | ✗ |
-| 102 | Operating regime sensitivity (α=0.01 was 10× too weak) | ✗ |
-| 103 | Adaptive RK4 integration weights | ✗ |
-| 104 | Dynamic spring-regulated hyperparameters | ✗ |
-| 105 | Per-band learnable coupling (α_k, β_k) | ✗ |
-| 106 | Attention entropy as routing quality metric | ✗ |
-| 107 | Integration-damping co-adaptation | ✗ |
-| 108 | Confidence-brittleness tradeoff in dynamic parameters | ✗ |
-| 109 | Two-bottleneck architecture calculator | ✗ |
-| 110 | Character-level compositional computation without BPE | ✗ |
-| 111 | Training data ordering as gradient signal | ✗ |
+| 93 | Wave-space training pipeline (L2 loss on ODE output states) | ✓ |
+| 94 | Teacher-forced accuracy as architecture capacity probe | ✓ |
+| 95 | Magnitude vs phase error decomposition in wave training | ✓ |
+| 96 | Input preservation vs targeted destruction (cos similarity diagnostic) | ✓ |
+| 97 | Two computation modes: positional (arithmetic) vs compositional (language) | ✓ |
+| 98 | β/α ratio as depth-dependent specialisation metric | ✓ |
+| 99 | Band utilisation monitoring (dead band detection) | ✓ |
+| 100 | Layer capacity formula: max_useful_layers = 2 + active_bands/20 | ✓ |
+| 101 | Frequency migration through depth (L0 high-to-low confirmed) | ✓ |
+| 102 | Operating regime sensitivity (α=0.01 was 10× too weak) | ✓ |
+| 103 | Adaptive RK4 integration weights | ✓ |
+| 104 | Dynamic spring-regulated hyperparameters | ✓ |
+| 105 | Per-band learnable coupling (α_k, β_k) | ✓ |
+| 106 | Attention entropy as routing quality metric | ✓ |
+| 107 | Integration-damping co-adaptation | ✓ |
+| 108 | Confidence-brittleness tradeoff in dynamic parameters | ✓ |
+| 109 | Two-bottleneck architecture calculator | ✓ |
+| 110 | Character-level compositional computation without BPE | ✓ |
+| 111 | Training data ordering as gradient signal | ✓ |
 
 ### Part 3: Instruments, Findings & Engineering (112-149)
 

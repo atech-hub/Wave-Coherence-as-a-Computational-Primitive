@@ -13,7 +13,7 @@
 **Part 2 of 3 — Patterns 71-111: Architecture & Training Patterns**
 **Dates:** March 22, 2026 (71-80); March 30, 2026 (88-92); April 2, 2026 (93-111)
 
-**Status:** Bodies complete for 71-81, 88-92. Bodies needed for 82-87, 93-111.
+**Status:** All bodies complete (71-111).
 
 ---
 
@@ -377,6 +377,295 @@ With learnable ODE parameters, the model self-regulates: at the exact iteration 
 
 ---
 
+## 82. Asymmetric Coupling Ratio — Dual-Channel Semantic Encoding
+
+### 82.1 Core Architecture
+
+A coupled oscillator neural layer where the self-phase modulation coefficient (alpha) and cross-phase modulation coefficient (beta) are independent design parameters. The ratio beta/alpha controls whether the ODE encodes information per-band (alpha-dominated) or cross-band (beta-dominated). When beta != alpha, the system develops two independent encoding channels: per-band phase (theta) and inter-band phase difference (delta-theta).
+
+**Implementation pattern:**
+- Phase advance per band: phi_k = omega_k + alpha * |Z_k|^2 + beta * sum(|Z_j|^2) for j in stencil
+- Alpha controls self-phase modulation (SPM): how much a band's own magnitude affects its phase
+- Beta controls cross-phase modulation (XPM): how much neighbouring bands affect this band's phase
+- Asymmetric ratio (beta/alpha > 1) favours cross-band encoding: relationships BETWEEN bands carry more information than individual band phases
+- Ratio beta/alpha < 1 favours per-band encoding: each band's own phase carries more information
+
+### 82.2 Crystallisation Prevention
+
+When beta/alpha is fixed during training, the optimiser commits to one encoding channel and the other dies (Pattern 92). Setting beta and alpha as independently learnable parameters prevents crystallisation — the model dynamically balances the two channels based on what the data requires.
+
+---
+
+## 83. Sub-Harmonic Diagnostics — Multi-Scale Phase Structure Analysis
+
+### 83.1 Core Architecture
+
+A diagnostic suite that measures the internal phase structure of a trained ODE layer at multiple harmonic scales. For each harmonic number n in {1, 2, 3, ..., 12}, compute the mean pairwise coherence C_n = mean(cos(n * (theta_i - theta_j))) across all band pairs. The resulting spectrum reveals which relationship types the model has learned.
+
+**Implementation pattern:**
+- Extract phase angles: theta_k = atan2(s_k, r_k) for each band k
+- For each harmonic n: compute pairwise coherence matrix [cos(n * (theta_i - theta_j))] for all i,j
+- Aggregate: mean coherence per harmonic, peak harmonic, spectral flatness
+- Diagnostic outputs: phase clustering strength, magnitude-phase independence, inter-modulation products
+
+### 83.2 Magnitude Coupling Decay Measurement
+
+Track how the magnitude of band k correlates with the magnitudes of bands at increasing distance. The decay profile reveals the effective coupling radius of the XPM stencil under trained parameters.
+
+---
+
+## 84. Rotational Learning — Alternating Channel Leadership with Entropy Ratchet
+
+### 84.1 Core Pattern
+
+Under cycled training (alternating freeze/unfreeze of ODE parameters), the model alternates which encoding channel dominates. Each cycle, the non-dominant channel grows while the dominant channel holds. Over many cycles, total entropy increases monotonically — an entropy ratchet that prevents the model from collapsing into a single-channel encoding.
+
+### 84.2 Implementation
+
+- Cycle 1: theta channel leads (per-band encoding active)
+- Freeze ODE, train lm_head: delta-theta channel grows to match
+- Cycle 2: delta-theta channel leads (cross-band encoding active)
+- Freeze ODE, train lm_head: theta channel grows to match
+- Each cycle's entropy > previous cycle's entropy (ratchet effect)
+- Both channels converge to comparable strength after sufficient cycles
+
+---
+
+## 85. Wave Transduction Output Decoder — Phase Coherence Scoring
+
+### 85.1 Core Architecture
+
+An output decoder that replaces the transformer's linear projection (lm_head: vocab x n_embd matrix) with per-band phase coherence scoring against learned reference patterns. For each vocabulary word w, the decoder stores a reference phase pattern ref_w[k] for each band k. The score for word w given ODE output is:
+
+score(w) = sum_k weight_k * cos(theta_output_k - ref_w_k) + magnitude_k * confidence_k
+
+**Implementation pattern:**
+- Reference patterns: EMA-accumulated from training data (alpha=0.01)
+- Per-band weights: learnable, initialised to 1/n_bands (uniform)
+- Magnitude as confidence: high magnitude bands contribute more to the score
+- Scoring is O(vocab x n_bands) — same complexity as dot-product but reads PHASE ANGLES
+- Gradient flows through atan2 Jacobian: d_phase/d_r = -s/mag_sq, d_phase/d_s = r/mag_sq
+
+### 85.2 Zero-Parameter Phase-Native Variant
+
+The simplest decoder uses the CRT embedding table directly as references with uniform weights — zero additional parameters. Score = sum_k cos(theta_output_k - theta_CRT_k). Validated at 7/10 accuracy matching the full lm_head decoder, with ZERO decoder parameters.
+
+---
+
+## 86. Cos Expansion Optimisation — Eliminating Transcendental Function Calls
+
+### 86.1 Core Architecture
+
+Replace per-pair atan2 + cos computation with precomputed cos/sin tables and the identity cos(a-b) = cos(a)cos(b) + sin(a)sin(b). For a vocabulary of V words and B bands, this reduces the scoring from O(V x B x atan2 + cos) to O(V x B x multiply-add) after a one-time O(V x B) precomputation of cos(theta_k), sin(theta_k) per reference embedding.
+
+**Implementation pattern:**
+- Precompute: for each word w, for each band k: cos_ref[w][k] = cos(ref_phase[w][k]), sin_ref[w][k] = sin(ref_phase[w][k])
+- At decode time: cos_out[k] = cos(theta_output[k]), sin_out[k] = sin(theta_output[k]) — one atan2 + trig per band
+- Score: sum_k cos_out[k] * cos_ref[w][k] + sin_out[k] * sin_ref[w][k]
+- All operations are fused multiply-add — SIMD vectorisable, no transcendental calls in the inner loop
+
+---
+
+## 87. Progressive Dimension Scaling — Band-Preserving Checkpoint Transplant
+
+### 87.1 Core Architecture
+
+A method for transferring trained model weights from a smaller dimension (n_bands_small) to a larger dimension (n_bands_large) while preserving the learned structure in the overlapping bands. The first n_bands_small bands retain their exact trained weights; additional bands are initialised with identity (for per-band parameters) or random (for cross-band parameters).
+
+**Implementation pattern:**
+- ODE parameters (gamma_raw, omega, phase_correction): copy first n_small entries, initialise rest from the default formula
+- Attention projections: pad with zeros (new bands start silent)
+- CRT embeddings: recomputed from scratch at new dimension (coprime moduli change)
+- Positional encoding: recomputed at new dimension
+- Corrector plate: pad with zeros (new band corrections start as identity rotation)
+- Validation: run galaxy scan at both dimensions, compare catalog distribution
+
+---
+
+## 93. Wave-Space Training Pipeline — L2 Loss on ODE Output States
+
+### 93.1 Core Architecture
+
+A training pipeline where the model's loss is computed in wave space (ODE output compared to target wave states) rather than token space (logits compared to one-hot labels). The input is a KWDS (Key Wave Data States) file containing pre-computed wave states for each position in the training data. Loss = ||ODE_output - target_state||^2 in the wave representation space.
+
+**Implementation pattern:**
+- KWDS file: binary format storing [n_positions][n_embd] float32 wave states
+- Compact KWDS (KWD2): stores token IDs instead of embeddings (500x smaller), reconstructs wave states on-the-fly from CRT embedding table
+- Forward: embed input token → ODE → output state → L2 loss against target token's wave state
+- Backward: gradient flows through ODE parameters (gamma, alpha, beta) and attention weights
+- No lm_head or decoder in the training loop — loss is purely in wave space
+
+### 93.2 KWDS Compact Format
+
+Header: magic + version + n_positions (u64) + n_bands (u32) + vocab_size (u32). Body: n_positions × (input_token_id: u16, target_token_id: u16). Reconstruction at training time: embed(token_id) using CRT table. Band-count independent — same KWDS works at any dimension.
+
+---
+
+## 94. Teacher-Forced Accuracy as Architecture Capacity Probe
+
+### 94.1 Core Pattern
+
+Feed ground truth tokens from KWDS at every position (no autoregressive errors) and measure per-position prediction accuracy. This isolates architecture capacity from error accumulation — if teacher-forced accuracy is low, the architecture can't represent the data even with perfect context.
+
+**Implementation pattern:**
+- Load KWDS, feed each position's true token as input
+- At each position, decode ODE output against all vocabulary embeddings
+- Measure: top-1 accuracy, top-5 accuracy, mean rank, confidence distribution
+- Compare against autoregressive accuracy to quantify error accumulation cost
+
+---
+
+## 95. Magnitude vs Phase Error Decomposition in Wave Training
+
+### 95.1 Core Pattern
+
+Decompose the L2 wave training loss into magnitude error and phase error components. For each band k: phase_error = 1 - cos(theta_output_k - theta_target_k), magnitude_error = (mag_output_k - mag_target_k)^2. Track the ratio during training — if phase error dominates, the ODE is misrouting; if magnitude error dominates, the ODE is miscalibrating energy.
+
+---
+
+## 96. Input Preservation vs Targeted Destruction — Cosine Similarity Diagnostic
+
+### 96.1 Core Pattern
+
+Measure the cosine similarity between ODE input and output per layer. A model that PRESERVES input (cos_sim near 1.0) acts as a wire — no computation. A model that DESTROYS input (cos_sim near 0 or negative) transforms the representation. Language models require controlled destruction: GPT-2 gives cos_sim = -0.09 (maximum destruction), while the Kerr ODE gives cos_sim = 0.87 (preservation). The gap between preservation (0.87) and destruction (-0.09) represents the architectural ceiling for language modelling.
+
+---
+
+## 97. Two Computation Modes — Positional vs Compositional
+
+### 97.1 Core Pattern
+
+Neural ODE architectures exhibit two distinct computation modes depending on the task: (1) Positional mode for arithmetic — each layer transforms independently, position in sequence determines output, low coupling between positions needed. (2) Compositional mode for language — layers compose character/word features progressively, context across positions determines output, high coupling needed. The same ODE parameters produce different behaviour depending on which mode the training data activates.
+
+---
+
+## 98. Beta/Alpha Ratio as Depth-Dependent Specialisation Metric
+
+### 98.1 Core Pattern
+
+The ratio beta/alpha at each layer reveals the layer's learned role in the processing pipeline. Low ratio (alpha-dominant): layer performs per-band transformation (conditioning, normalising). High ratio (beta-dominant): layer performs cross-band mixing (relationship building, semantic composition). Empirical finding: ratio increases monotonically with depth (L0: 1.4x, L1: 3.6x, L2: 7.1x, L3: 14.3x at 168-dim), constituting a depth-dependent specialisation gradient.
+
+---
+
+## 99. Band Utilisation Monitoring — Dead Band Detection
+
+### 99.1 Core Pattern
+
+Monitor per-band coefficient of variation (CV) across vocabulary words to detect dead bands — bands that carry the same value regardless of input token. Dead bands consume parameters and compute without contributing to discrimination. Implementation: for each band k, compute CV = std(mag_k across vocab) / mean(mag_k across vocab). Bands with CV < 0.1 are dead. Report count, positions, and percentage at health intervals.
+
+---
+
+## 100. Layer Capacity Formula — Maximum Useful Layers
+
+### 100.1 Core Pattern
+
+Empirical formula bounding the maximum number of useful layers for a given band count: max_useful_layers = 2 + active_bands / 20. Beyond this limit, additional layers become passthrough (cos_sim > 0.93 between input and output). Proved at 168-dim (84 bands): 8 layers specified, only L0-L2 active (cos_sim < 0.8), L3-L5 passthrough (cos_sim > 0.93). Formula predicts max_useful = 2 + 84/20 = 6.2, consistent with observation.
+
+---
+
+## 101. Frequency Migration Through Depth — L0 High-to-Low Confirmed
+
+### 101.1 Core Pattern
+
+In trained models, the dominant harmonic frequency decreases with depth: L0 captures high-frequency features (individual character/phoneme level), deeper layers capture lower-frequency features (word/phrase level). Measured via per-layer harmonic spectrum analysis. The migration is spontaneous — not imposed by architecture — and consistent across training seeds.
+
+---
+
+## 102. Operating Regime Sensitivity — Critical Parameter Thresholds
+
+### 102.1 Core Pattern
+
+The Kerr ODE has sharp performance boundaries at specific parameter values. Alpha = 0.01 was 10x too weak for meaningful self-phase modulation — performance at alpha=0.01 was indistinguishable from alpha=0 (wire). Alpha = 0.1 crossed the threshold for meaningful computation. Beta shows similar sensitivity at ~0.1. These thresholds are dataset-independent — they reflect the mathematical structure of the ODE, not properties of the training data.
+
+---
+
+## 103. Adaptive RK4 Integration Weights — Depth-Dependent Numerical Integration
+
+### 103.1 Core Architecture
+
+Per-layer learnable RK4 combination weights [w0, w1, w2, w3] with spring regulation at the standard equilibrium [1/6, 1/3, 1/3, 1/6]. The model learns depth-dependent integration strategies: compressive layers (L0, high damping) shift weight toward endpoint evaluation (k4), cross-band mixing layers (L3, high beta/alpha) shift weight toward initial slope (k1).
+
+**Implementation pattern:**
+- 4 additional parameters per layer (16 total for 4 layers)
+- Spring regulation: w_new = w - lr * k * (w - w_eq) applied after each optimiser step
+- Spring stiffness k=2.0 prevents departure from numerical stability
+- After unflatten: normalise weights to sum to 1.0 (conservation)
+
+---
+
+## 104. Dynamic Spring-Regulated Hyperparameters
+
+### 104.1 Core Architecture
+
+A mechanism for making any hyperparameter learnable while maintaining stability: attach a restoring spring to the parameter with a specified equilibrium point. The parameter learns via gradient but is pulled toward its equilibrium — creating bounded exploration around a known-good value.
+
+**Implementation pattern:**
+- After optimiser step: param -= lr * spring_k * (param - equilibrium)
+- Same mathematical form as AdamW weight decay, but with ARBITRARY equilibrium (not just zero)
+- Spring stiffness controls exploration range: high k = tight around equilibrium, low k = wide exploration
+- Applied to: layer scale, LR scale, alpha, beta (when dynamic)
+
+---
+
+## 105. Per-Band Learnable Coupling — Alpha_k and Beta_k
+
+### 105.1 Core Pattern
+
+Extend the scalar alpha and beta to per-band vectors alpha_k and beta_k, allowing each frequency band to have independent coupling parameters. Implementation: phi_k = omega_k + alpha_k * |Z_k|^2 + beta_k * sum(|Z_j|^2). The gradient naturally flows to each alpha_k and beta_k independently. Finding: per-band coupling enables band-specific specialisation but increases parameter count by 2 * n_bands per layer.
+
+---
+
+## 106. Attention Entropy as Routing Quality Metric
+
+### 106.1 Core Pattern
+
+Measure the entropy of attention weight distributions per head per position. Low entropy = sharp attention (head confidently routes to specific positions). High entropy = diffuse attention (head spreads weight uniformly — not routing). Dead heads show maximum entropy (uniform distribution). Healthy routing shows bimodal entropy: some positions attend sharply (content-dependent routing), others attend broadly (context gathering).
+
+---
+
+## 107. Integration-Damping Co-Adaptation
+
+### 107.1 Core Pattern
+
+When adaptive RK4 weights (Pattern 103) and learnable damping (gamma) are both active, they co-adapt: endpoint-heavy integration at high-damping layers reinforces compression, startpoint-heavy integration at low-damping layers reinforces conservation. The two independently-designed mechanisms learn to cooperate. Damping gradient amplifies from 1.19x (baseline) to 1.59x (with adaptive integration). This is emergence — not imposed coordination.
+
+---
+
+## 108. Confidence-Brittleness Tradeoff in Dynamic Parameters
+
+### 108.1 Core Pattern (Null Finding — Defensive Publication)
+
+Spring-regulated dynamic parameters (Pattern 104) make models more confident (lower entropy: 0.403 to 0.335, higher margin: 0.811 to 0.869) but 4x more brittle (worst margin: 0.038 to 0.010). Seven configurations tested — all show the same pattern. Accuracy unchanged (49/55). The confidence gain does NOT translate to correctness improvement. Published as null finding to prevent reinvention.
+
+---
+
+## 109. Two-Bottleneck Architecture Calculator
+
+### 109.1 Core Architecture
+
+An empirical model for sizing wave-engine architectures from dataset characteristics, identifying TWO independent bottlenecks that must both be satisfied:
+
+**Bottleneck 1 — Band capacity:** tokens_per_effective_dim < 0.50 with dead band accounting via coprime moduli. Fixing attention without fixing bands gives zero accuracy gain (proved: 8H8L at 168-dim, 5x attention improvement, same rank 18.5).
+
+**Bottleneck 2 — Attention resolution:** positions_per_head < 40, head_dim >= 16. At 4 heads with seq=256, max attention weight is 0.025 (dead). At 8 heads, it's 0.122 (alive).
+
+**Implementation:** --recommend flag reads training data, computes moduli, checks both bottlenecks, outputs copy-paste CLI with recommended n_bands, n_head, n_layers, iters.
+
+---
+
+## 110. Character-Level Compositional Computation Without BPE
+
+### 110.1 Core Pattern
+
+The Kerr ODE composes individual characters into word-level meaning through sequential processing across layers, WITHOUT requiring subword tokenisation (BPE). Validated at 90.2% word classification accuracy (46/51) at character level (168-dim, 4L, 25 vocab, zero decoder params). The ODE develops a gradual coupling ramp (beta/alpha 1.6x to 6.6x) for word composition. BPE is an engineering optimisation (fewer ODE steps), not an architectural necessity — the ODE natively performs the character-to-word composition that BPE pre-computes.
+
+---
+
+## 111. Training Data Ordering as Gradient Signal
+
+### 111.1 Core Pattern
+
+In autoregressive models, the gradient connects only items within the same context window. Relationships that span multiple training examples cannot be learned unless they co-occur within a single window. Placing related items adjacently in the training data (e.g., commutative pairs: "7+2=9" followed by "2+7=9") achieves 100% accuracy where random ordering achieves 89% (49/55). Data ordering is not preprocessing — it IS a training signal that determines what relationships the gradient can form.
 
 ---
 
